@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TERRE SYSTEM</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2713%27 fill=%27none%27 stroke=%27%2338d6f5%27 stroke-width=%273%27 stroke-dasharray=%2714 6%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%275%27 fill=%27%23bff4ff%27/%3E%3C/svg%3E">
+<style>
+:root{--bg:#050910;--panel:rgba(12,20,33,.78);--line:#1a2b40;--cyan:#38d6f5;--cyan2:#0f8fb0;--txt:#d8e6f3;--mut:#7d93ab;
+      --red:#ff5d6c;--amber:#ffbe55;--green:#47d18c;--amp:0}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100vh}
+body{background:var(--bg);color:var(--txt);font:15px/1.5 "Segoe UI",system-ui,sans-serif;overflow-x:hidden}
+#bg{position:fixed;inset:0;z-index:-2}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(rgba(56,214,245,.035) 1px,transparent 1px) 0 0/100% 4px,
+             radial-gradient(ellipse at 50% -10%,rgba(16,64,96,.55),transparent 60%)}
+body::after{content:"";position:fixed;left:0;right:0;height:160px;top:-160px;z-index:-1;pointer-events:none;
+  background:linear-gradient(transparent,rgba(56,214,245,.05),transparent);animation:scanline 9s linear infinite}
+@keyframes scanline{to{top:100%}}
+
+/* ---------- Boot ---------- */
+#boot{position:fixed;inset:0;z-index:50;background:#03070c;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:28px;transition:opacity .7s ease, transform .7s ease;cursor:pointer}
+#boot.out{opacity:0;transform:scale(1.08);pointer-events:none}
+#boot .big{width:230px;height:230px}
+#boot h2{margin:0;font-size:30px;letter-spacing:12px;font-weight:300;color:#bff4ff;text-shadow:0 0 18px var(--cyan)}
+#boot h2 span{display:inline-block;opacity:0;transform:translateY(10px);animation:letter .5s forwards}
+@keyframes letter{to{opacity:1;transform:none}}
+#bootlog{font:13px/1.9 Consolas,monospace;color:var(--mut);min-height:180px;width:380px}
+#bootlog div{white-space:nowrap;overflow:hidden;animation:typeLine .35s steps(30) both}
+#bootlog b{color:var(--green);font-weight:400}
+@keyframes typeLine{from{width:0}to{width:100%}}
+#boot .hint{position:absolute;bottom:22px;font-size:12px;color:#33475e}
+
+/* ---------- Reactor ---------- */
+.reactor{position:relative;flex:none}
+.reactor svg{width:100%;height:100%;overflow:visible}
+.reactor .ring{fill:none;stroke:var(--cyan);transform-origin:100px 100px}
+.r1{stroke-width:1.5;stroke-dasharray:3 7;opacity:.55;animation:spin 30s linear infinite}
+.r2{stroke-width:5;stroke-dasharray:46 14;opacity:.85;animation:spin 9s linear infinite reverse}
+.r3{stroke-width:1;stroke-dasharray:2 4;opacity:.7;animation:spin 14s linear infinite}
+.r4{stroke-width:2;stroke-dasharray:110 300;opacity:.9;animation:spin 3.2s cubic-bezier(.6,.1,.4,.9) infinite}
+.ticks{transform-origin:100px 100px;animation:spin 60s linear infinite reverse}
+.ticks line{stroke:var(--cyan);stroke-width:2;opacity:.6}
+.viz line{stroke:#9cecff;stroke-width:2.2;stroke-linecap:round;opacity:.85}
+.core{transform-origin:100px 100px;transform:scale(calc(1 + var(--amp)*.45));transition:transform .06s}
+.glow{filter:drop-shadow(0 0 calc(8px + var(--amp)*28px) var(--cyan))}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes breathe{50%{opacity:.55}}
+
+/* ---------- Layout ---------- */
+#loadbar{position:fixed;top:0;left:0;right:0;height:2px;z-index:40;overflow:hidden;opacity:0;transition:opacity .3s}
+#loadbar::before{content:"";position:absolute;inset:0;width:35%;background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  animation:loadmove 1.1s ease-in-out infinite}
+.loading #loadbar{opacity:1}
+@keyframes loadmove{from{transform:translateX(-100%)}to{transform:translateX(300%)}}
+
+header{display:flex;align-items:center;gap:22px;padding:18px 32px;border-bottom:1px solid var(--line);
+       background:linear-gradient(180deg,rgba(5,9,16,.6),transparent);backdrop-filter:blur(6px);position:sticky;top:0;z-index:20}
+header .reactor{width:76px;height:76px}
+.brand{font-size:11px;letter-spacing:5px;color:var(--cyan);opacity:.85}
+h1{margin:2px 0 0;font-size:23px;font-weight:600}
+.sub{color:var(--mut);font-size:13px;display:flex;gap:10px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:breathe 2s infinite}
+.grow{flex:1}
+.clock{text-align:right;margin-right:8px}
+.clock .t{font:300 30px/1 "Segoe UI",sans-serif;letter-spacing:2px;font-variant-numeric:tabular-nums;color:#e6f9ff}
+.clock .t s{text-decoration:none;font-size:16px;color:var(--cyan);margin-left:2px}
+.clock .d{font-size:12px;color:var(--mut);margin-top:4px}
+button{background:rgba(18,37,58,.8);border:1px solid var(--line);color:var(--txt);padding:7px 14px;border-radius:8px;cursor:pointer;
+       font:inherit;font-size:13px;transition:border-color .2s, box-shadow .2s, transform .1s, background .2s}
+button:hover{border-color:var(--cyan2);box-shadow:0 0 14px rgba(56,214,245,.2)}
+button:active{transform:scale(.96)}
+button.pri{background:var(--cyan2);border-color:var(--cyan2);color:#fff} button.pri:hover{background:#13a6cc}
+button:disabled{opacity:.5;cursor:wait}
+#refresh .ic{display:inline-block} .loading #refresh .ic{animation:spin .9s linear infinite}
+
+main{padding:22px 32px 48px;display:grid;gap:18px;grid-template-columns:repeat(12,1fr)}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;overflow:hidden;
+      backdrop-filter:blur(8px);opacity:0;animation:rise .7s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:var(--d,0s);
+      transition:border-color .3s, box-shadow .3s}
+.card:hover{border-color:#24405d;box-shadow:0 0 30px rgba(56,214,245,.06)}
+.card::after{content:"";position:absolute;top:0;left:-40%;width:40%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:sweep 7s linear infinite;animation-delay:var(--d,0s)}
+.card::before{content:"";position:absolute;width:10px;height:10px;top:8px;left:8px;border-top:1px solid var(--cyan);border-left:1px solid var(--cyan);opacity:.5}
+@keyframes sweep{to{left:110%}}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+.card h2{margin:0 0 12px;font-size:12px;letter-spacing:1.8px;text-transform:uppercase;color:var(--cyan);font-weight:600;display:flex;align-items:center;gap:8px}
+.n{background:#12253a;color:var(--txt);border-radius:10px;padding:0 8px;font-size:12px;letter-spacing:0;display:inline-block}
+.n.bump{animation:bump .6s}
+@keyframes bump{30%{transform:scale(1.5);background:var(--cyan2);color:#fff}}
+.brief{grid-column:span 12;font-size:16.5px;line-height:1.75;min-height:120px}
+.caret{display:inline-block;width:8px;height:1.1em;background:var(--cyan);vertical-align:-2px;margin-left:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.cal{grid-column:span 5} .met{grid-column:span 7} .col{grid-column:span 4}
+
+/* calendar */
+.tl{position:relative;padding-left:18px}
+.tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:linear-gradient(var(--cyan2),transparent)}
+.ev{position:relative;display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);opacity:0;animation:slideIn .5s forwards}
+.ev:last-child{border:0}
+.ev::before{content:"";position:absolute;left:-17px;top:16px;width:9px;height:9px;border-radius:50%;background:var(--bg);border:1px solid var(--cyan2)}
+.ev.past{opacity:.45!important} .ev.past::before{background:var(--cyan2)}
+.ev.now::before,.ev.next::before{background:var(--cyan);box-shadow:0 0 0 0 var(--cyan);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 10px rgba(56,214,245,0)}100%{box-shadow:0 0 0 0 rgba(56,214,245,0)}}
+.ev .t{color:var(--cyan);font-weight:600;width:62px;flex:none;font-variant-numeric:tabular-nums}
+.ev .l{color:var(--mut);font-size:12px}
+.badge{font-size:11px;padding:1px 7px;border-radius:6px;background:rgba(56,214,245,.15);color:var(--cyan);margin-left:6px}
+.ev.now .badge{background:rgba(71,209,140,.15);color:var(--green)}
+
+/* metrics */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.m{background:rgba(6,12,20,.7);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;
+   opacity:0;animation:rise .6s forwards;transition:transform .25s,border-color .25s}
+.m:hover{transform:translateY(-3px);border-color:var(--cyan2)}
+.gauge{width:58px;height:58px;flex:none}
+.gauge circle{fill:none;stroke-width:6}
+.gauge .bgc{stroke:#1a2b40} .gauge .fg{stroke:var(--cyan);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;
+  transition:stroke-dashoffset 1.6s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 4px var(--cyan))}
+.gauge text{fill:var(--txt);font-size:15px;text-anchor:middle;dominant-baseline:central;font-weight:600}
+.m .v{white-space:nowrap;font-size:27px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1} .m .v small{font-size:13px;color:var(--mut);font-weight:400}
+.m .lb{color:var(--mut);font-size:12px}
+
+/* items */
+.list{min-height:40px}
+.item{position:relative;border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:12px 14px;margin-bottom:10px;
+      background:rgba(6,12,20,.75);overflow:hidden;transition:border-color .25s, transform .25s}
+.item:hover{transform:translateX(3px)}
+.urgent .item{border-left-color:var(--red)} .auto .item{border-left-color:var(--green);padding:9px 12px}
+.urgent .item::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,93,108,.09),transparent 45%);
+  animation:alarm 2.4s ease-in-out infinite}
+@keyframes alarm{50%{opacity:.25}}
+.item.enter{animation:slideIn .55s cubic-bezier(.2,.8,.2,1) both}
+.item.fresh::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(56,214,245,.25),transparent);
+  transform:translateX(-100%);animation:flash 1.2s .3s ease-out}
+@keyframes flash{to{transform:translateX(100%)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+.item.leave{animation:collapse .45s ease forwards;pointer-events:none}
+@keyframes collapse{to{opacity:0;transform:scale(.95);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:0;border-width:0}}
+.item.sent{animation:fly .7s cubic-bezier(.6,0,.4,1) forwards;pointer-events:none;border-left-color:var(--green)}
+@keyframes fly{30%{transform:translateX(-8px);box-shadow:0 0 24px rgba(71,209,140,.4)}100%{transform:translateX(120%);opacity:0}}
+.meta{font-size:12px;color:var(--mut);display:flex;gap:8px;flex-wrap:wrap}
+.src{text-transform:uppercase;letter-spacing:.8px;color:var(--cyan)}
+.sum{margin:4px 0 6px;font-weight:500}
+.why{font-size:12px;color:var(--mut);font-style:italic}
+details{margin:6px 0;font-size:13px;color:var(--mut)} summary{cursor:pointer} details pre{white-space:pre-wrap;font:inherit;margin:6px 0 0;animation:slideIn .3s}
+textarea{width:100%;min-height:110px;background:#04080e;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px;
+         font:inherit;font-size:14px;resize:vertical;margin:6px 0;transition:border-color .2s, box-shadow .2s}
+textarea:focus{outline:0;border-color:var(--cyan2);box-shadow:0 0 0 3px rgba(56,214,245,.12)}
+textarea.thinking{background:linear-gradient(90deg,#04080e 0,#0c2233 50%,#04080e 100%) 0 0/200% 100%;animation:shimmer 1.2s linear infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.empty{color:var(--mut);font-size:13px;padding:6px 0;animation:slideIn .4s}
+.errs{grid-column:span 12;color:var(--amber);font-size:13px}
+.demo{background:#3a2a07;color:var(--amber);padding:2px 8px;border-radius:6px;font-size:11px;margin-left:8px;vertical-align:3px}
+
+/* School manager */
+.sm{grid-column:span 12} .fl{grid-column:span 12}
+.cmd{display:flex;gap:8px;margin-bottom:12px}
+.cmd input{flex:1;background:#04080e;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 14px;font:inherit;
+  transition:border-color .2s, box-shadow .2s}
+.cmd input:focus{outline:0;border-color:var(--cyan2);box-shadow:0 0 0 3px rgba(56,214,245,.12),0 0 24px rgba(56,214,245,.12)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border-radius:20px;padding:6px 14px;position:relative;overflow:hidden}
+.chip small{color:var(--mut);margin-left:6px}
+.chip::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(56,214,245,.18),transparent);transform:translateX(-100%)}
+.chip:hover::after{animation:flash .8s}
+#proposal:empty{display:none}
+.prop{border:1px solid var(--cyan2);border-radius:12px;padding:14px;background:rgba(15,143,176,.08);margin-bottom:12px;animation:slideIn .4s}
+.prop .say{margin-bottom:10px}
+.prop label{display:block;font-size:12px;color:var(--mut);margin:8px 0 3px}
+.prop input,.prop select{width:100%;background:#04080e;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font:inherit}
+.prop .acts{margin-top:12px}
+.run{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px;background:rgba(6,12,20,.75);animation:slideIn .4s}
+.run .steps div{font:12.5px/1.8 Consolas,monospace;color:var(--mut);opacity:0;animation:slideIn .3s forwards}
+.run.ok{border-left:3px solid var(--green)} .run.bad{border-left:3px solid var(--red)}
+.runbar{height:3px;border-radius:2px;background:#1a2b40;overflow:hidden;margin:8px 0}
+.runbar i{display:block;height:100%;width:30%;background:var(--cyan);animation:loadmove 1s ease-in-out infinite}
+.mlog{font-size:12.5px;color:var(--mut)} .mlog div{padding:4px 0;border-top:1px solid var(--line)}
+.mlog .okc{color:var(--green)} .mlog .badc{color:var(--red)}
+.pill{font-size:11px;letter-spacing:.5px;text-transform:none;padding:2px 9px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.pill.on{background:rgba(71,209,140,.12);color:var(--green)} .pill.off{background:rgba(125,147,171,.15);color:var(--mut)}
+.pill.on::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:breathe 2s infinite}
+.pill button{padding:1px 8px;font-size:11px;margin-left:4px}
+.prop .opt{opacity:.6;font-size:11px;margin-left:4px}
+.answer{padding:10px 14px;border-left:2px solid var(--cyan);background:rgba(56,214,245,.06);border-radius:0 10px 10px 0;margin-bottom:12px;animation:slideIn .4s}
+body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} body.busy .r1{animation-duration:6s}
+
+/* Files */
+.fstat{display:flex;gap:14px;font-size:12.5px;color:var(--mut);margin-bottom:10px}
+.fstat b{color:var(--txt);font-size:18px;margin-right:4px;font-variant-numeric:tabular-nums}
+.fsub{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut);margin:12px 0 6px;display:flex;justify-content:space-between;align-items:center}
+.file{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;background:rgba(6,12,20,.75);
+  overflow:hidden;transition:transform .25s}
+.file:hover{transform:translateX(3px)}
+.file .ic{font-size:20px;flex:none;width:26px;text-align:center}
+.file .nm{flex:1;min-width:0}
+.file .nm div:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px}
+.file .nm div:last-child{font-size:11.5px;color:var(--mut)}
+.file .cat{color:var(--cyan)}
+.file .rn{display:block;width:100%;margin-top:4px;background:#04080e;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:3px 7px;font-size:12px}
+.file .rn:focus{outline:0;border-color:var(--cyan2)}
+.file .newn{color:var(--green);font-size:11.5px}
+.file select{background:#04080e;border:1px solid var(--line);color:var(--cyan);border-radius:6px;padding:2px 4px;font-size:11.5px;max-width:150px}
+.file button{padding:4px 9px;font-size:12px}
+.file.enter{animation:slideIn .5s both} .file.fresh{box-shadow:inset 0 0 0 1px var(--cyan2)}
+.file.leave{animation:collapse .45s forwards}
+.file.sent{animation:fly .7s forwards}
+
+/* Folders */
+.fo{grid-column:span 12}
+.fadd{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.fadd input:not([type=checkbox]){flex:1;min-width:240px;background:#04080e;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:8px 12px;font:inherit;font-size:13.5px}
+.fadd input:not([type=checkbox]):focus{outline:0;border-color:var(--cyan2)}
+.fopt{font-size:12.5px;color:var(--mut);display:flex;align-items:center;gap:6px;margin-left:auto}
+.frow{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:12px;
+  margin-bottom:8px;background:rgba(6,12,20,.75);transition:border-color .25s, transform .25s;animation:slideIn .45s both}
+.frow:hover{border-color:#24405d}
+.frow .ic{font-size:24px;filter:drop-shadow(0 0 6px rgba(56,214,245,.35))}
+.frow .p{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
+.frow .last{font-size:12px;color:var(--mut);margin-top:3px}
+.frow select{background:#04080e;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:4px 6px;font-size:12px}
+.frow .ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.frow.miss{opacity:.55}
+#planBox:empty{display:none}
+.planp{border:1px solid var(--cyan2);border-radius:14px;padding:16px 18px;margin:6px 0 12px;background:rgba(15,143,176,.07);animation:slideIn .45s both;position:relative;overflow:hidden}
+.planp h3{margin:0 0 10px;font-size:15px;font-weight:600}
+.planp .stage{font-size:13px;color:var(--mut);margin-bottom:6px}
+.pbar{height:6px;border-radius:4px;background:#1a2b40;overflow:hidden}
+.pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan2),var(--cyan));transition:width .5s;box-shadow:0 0 10px var(--cyan)}
+.pbar.ind i{width:30%!important;animation:loadmove 1.1s ease-in-out infinite}
+.big4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 14px}
+.big4 div{background:rgba(4,8,14,.7);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.big4 b{display:block;font-size:24px;font-variant-numeric:tabular-nums} .big4 span{font-size:12px;color:var(--mut)}
+.cbar{display:grid;grid-template-columns:170px 1fr 40px;gap:10px;align-items:center;font-size:13px;margin:5px 0}
+.cbar .tr{height:9px;border-radius:5px;background:#1a2b40;overflow:hidden}
+.cbar .tr i{display:block;height:100%;width:0;background:var(--cyan);border-radius:5px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.cbar .n{text-align:right;color:var(--mut);background:none;padding:0}
+.warn{font-size:12.5px;color:var(--amber);margin:8px 0}
+.pitems{max-height:320px;overflow:auto;margin:10px 0;border-top:1px solid var(--line)}
+.pit .nn{background:#04080e;border:1px solid var(--line);color:var(--green);border-radius:6px;padding:2px 6px;font-size:12px;width:100%}
+.pit{display:grid;grid-template-columns:22px 1fr 1fr 170px 28px;gap:8px;align-items:center;padding:5px 2px;border-bottom:1px solid rgba(26,43,64,.6);font-size:12.5px}
+.pit .s{color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pit select{background:#04080e;border:1px solid var(--line);color:var(--cyan);border-radius:6px;padding:2px 4px;font-size:12px}
+.pit.sk{opacity:.35;text-decoration:line-through}
+.pit button{padding:1px 6px;font-size:11px}
+.done-burst{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(71,209,140,.25),transparent 60%);animation:burst 1.2s forwards}
+@keyframes burst{from{opacity:1;transform:scale(.6)}to{opacity:0;transform:scale(1.6)}}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:rgba(10,20,32,.7);border:1px solid var(--line);border-radius:12px;padding:4px;margin-right:6px}
+.tabs button{border:0;background:none;padding:7px 14px;border-radius:9px;color:var(--mut);position:relative}
+.tabs button.on{background:var(--cyan2);color:#fff;box-shadow:0 0 16px rgba(56,214,245,.25)}
+.tabs button:hover:not(.on){color:var(--txt)}
+.tb{background:var(--red);color:#fff;border-radius:8px;font-size:10.5px;padding:0 6px;margin-left:3px}
+.tb:empty{display:none}
+.hdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px;background:var(--green);box-shadow:0 0 6px var(--green)}
+.hdot.warn{background:var(--amber);box-shadow:0 0 6px var(--amber)} .hdot.error{background:var(--red);box-shadow:0 0 8px var(--red);animation:breathe 1s infinite}
+[data-tab].hidden{display:none!important}
+#mic.rec{background:var(--red);border-color:var(--red);color:#fff;animation:breathe .8s infinite}
+.tk,.dr{grid-column:span 6} .se{grid-column:span 12} .hl{grid-column:span 6} .jr{grid-column:span 6} .lr{grid-column:span 12}
+.task{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px;
+  margin-bottom:7px;background:rgba(6,12,20,.75);border-left:3px solid var(--cyan2)}
+.task.over{border-left-color:var(--red)} .task.today{border-left-color:var(--amber)} .task.meet{border-left-color:#a78bfa} .task.fu{border-left-color:#7d93ab}
+.task .t1{font-size:13.5px} .task .t2{font-size:11.5px;color:var(--mut)}
+.task .due{font-size:11.5px;padding:1px 8px;border-radius:8px;background:#12253a;white-space:nowrap}
+.task.over .due{background:rgba(255,93,108,.18);color:var(--red)} .task.today .due{background:rgba(255,190,85,.15);color:var(--amber)}
+.task input[type=checkbox]{width:18px;height:18px;accent-color:var(--cyan)}
+.task button{padding:3px 9px;font-size:12px}
+.task.enter{animation:slideIn .45s both} .task.leave{animation:collapse .45s forwards} .task.sent{animation:fly .7s forwards}
+.dri{display:grid;grid-template-columns:24px 1fr;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;background:rgba(6,12,20,.75);animation:slideIn .4s both}
+.dri.added{opacity:.55;border-left:3px solid var(--green)} .dri.skipped{opacity:.35;text-decoration:line-through}
+.dri input[type=checkbox]{width:18px;height:18px;accent-color:var(--cyan);margin-top:2px}
+.dri .ttl{background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--txt);font:inherit;font-size:13.5px;width:100%;padding:2px 0}
+.dri .meta2{font-size:11.5px;color:var(--mut);margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dri select,.dri .hrs{background:#04080e;border:1px solid var(--line);color:var(--cyan);border-radius:6px;padding:1px 4px;font-size:11.5px}
+.dri .hrs{width:52px}
+.sres{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;padding:9px 10px;border-bottom:1px solid var(--line);animation:slideIn .35s both}
+.sres .sn{font-size:12.5px;color:var(--mut)} .sres .sn mark{background:rgba(56,214,245,.22);color:var(--txt);border-radius:3px;padding:0 2px}
+.sres button{padding:2px 8px;font-size:11.5px}
+.hrow{display:grid;grid-template-columns:14px 150px 1fr;gap:10px;align-items:start;padding:8px 4px;border-bottom:1px solid var(--line);font-size:13px;animation:slideIn .35s both}
+.hrow .d{width:10px;height:10px;border-radius:50%;margin-top:4px;background:var(--green);box-shadow:0 0 6px var(--green)}
+.hrow.warn .d{background:var(--amber);box-shadow:0 0 6px var(--amber)} .hrow.error .d{background:var(--red);box-shadow:0 0 8px var(--red)}
+.hrow.pending .d{background:#4a5b70;box-shadow:none}
+.hrow .hm{color:var(--mut);font-size:12px} .hrow .hint{color:var(--cyan);font-size:12px;margin-top:2px}
+.jrow{display:grid;grid-template-columns:22px 46px 1fr auto;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid rgba(26,43,64,.7);font-size:12.5px;animation:slideIn .3s both}
+.jrow .tm{color:var(--mut);font-variant-numeric:tabular-nums} .jrow.undone{opacity:.4;text-decoration:line-through}
+.jrow .who{font-size:11px;color:var(--mut)} .jrow button{padding:1px 8px;font-size:11px}
+.jday{font-size:11px;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin:10px 0 4px}
+#jlist,#tlist{max-height:520px;overflow:auto}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.lgrid textarea{min-height:150px}
+.lst{display:flex;gap:16px;margin-bottom:10px;font-size:12.5px;color:var(--mut)} .lst b{color:var(--txt);font-size:20px;margin-right:4px}
+.lex{font-size:12px;color:var(--mut);padding:4px 0;border-bottom:1px solid rgba(26,43,64,.6)}
+@media(max-width:1100px){.tk,.dr,.hl,.jr{grid-column:span 12} .lgrid{grid-template-columns:1fr} .tabs button{padding:6px 9px}}
+
+/* toasts */
+#toasts{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:8px;z-index:60}
+.toast{background:rgba(10,20,32,.95);border:1px solid var(--cyan2);border-left:3px solid var(--cyan);padding:10px 16px;border-radius:10px;
+       font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);animation:toastIn .4s cubic-bezier(.2,.8,.2,1)}
+.toast.ok{border-left-color:var(--green)} .toast.err{border-left-color:var(--red)}
+.toast.out{animation:toastOut .4s forwards}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(40px)}}
+
+@media(max-width:1100px){.cal,.met,.col,.sm,.fl{grid-column:span 12} .big4{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="loadbar"></div>
+
+<div id="boot">
+  <div class="reactor big" id="bootReactor"></div>
+  <h2 id="bootTitle"></h2>
+  <div id="bootlog"></div>
+  <div class="hint">дарж алгасах</div>
+</div>
+
+<header>
+  <div class="reactor" id="reactor"></div>
+  <div class="grow">
+    <div class="brand">TERRE SYSTEM</div>
+    <h1 id="hello">Холбогдож байна...</h1>
+    <div class="sub"><span class="dot"></span><span id="sub">Систем эхэлж байна</span></div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="home" class="on">Нүүр</button><button data-tab="work">Ажил <span class="tb" id="tbWork"></span></button>
+    <button data-tab="files">Файл</button><button data-tab="system">Систем <span class="hdot" id="hdot"></span></button>
+  </nav>
+  <div class="clock"><div class="t" id="clk">--:--</div><div class="d" id="date"></div></div>
+  <button id="mic" title="Дуугаар тушаал өгөх">🎙</button>
+  <button id="play">🔊 Сонсох</button>
+  <button id="refresh"><span class="ic">↻</span> Шинэчлэх</button>
+</header>
+
+<main>
+  <section data-tab="home" class="card brief" style="--d:.05s"><h2>Өнөөдрийн мэдээлэл</h2><div id="brief"><span class="caret"></span></div></section>
+  <section data-tab="home" class="card cal" style="--d:.15s"><h2>Календарь</h2><div class="tl" id="cal"></div></section>
+  <section data-tab="home" class="card met" style="--d:.25s"><h2>Тоон үзүүлэлт</h2><div class="mgrid" id="met"></div></section>
+  <section data-tab="work" class="card sm" style="--d:.3s"><h2>⚙ School Manager <span id="smStatus"></span></h2>
+    <div class="cmd"><input id="cmdIn" placeholder="Terre-д тушаал өгөх… жишээ нь: Болд багшийг өнөөдөр өвчтэй гэж тэмдэглэ" autocomplete="off">
+      <button class="pri" id="cmdGo">➤</button></div>
+    <div id="answer"></div><div id="proposal"></div><div id="running"></div>
+    <div class="chips" id="chips"></div>
+    <div class="mlog" id="mlog"></div>
+  </section>
+  <section data-tab="files" class="card fl" style="--d:.33s"><h2>🗂 Файлууд</h2>
+    <div class="fstat" id="fstat"></div>
+    <div class="fsub"><span>Таны зөвшөөрөл хүлээж буй</span><button id="approveAll" style="padding:3px 10px;font-size:11.5px">Бүгдийг зөөх</button></div>
+    <div class="list" id="fsug"></div>
+    <div class="fsub"><span>Сүүлд эмхэлсэн</span></div>
+    <div class="list" id="fmoved"></div>
+  </section>
+  <section data-tab="files" class="card fo" style="--d:.34s"><h2>📁 Холбосон хавтсууд</h2>
+    <div class="fadd">
+      <button class="pri" id="fPick">＋ Хавтас сонгох</button>
+      <input id="fPath" placeholder="эсвэл замыг бичих: D:\Сургууль\2026 баримтууд" autocomplete="off">
+      <button id="fAdd">Холбох</button>
+      <label class="fopt"><input type="checkbox" id="fEmpty"> Цэгцэлсний дараа хоосорсон хавтсыг устгах</label>
+    </div>
+    <div id="planBox"></div>
+    <div id="flist"></div>
+  </section>
+  <section data-tab="home" class="card col urgent" style="--d:.35s"><h2>🔴 Яаралтай <span class="n" id="nU">0</span></h2><div class="list" id="urgent"></div></section>
+  <section data-tab="home" class="card col pending" style="--d:.45s"><h2>🟡 Таны зөвшөөрөл хэрэгтэй <span class="n" id="nP">0</span></h2><div class="list" id="pending"></div></section>
+  <section data-tab="home" class="card col auto" style="--d:.55s"><h2>🟢 Terre шийдсэн <span class="n" id="nA">0</span></h2><div class="list" id="auto"></div></section>
+  <section data-tab="work" class="card tk" style="--d:.12s"><h2>✅ Даалгавар, хугацаа <span class="n" id="nT">0</span></h2>
+    <div class="fadd"><input id="tTitle" placeholder="Шинэ даалгавар…"><input id="tDue" type="date" style="flex:0 0 150px;min-width:0"><button id="tAdd">Нэмэх</button></div>
+    <div id="tlist"></div><div class="fsub"><span>Сүүлд хийсэн</span></div><div id="tdone"></div></section>
+  <section data-tab="work" class="card dr" style="--d:.2s"><h2>📝 Өдрийн тайлан → School Manager</h2>
+    <div id="drBox"></div></section>
+  <section data-tab="files" class="card se" style="--d:.05s"><h2>🔎 Файлаас хайх, асуух</h2>
+    <div class="cmd"><input id="sQ" placeholder="жишээ нь: А-145 тушаалд юу гэж байсан бэ?  эсвэл  ирцийн тайлан" autocomplete="off">
+      <button id="sGo">Хайх</button><button class="pri" id="sAsk">✨ Асуух</button></div>
+    <div id="sAns"></div><div id="sRes"></div><div class="why" id="sStat"></div></section>
+  <section data-tab="system" class="card hl" style="--d:.05s"><h2>🩺 Холболтын эрүүл мэнд</h2><div id="hlist"></div>
+    <div class="acts" style="margin-top:12px">
+      <button data-sys="setup">🔌 Холболт тохируулах</button><button data-sys="config">⚙ Тохиргоо засах</button>
+      <button data-sys="folder">📂 Өгөгдлийн хавтас</button><button data-sys="restart">↻ Дахин асаах</button>
+      <button id="demoBtn"></button></div></section>
+  <section data-tab="system" class="card jr" style="--d:.12s"><h2>📜 Үйлдлийн журнал</h2><div id="jlist"></div></section>
+  <section data-tab="system" class="card lr" style="--d:.2s"><h2>🧠 Terre-ийн сурсан зүйл</h2><div id="lbox"></div></section>
+  <div class="errs" data-tab="home" id="errs"></div>
+</main>
+
+<div id="toasts"></div>
+<audio id="audio"></audio>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => (s ?? "").toString().replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SRC = {gmail:"Gmail", outlook:"Outlook", telegram:"Telegram", gchat:"Google Chat"};
+const srcName = it => it.source === "imap" ? ((it.meta && it.meta.account) || "Мэйл") : (SRC[it.source] || it.source);
+let S = null, firstRender = true, lastBrief = null, serverSpeaking = false;
+
+/* ================= Reactor (SVG) ================= */
+const BARS = 48;
+function reactorSVG(){
+  let ticks = "", bars = "";
+  for(let i=0;i<60;i++){ const a=i*6*Math.PI/180, r1=i%5?86:82; ticks+=`<line x1="${100+r1*Math.cos(a)}" y1="${100+r1*Math.sin(a)}" x2="${100+89*Math.cos(a)}" y2="${100+89*Math.sin(a)}"/>`; }
+  for(let i=0;i<BARS;i++) bars += `<line data-a="${i*2*Math.PI/BARS}"/>`;
+  return `<svg viewBox="0 0 200 200"><defs>
+    <radialGradient id="cg"><stop offset="0" stop-color="#f2feff"/><stop offset=".3" stop-color="#7fe8ff"/><stop offset=".65" stop-color="#38d6f5" stop-opacity=".55"/><stop offset="1" stop-color="#38d6f5" stop-opacity="0"/></radialGradient></defs>
+    <g class="glow">
+      <circle class="ring r1" cx="100" cy="100" r="97"/>
+      <g class="ticks">${ticks}</g>
+      <circle class="ring r2" cx="100" cy="100" r="74"/>
+      <circle class="ring r3" cx="100" cy="100" r="64"/>
+      <circle class="ring r4" cx="100" cy="100" r="54"/>
+      <g class="viz">${bars}</g>
+      <g class="core"><circle cx="100" cy="100" r="34" fill="url(#cg)"/><circle cx="100" cy="100" r="13" fill="#effdff"/></g>
+    </g></svg>`;
+}
+$("reactor").innerHTML = reactorSVG();
+$("bootReactor").innerHTML = reactorSVG();
+
+/* audio-reactive loop */
+let actx, analyser, freq;
+function setupAnalyser(){
+  if(actx) return;
+  try{ actx = new (window.AudioContext||window.webkitAudioContext)();
+    const src = actx.createMediaElementSource($("audio")); analyser = actx.createAnalyser(); analyser.fftSize = 128;
+    src.connect(analyser); analyser.connect(actx.destination); freq = new Uint8Array(analyser.frequencyBinCount);
+  }catch(e){}
+}
+let t0 = performance.now(), smooth = new Array(BARS).fill(0), ampS = 0;
+function frame(now){
+  const t = (now - t0)/1000, audio = $("audio"), browserPlaying = analyser && !audio.paused;
+  let vals = new Array(BARS).fill(0), amp = 0;
+  if(browserPlaying){
+    analyser.getByteFrequencyData(freq);
+    for(let i=0;i<BARS;i++){ const k = i < BARS/2 ? i : BARS-1-i; vals[i] = freq[Math.min(freq.length-1, 2+k)]/255; }
+    amp = vals.reduce((a,b)=>a+b,0)/BARS;
+  } else if(serverSpeaking){            // компьютер ярьж байна: симуляц
+    for(let i=0;i<BARS;i++) vals[i] = .25 + .55*Math.abs(Math.sin(t*7 + i*.7) * Math.sin(t*3.1 + i*.23));
+    amp = .3 + .25*Math.abs(Math.sin(t*6));
+  } else {                              // тайван амьсгал
+    for(let i=0;i<BARS;i++) vals[i] = .06 + .05*Math.sin(t*1.4 + i*.5);
+    amp = .04 + .04*Math.sin(t*1.2);
+  }
+  ampS += (amp - ampS)*.25;
+  document.querySelectorAll(".reactor").forEach(r => r.style.setProperty("--amp", ampS.toFixed(3)));
+  document.querySelectorAll(".viz").forEach(g => {
+    g.querySelectorAll("line").forEach((l, i) => {
+      smooth[i] += (vals[i] - smooth[i]) * .3;
+      const a = +l.dataset.a, r0 = 38, r1 = 38 + 4 + smooth[i]*12;
+      l.setAttribute("x1", 100 + r0*Math.cos(a)); l.setAttribute("y1", 100 + r0*Math.sin(a));
+      l.setAttribute("x2", 100 + r1*Math.cos(a)); l.setAttribute("y2", 100 + r1*Math.sin(a));
+    });
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ================= Background particles ================= */
+(function(){
+  const c = $("bg"), x = c.getContext("2d"); let W, H, P;
+  function size(){ W = c.width = innerWidth; H = c.height = innerHeight;
+    P = Array.from({length: Math.min(70, Math.floor(W*H/22000))}, () => ({x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*.25, vy:(Math.random()-.5)*.25})); }
+  size(); addEventListener("resize", size);
+  function draw(){
+    x.clearRect(0,0,W,H);
+    for(const p of P){ p.x=(p.x+p.vx+W)%W; p.y=(p.y+p.vy+H)%H; }
+    for(let i=0;i<P.length;i++){
+      const a=P[i]; x.fillStyle="rgba(56,214,245,.45)"; x.fillRect(a.x-1,a.y-1,2,2);
+      for(let j=i+1;j<P.length;j++){ const b=P[j], d=Math.hypot(a.x-b.x,a.y-b.y);
+        if(d<130){ x.strokeStyle=`rgba(56,214,245,${.12*(1-d/130)})`; x.beginPath(); x.moveTo(a.x,a.y); x.lineTo(b.x,b.y); x.stroke(); } }
+    }
+    if(!RM) requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ================= Clock ================= */
+const DAYS = ["Ням","Даваа","Мягмар","Лхагва","Пүрэв","Баасан","Бямба"];
+function tick(){
+  const d = new Date(), p = n => String(n).padStart(2,"0");
+  $("clk").innerHTML = `${p(d.getHours())}:${p(d.getMinutes())}<s>${p(d.getSeconds())}</s>`;
+  $("date").textContent = `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} · ${DAYS[d.getDay()]} гараг`;
+}
+tick(); setInterval(tick, 1000);
+
+/* ================= Boot sequence ================= */
+let booted = false;
+try{ booted = sessionStorage.getItem("terre_booted") === "1"; }catch(e){}
+function endBoot(){ $("boot").classList.add("out"); setTimeout(() => $("boot").remove(), 800); try{ sessionStorage.setItem("terre_booted","1"); }catch(e){} }
+async function boot(){
+  if(booted || RM){ $("boot").remove(); return; }
+  $("boot").onclick = endBoot;
+  $("bootTitle").innerHTML = [..."TERRE SYSTEM"].map((ch,i) => `<span style="animation-delay:${.15+i*.07}s">${ch===" "?"&nbsp;":ch}</span>`).join("");
+  let sources = [];
+  try{ sources = (await (await fetch("/api/state")).json()).sources || []; }catch(e){}
+  const lines = ["Цөм систем эхэлж байна", "Санах ой ачааллаж байна", ...sources.map(s => `${s} холболт`), "Бүх систем хэвийн"];
+  const log = $("bootlog"), wait = ms => new Promise(r => setTimeout(r, ms));
+  await wait(900);
+  for(const l of lines){
+    if(!document.body.contains(log)) return;
+    log.insertAdjacentHTML("beforeend", `<div>› ${esc(l)} ${".".repeat(Math.max(2, 26-l.length))} <b>OK</b></div>`);
+    await wait(230);
+  }
+  await wait(600); if(document.body.contains($("boot"))) endBoot();
+}
+boot();
+
+/* ================= Helpers ================= */
+function toast(msg, kind=""){
+  const t = document.createElement("div"); t.className = `toast ${kind}`; t.textContent = msg; $("toasts").appendChild(t);
+  setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 400); }, 3200);
+}
+async function api(path, body){
+  const r = await fetch(path, body === undefined ? {} : {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
+  if(!r.ok){ let t = await r.text(); try{ t = JSON.parse(t).detail; }catch(e){} throw new Error(t); }
+  return r.json();
+}
+const when = iso => iso ? new Date(iso).toLocaleString("mn-MN",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}) : "";
+const node = html => { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstChild; };
+
+function countUp(el, to, dur=1300){
+  const from = +el.dataset.v || 0; el.dataset.v = to;
+  if(RM || typeof to !== "number"){ el.textContent = to; return; }
+  const s = performance.now(), dec = Number.isInteger(to) ? 0 : 1;
+  (function f(n){ const k = Math.min(1,(n-s)/dur), e = 1-Math.pow(1-k,3);
+    el.textContent = (from + (to-from)*e).toFixed(dec); if(k<1) requestAnimationFrame(f); })(s);
+}
+function setCount(el, n){ if(el.textContent !== String(n)){ el.textContent = n; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); } }
+
+let typeTimer;
+function typeBrief(text){
+  const el = $("brief"); clearTimeout(typeTimer);
+  if(RM){ el.textContent = text; return; }
+  let i = 0; el.innerHTML = `<span id="bt"></span><span class="caret"></span>`; const bt = $("bt");
+  (function step(){ i += 2; bt.textContent = text.slice(0, i); if(i < text.length) typeTimer = setTimeout(step, 16); })();
+}
+
+/* ================= Cards ================= */
+function itemCard(it){
+  return `<div class="item">
+    <div class="meta"><span class="src">${esc(srcName(it))}</span><span>${esc(it.sender)}</span><span>${when(it.received)}</span></div>
+    <div class="sum">${esc(it.summary || it.subject)}</div>
+    <div class="why">${esc(it.reason)}</div>
+    <details><summary>Эх мессеж</summary><pre>${esc(it.subject)}\n\n${esc(it.body || it.snippet)}</pre></details>
+    <textarea>${esc(it.draft)}</textarea>
+    <div class="acts">
+      ${it.source==="gchat" ? `<button data-a="copy">📋 Хуулах</button>` : `<button class="pri" data-a="send">✉ Илгээх</button>`}
+      <button data-a="redraft">✎ Дахин бичүүлэх</button>
+      <button data-a="dismiss">Алгасах</button>
+    </div></div>`;
+}
+function autoCard(it){
+  const act = {archive:"архивлах", mark_read:"уншсан болгох"}[it.action], done = it.status === "auto_done";
+  return `<div class="item">
+    <div class="meta"><span class="src">${esc(srcName(it))}</span><span>${esc(it.sender)}</span></div>
+    <div>${esc(it.summary || it.subject)}</div>
+    <div class="acts" style="margin-top:6px">
+      ${done ? `<span class="why">✓ ${act||"шийдсэн"}</span>` : (act ? `<button data-a="apply">✓ ${act}</button>` : "")}
+      ${!done ? `<button data-a="promote">Хариу бичих</button>` : ""}
+    </div></div>`;
+}
+
+/* Хэрэглэгчийн засварыг устгахгүйн тулд зөвхөн шинэ/алга болсон картыг өөрчилнө */
+function reconcile(el, items, render, emptyText){
+  const keys = new Set(items.map(i => i.id + "|" + i.status));
+  [...el.children].forEach(ch => {
+    if(ch.classList.contains("empty")){ if(items.length) ch.remove(); return; }
+    if(ch.dataset.key && !keys.has(ch.dataset.key)) leave(ch);
+  });
+  let prev = null;
+  items.forEach((it, idx) => {
+    const key = it.id + "|" + it.status;
+    let n = [...el.children].find(c => c.dataset.key === key);
+    if(!n){
+      n = node(render(it)); n.dataset.key = key; n.dataset.id = encodeURIComponent(it.id);
+      n.classList.add("enter"); n.style.animationDelay = firstRender ? (0.5 + idx*0.08) + "s" : "0s";
+      if(!firstRender) n.classList.add("fresh");
+    }
+    const ref = prev ? prev.nextSibling : el.firstChild;
+    if(n !== ref) el.insertBefore(n, ref);
+    prev = n;
+  });
+  if(!items.length && !el.querySelector(".empty")) el.insertAdjacentHTML("beforeend", `<div class="empty">${emptyText}</div>`);
+}
+function leave(n, cls="leave"){
+  n.dataset.key = ""; n.style.maxHeight = n.scrollHeight + "px"; n.classList.remove("enter","fresh"); n.classList.add(cls);
+  setTimeout(() => n.remove(), cls === "sent" ? 700 : 450);
+}
+
+function renderCalendar(ev){
+  const el = $("cal");
+  if(!ev.length){ el.innerHTML = `<div class="empty">Өнөөдөр календарь хоосон.</div>`; return; }
+  const d = new Date(), nowMin = d.getHours()*60 + d.getMinutes();
+  const mins = ev.map(e => /^\d\d:\d\d$/.test(e.time) ? (+e.time.slice(0,2))*60 + (+e.time.slice(3)) : -1);
+  let nextIdx = mins.findIndex(m => m > nowMin);
+  el.innerHTML = ev.map((e, i) => {
+    const m = mins[i], end = i+1 < mins.length && mins[i+1] > m ? mins[i+1] : m + 60;
+    let cls = "", badge = "";
+    if(m >= 0 && nowMin >= m && nowMin < end){ cls = "now"; badge = `<span class="badge">Одоо</span>`; }
+    else if(m >= 0 && nowMin >= end){ cls = "past"; }
+    else if(i === nextIdx){ cls = "next"; const left = m - nowMin; badge = `<span class="badge">${left < 60 ? left + " мин" : Math.floor(left/60) + " цаг " + (left%60) + " мин"}</span>`; }
+    return `<div class="ev ${cls}" style="animation-delay:${firstRender ? .3 + i*.08 : 0}s"><div class="t">${esc(e.time)}</div>
+      <div>${esc(e.title)}${badge}<div class="l">${esc(e.location)}${e.location ? " · " : ""}${esc(e.source)}</div></div></div>`;
+  }).join("");
+}
+
+function renderMetrics(ms){
+  const el = $("met");
+  if(!ms.length){ el.innerHTML = `<div class="empty">Тоон үзүүлэлт тохируулаагүй (School manager-ийн өгөгдлийн сангаас).</div>`; return; }
+  if(el.children.length !== ms.length || el.querySelector(".empty")){
+    el.innerHTML = ms.map((m, i) => `<div class="m" style="animation-delay:${.35 + i*.1}s">
+      ${m.total ? `<svg class="gauge" viewBox="0 0 60 60"><circle class="bgc" cx="30" cy="30" r="25"/><circle class="fg" cx="30" cy="30" r="25"
+        stroke-dasharray="157.1" stroke-dashoffset="157.1"/><text x="30" y="30" class="pct">0%</text></svg>` : ""}
+      <div><div class="v"><span class="num">0</span>${m.total ? ` <small>/ ${m.total}</small>` : (m.unit ? ` <small>${esc(m.unit)}</small>` : "")}</div>
+      <div class="lb">${esc(m.label)}</div></div></div>`).join("");
+  }
+  [...el.children].forEach((card, i) => {
+    const m = ms[i], v = typeof m.value === "number" ? m.value : (+m.value || m.value);
+    setTimeout(() => {
+      countUp(card.querySelector(".num"), v);
+      if(m.total){ const pct = Math.min(100, Math.round(100*v/m.total));
+        card.querySelector(".fg").style.strokeDashoffset = 157.1 * (1 - pct/100); countUp(card.querySelector(".pct"), pct);
+        setTimeout(() => card.querySelector(".pct").textContent = pct + "%", 1400); }
+    }, firstRender ? 700 + i*120 : 0);
+  });
+}
+
+function render(){
+  $("hello").innerHTML = `${esc(S.greeting)}, ${esc(S.owner)}` + (S.demo ? `<span class="demo">ДЕМО</span>` : "");
+  $("sub").textContent = S.last_run ? `Сүүлд шалгасан ${when(S.last_run)} · Бүх систем хэвийн` : "Эхний шалгалт хийж байна...";
+  if(S.briefing && S.briefing !== lastBrief){ lastBrief = S.briefing; setTimeout(() => typeBrief(S.briefing), firstRender ? 600 : 0); }
+  renderCalendar(S.calendar);
+  renderMetrics(S.metrics);
+  renderMacros(); renderFiles(); renderFolders(); renderTasks(); renderHealthDot();
+  if(TAB === "work") renderDayReport();
+  reconcile($("urgent"), S.urgent, itemCard, "Яаралтай зүйл алга. 👌");
+  reconcile($("pending"), S.pending, itemCard, "Хүлээгдэж буй зүйл алга.");
+  reconcile($("auto"), S.auto, autoCard, "Одоохондоо хоосон.");
+  setCount($("nU"), S.urgent.length); setCount($("nP"), S.pending.length); setCount($("nA"), S.auto.length);
+  $("errs").innerHTML = (S.errors||[]).map(e => `⚠ ${esc(e)}`).join("<br>");
+  firstRender = false;
+}
+
+/* ================= School manager ================= */
+let MACROS = [];
+function renderMacros(){
+  const card = document.querySelector(".card.sm");
+  card.style.display = S.sm ? "" : "none";
+  if(!S.sm) return;
+  const sig = JSON.stringify(S.macros.map(m => m.name));
+  if($("chips").dataset.sig !== sig){
+    $("chips").dataset.sig = sig; MACROS = S.macros;
+    $("chips").innerHTML = MACROS.map((m, i) => `<button class="chip" data-m="${i}" title="${esc(m.description)}">▶ ${esc(m.name)}${m.schedule ? `<small>⏱ ${esc(m.schedule)}</small>` : ""}</button>`).join("")
+      || `<div class="empty">Тушаал алга.</div>`;
+  }
+  $("smStatus").innerHTML = S.sm_running ? `<span class="pill on">Нээлттэй</span>`
+    : `<span class="pill off">Хаалттай <button id="smOpen">Нээх</button></span>`;
+  const so = $("smOpen"); if(so) so.onclick = async () => { so.disabled = true; so.textContent = "Асааж байна…";
+    try{ await api("/api/sm/start", {}); toast("School Manager нээгдлээ", "ok"); } catch(e){ toast("Алдаа: " + e.message, "err"); } load(); };
+  $("mlog").innerHTML = (S.macro_log||[]).slice(0,5).map(e =>
+    `<div><span class="${e.ok ? "okc" : "badc"}">${e.ok ? "✓" : "✗"}</span> ${esc(e.time)} · ${esc(e.macro)} <span style="opacity:.7">(${esc(e.who)})</span></div>`).join("");
+}
+function showProposal(m, params = {}, say = ""){
+  const fields = (m.params || []).map(p => {
+    const v = esc(params[p.name] || "");
+    const dl = p.suggest && (S.sm_lists||{})[p.suggest] ? `<datalist id="dl_${esc(p.name)}">${S.sm_lists[p.suggest].map(x => `<option value="${esc(x)}">`).join("")}</datalist>` : "";
+    return `<label>${esc(p.label || p.name)}${p.optional ? '<span class="opt">(заавал биш)</span>' : ""}</label>` + dl + (p.choices
+      ? `<select data-p="${esc(p.name)}"><option value="">— сонгох —</option>${p.choices.map(c => `<option ${c === params[p.name] ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>`
+      : `<input data-p="${esc(p.name)}" value="${v}" ${dl ? `list="dl_${esc(p.name)}"` : ""} autocomplete="off">`);
+  }).join("");
+  $("proposal").innerHTML = `<div class="prop"><div class="say"><b>${esc(m.name)}</b>${say ? " — " + esc(say) : (m.description ? " — " + esc(m.description) : "")}</div>
+    ${fields}<div class="acts"><button class="pri" id="runGo">▶ Ажиллуулах</button><button id="runNo">Болих</button></div></div>`;
+  $("runNo").onclick = () => $("proposal").innerHTML = "";
+  $("runGo").onclick = () => {
+    const params = {}; $("proposal").querySelectorAll("[data-p]").forEach(el => params[el.dataset.p] = el.value.trim());
+    const miss = (m.params||[]).find(p => !p.optional && !params[p.name]);
+    if(miss){ toast(`"${miss.label || miss.name}" хоосон байна`, "err"); return; }
+    $("proposal").innerHTML = ""; runMacro(m, params);
+  };
+}
+async function runMacro(m, params){
+  document.body.classList.add("busy");
+  $("running").innerHTML = `<div class="run"><b>▶ ${esc(m.name)}</b> → School Manager…<div class="runbar"><i></i></div></div>`;
+  try{
+    const r = await api("/api/macros/run", {name: m.name, params});
+    $("running").innerHTML = `<div class="run ${r.ok ? "ok" : "bad"}"><b>${r.ok ? "✓" : "✗"} ${esc(m.name)}</b>
+      <div class="steps">${(r.log||[]).map((l, i) => `<div style="animation-delay:${i*.12}s">${esc(l)}</div>`).join("")}</div></div>`;
+    toast(r.ok ? `✓ ${m.name} амжилттай` : `✗ ${m.name}: ${(r.log||[])[0]||""}`, r.ok ? "ok" : "err");
+    setTimeout(() => { const el = $("running").firstChild; if(el){ el.classList.add("item","leave"); setTimeout(() => $("running").innerHTML = "", 450); } }, 9000);
+  } catch(e){ toast("Алдаа: " + e.message, "err"); $("running").innerHTML = ""; }
+  finally{ document.body.classList.remove("busy"); load(); }
+}
+async function sendCommand(){
+  const text = $("cmdIn").value.trim(); if(!text) return;
+  $("cmdGo").disabled = true; document.body.classList.add("busy"); $("answer").innerHTML = ""; $("proposal").innerHTML = "";
+  try{
+    const r = await api("/api/command", {text});
+    handlePlan(r, false);
+    $("cmdIn").value = "";
+  } catch(e){ toast("Алдаа: " + e.message, "err"); }
+  finally{ $("cmdGo").disabled = false; document.body.classList.remove("busy"); }
+}
+$("cmdGo").onclick = sendCommand;
+$("cmdIn").addEventListener("keydown", e => { if(e.key === "Enter") sendCommand(); });
+$("chips").addEventListener("click", e => { const b = e.target.closest("[data-m]"); if(b) showProposal(MACROS[+b.dataset.m]); });
+
+/* ================= Files ================= */
+const FICON = n => { const e = (n.split(".").pop()||"").toLowerCase();
+  return {pdf:"📕", doc:"📘", docx:"📘", xls:"📗", xlsx:"📗", csv:"📗", ppt:"📙", pptx:"📙", jpg:"🖼", jpeg:"🖼", png:"🖼", heic:"🖼", zip:"🗜", rar:"🗜", "7z":"🗜", exe:"⚙", msi:"⚙"}[e] || "📄"; };
+function fileSug(f){
+  const opts = S.files.categories.map(c => `<option ${c === f.category ? "selected" : ""}>${esc(c)}</option>`).join("");
+  return `<div class="file" data-f="${f.id}"><div class="ic">${FICON(f.name)}</div>
+    <div class="nm"><div title="${esc(f.src)}">${esc(f.name)}</div><div>${esc(f.origin)} → <select>${opts}</select> · ${esc(f.reason)}</div>
+      <input class="rn" value="${esc(f.newname || f.name)}" title="Шинэ нэр (засаж болно)"></div>
+    <button class="pri" data-fa="approve">✓</button><button data-fa="ignore">✕</button></div>`;
+}
+function fileMoved(f){
+  return `<div class="file" data-f="${f.id}"><div class="ic">${FICON(f.name)}</div>
+    <div class="nm"><div title="${esc(f.dest)}">${esc(f.newname || f.name)}</div><div>${esc(f.origin)} → <span class="cat">${esc(f.category)}</span>${f.newname && f.newname !== f.name ? ` · <span class="newn" title="Хуучин нэр">✎ ${esc(f.name)}</span>` : ""}</div></div>
+    <button data-fa="undo" title="Буцаах">↶</button></div>`;
+}
+function renderFiles(){
+  const st = S.files.stats || {};
+  $("fstat").innerHTML = `<span><b>${st.moved||0}</b>өнөөдөр эмхэлсэн</span><span><b>${S.files.suggested.length}</b>хүлээгдэж буй</span>`;
+  $("approveAll").style.display = S.files.suggested.length ? "" : "none";
+  reconcile($("fsug"), S.files.suggested, fileSug, "Хүлээгдэж буй файл алга.");
+  reconcile($("fmoved"), S.files.moved, fileMoved, "Одоохондоо хоосон.");
+}
+async function fileAct(row, act){
+  const sel = row.querySelector("select");
+  const rn = row.querySelector(".rn");
+  await api(`/api/files/${row.dataset.f}/${act}`, act === "approve" ? {category: sel ? sel.value : null, newname: rn ? rn.value.trim() : null} : {});
+  leave(row, act === "approve" ? "sent" : "leave");
+}
+document.body.addEventListener("click", async ev => {
+  const b = ev.target.closest("button[data-fa]"); if(!b) return;
+  const row = b.closest(".file"); b.disabled = true;
+  try{ await fileAct(row, b.dataset.fa); toast({approve:"🗂 Файл зөөгдлөө", ignore:"Алгаслаа", undo:"↶ Буцаагдлаа"}[b.dataset.fa], "ok"); setTimeout(load, 600); }
+  catch(e){ toast("Алдаа: " + e.message, "err"); b.disabled = false; }
+});
+$("approveAll").onclick = async () => {
+  const rows = [...$("fsug").querySelectorAll(".file[data-key]")];
+  for(const [i, r] of rows.entries()){ try{ await fileAct(r, "approve"); }catch(e){} await new Promise(x => setTimeout(x, 120)); }
+  toast(`🗂 ${rows.length} файл зөөгдлөө`, "ok"); setTimeout(load, 600);
+};
+
+/* ================= Folders ================= */
+let activeJob = null, jobTimer = null, planDrawn = null;
+const MODE = {off:"Шинэ файлыг хянахгүй", suggest:"Шинэ файлыг санал болгох", auto:"Шинэ файлыг автоматаар"};
+const TARGET = {inside:"Тухайн хавтас дотор цэгцлэх", root:"Documents\\Terre руу зөөх"};
+function renderFolders(){
+  const list = S.folders || [];
+  const sig = JSON.stringify(list.map(f => [f.id, f.mode, f.target, f.exists, f.last_job && [f.last_job.id, f.last_job.status]]));
+  if($("flist").dataset.sig === sig) return; $("flist").dataset.sig = sig;
+  $("flist").innerHTML = list.length ? list.map((f, i) => {
+    const j = f.last_job, js = j && j.summary || {};
+    let last = "";
+    if(j && j.status === "applied") last = `Сүүлд ${esc(js.applied_at||"")} цэгцэлсэн · ${js.applied||0} файл <button data-j="${j.id}" data-ja="undo" style="padding:1px 8px;font-size:11px">↶ Бүгдийг буцаах</button>`;
+    else if(j && j.status === "undone") last = "Сүүлийн цэгцлэлтийг буцаасан";
+    else if(j && ["planning","applying","undoing"].includes(j.status)) last = "⏳ ажиллаж байна…";
+    else if(j && j.status === "ready") last = `Төлөвлөгөө бэлэн <button data-j="${j.id}" data-ja="open" style="padding:1px 8px;font-size:11px">Харах</button>`;
+    return `<div class="frow ${f.exists ? "" : "miss"}" style="animation-delay:${i*.06}s" data-fid="${f.id}">
+      <div class="ic">📁</div>
+      <div><div><b>${esc(f.name)}</b>${f.exists ? "" : ' <span class="why">— олдсонгүй</span>'}</div>
+        <div class="p" title="${esc(f.path)}">${esc(f.path)}</div><div class="last">${last}</div></div>
+      <div class="ctl">
+        <select data-fs="target">${Object.entries(TARGET).map(([k,v]) => `<option value="${k}" ${f.target===k?"selected":""}>${v}</option>`).join("")}</select>
+        <select data-fs="mode">${Object.entries(MODE).map(([k,v]) => `<option value="${k}" ${f.mode===k?"selected":""}>${v}</option>`).join("")}</select>
+        <button class="pri" data-fo="plan" ${f.exists ? "" : "disabled"}>✨ Цэгцлэх</button>
+        <button data-fo="remove" title="Холболтыг салгах (файлд хүрэхгүй)">✕</button>
+      </div></div>`;
+  }).join("") : `<div class="empty">Хавтас холбоогүй байна. "＋ Хавтас сонгох" дарж эхэлнэ үү.</div>`;
+}
+async function addFolder(path){
+  if(!path) return;
+  try{ await api("/api/folders", {path}); $("fPath").value = ""; toast("📁 Хавтас холбогдлоо", "ok"); load(); }
+  catch(e){ toast(e.message, "err"); }
+}
+$("fPick").onclick = async () => {
+  $("fPick").disabled = true;
+  try{ const r = await api("/api/folders/pick", {}); if(r.path) await addFolder(r.path); }
+  catch(e){ toast(e.message, "err"); $("fPath").focus(); }
+  finally{ $("fPick").disabled = false; }
+};
+$("fAdd").onclick = () => addFolder($("fPath").value.trim());
+$("fPath").addEventListener("keydown", e => { if(e.key === "Enter") addFolder($("fPath").value.trim()); });
+$("flist").addEventListener("change", async e => {
+  const sel = e.target.closest("select[data-fs]"); if(!sel) return;
+  const fid = sel.closest(".frow").dataset.fid;
+  try{ await api(`/api/folders/${fid}/update`, {[sel.dataset.fs]: sel.value}); toast("Хадгалагдлаа"); }catch(err){ toast(err.message, "err"); }
+});
+document.body.addEventListener("click", async e => {
+  const b = e.target.closest("button[data-fo],button[data-j]"); if(!b) return;
+  if(b.dataset.j){ const jid = +b.dataset.j;
+    if(b.dataset.ja === "undo"){ if(!confirm("Энэ цэгцлэлтийг бүхэлд нь буцааж, файлуудыг анхны газарт нь буцаах уу?")) return;
+      await api(`/api/jobs/${jid}/undo`, {}); }
+    watchJob(jid); return; }
+  const row = b.closest(".frow"), fid = row.dataset.fid;
+  if(b.dataset.fo === "remove"){
+    if(!confirm("Холболтыг салгах уу? (Файлууд хэвээр үлдэнэ)")) return;
+    await api(`/api/folders/${fid}/remove`, {}); leave(row, "leave"); toast("Холболт салгагдлаа"); setTimeout(load, 500);
+  } else if(b.dataset.fo === "plan"){
+    b.disabled = true;
+    try{ const r = await api(`/api/folders/${fid}/plan`, {remove_empty: $("fEmpty").checked}); watchJob(r.job); }
+    catch(err){ toast(err.message, "err"); } finally{ b.disabled = false; }
+  }
+});
+function watchJob(jid){
+  activeJob = jid; planDrawn = null; clearTimeout(jobTimer);
+  $("planBox").scrollIntoView({behavior: RM ? "auto" : "smooth", block: "center"});
+  pollJob();
+}
+async function pollJob(){
+  if(!activeJob) return;
+  let j; try{ j = await api(`/api/jobs/${activeJob}`); }catch(e){ return; }
+  drawJob(j);
+  if(["planning","applying","undoing"].includes(j.status)){ document.body.classList.add("busy"); jobTimer = setTimeout(pollJob, 700); }
+  else document.body.classList.remove("busy");
+}
+function drawJob(j){
+  const box = $("planBox"), s = j.summary || {}, live = j.live || {};
+  if(["planning","applying","undoing"].includes(j.status)){
+    const pct = live.total ? Math.round(100*live.done/live.total) : 0;
+    box.innerHTML = `<div class="planp"><h3>${{planning:"🔍 Хавтсыг судалж байна", applying:"🚚 Цэгцэлж байна", undoing:"↶ Буцааж байна"}[j.status]}</h3>
+      <div class="stage">${esc(live.stage || "…")} ${live.total ? `· ${live.done} / ${live.total}` : ""}</div>
+      <div class="pbar ${live.total ? "" : "ind"}"><i style="width:${pct}%"></i></div></div>`;
+    planDrawn = null; return;
+  }
+  if(j.status === "failed"){ box.innerHTML = `<div class="planp"><h3>✗ Алдаа</h3><div class="warn">${esc(s.error||"")}</div><button onclick="$('planBox').innerHTML=''">Хаах</button></div>`; return; }
+  if(planDrawn === j.id + j.status) return;
+  planDrawn = j.id + j.status;
+  if(j.status === "ready"){
+    const cats = Object.entries(s.by_category || {}).sort((a,b) => b[1]-a[1]), mx = Math.max(1, ...cats.map(c => c[1]));
+    const items = j.items || [];
+    box.innerHTML = `<div class="planp"><h3>✨ Цэгцлэх төлөвлөгөө — ${esc(j.path)}</h3>
+      <div class="stage">Одоогоор юу ч хөдлөөгүй. Шалгаад "Хэрэгжүүлэх" дарна уу. Ангиллыг файл бүрээр сольж, ✕-ээр алгасаж болно.</div>
+      <div class="big4"><div><b class="cu" data-to="${s.scanned||0}">0</b><span>файл шалгасан</span></div>
+        <div><b class="cu" data-to="${s.moves||0}">0</b><span>ангилж зөөнө</span></div>
+        <div><b class="cu" data-to="${s.dups||0}">0</b><span>давхардсан (${s.dup_mb||0} MB) → _Давхардсан</span></div>
+        <div><b class="cu" data-to="${s.rmdirs||0}">0</b><span>хоосон хавтас устгана</span></div></div>
+      ${cats.map(([c,n]) => `<div class="cbar"><span>${esc(c)}</span><div class="tr"><i data-w="${Math.round(100*n/mx)}"></i></div><span class="n">${n}</span></div>`).join("")}
+      ${(s.projects_skipped||[]).length ? `<div class="warn">⚠ Програмын код агуулсан ${s.projects_skipped.length} хавтсанд хүрэхгүй: ${esc(s.projects_skipped.slice(0,5).join(", "))}</div>` : ""}
+      ${s.truncated ? `<div class="warn">⚠ Хэт олон файл тул эхний 5000-г л хамруулав. Дараа нь дахин цэгцэлнэ үү.</div>` : ""}
+      ${s.renames ? `<div class="stage">✎ ${s.renames} файлын утгагүй нэрийг (scan0001, IMG_1234…) агуулгаар нь сольно.</div>` : ""}
+      <details><summary>Файл бүрээр харах (${items.length})</summary><div class="pitems">${items.map(it => `<div class="pit ${it.status==="skipped"?"sk":""}" data-pi="${it.id}">
+        <span>${it.kind==="dup" ? "♊" : it.kind==="rmdir" ? "🗑" : FICON(it.src)}</span>
+        <span class="s" title="${esc(it.src)}">${esc(it.src.replace(j.path, "…"))}</span>
+        ${it.kind==="move" ? `<input class="nn" value="${esc(it.dest.split(/[\\/]/).pop())}" title="Шинэ нэр (засаж болно)">` : "<span></span>"}
+        ${it.kind==="move" ? `<select>${S.files.categories.map(c => `<option ${c===it.category?"selected":""}>${esc(c)}</option>`).join("")}</select>` : `<span class="why">${esc(it.kind==="dup" ? "давхардсан" : "хоосон хавтас")}</span>`}
+        <button data-pa="skip" title="Алгасах">✕</button></div>`).join("")}</div></details>
+      <div class="acts" style="margin-top:12px"><button class="pri" id="jApply">✓ Хэрэгжүүлэх</button><button id="jCancel">Болих</button></div></div>`;
+    requestAnimationFrame(() => {
+      box.querySelectorAll(".cu").forEach(el => countUp(el, +el.dataset.to, 900));
+      box.querySelectorAll(".tr i").forEach((el, i) => setTimeout(() => el.style.width = el.dataset.w + "%", 120 + i*90));
+    });
+    $("jApply").onclick = async () => { await api(`/api/jobs/${j.id}/apply`, {}); pollJob(); };
+    $("jCancel").onclick = async () => { await api(`/api/jobs/${j.id}/cancel`, {}); box.innerHTML = ""; activeJob = null; load(); };
+  } else if(j.status === "applied"){
+    box.innerHTML = `<div class="planp"><div class="done-burst"></div><h3>✓ Цэгцэллээ!</h3>
+      <div class="stage">${s.applied||0} үйлдэл амжилттай${s.errors ? `, ${s.errors} алдаа (файл нээлттэй байсан байж магадгүй)` : ""}. Буцаах бол "↶ Бүгдийг буцаах".</div>
+      <div class="acts"><button data-j="${j.id}" data-ja="undo">↶ Бүгдийг буцаах</button><button onclick="$('planBox').innerHTML=''">Хаах</button></div></div>`;
+    toast("✓ Хавтас цэгцлэгдлээ", "ok"); load();
+  } else if(j.status === "undone"){
+    box.innerHTML = `<div class="planp"><h3>↶ Буцаагдлаа</h3><div class="stage">Бүх файл анхны газартаа очлоо.</div>
+      <button onclick="$('planBox').innerHTML=''">Хаах</button></div>`;
+    toast("↶ Буцаагдлаа", "ok"); load();
+  } else { box.innerHTML = ""; }
+}
+$("planBox").addEventListener("change", async e => {
+  const nn = e.target.closest(".pit .nn");
+  if(nn){ try{ await api(`/api/plan/${nn.closest(".pit").dataset.pi}/rename`, {newname: nn.value}); toast("✎ Нэр хадгалагдлаа"); }catch(err){ toast(err.message, "err"); } return; }
+  const sel = e.target.closest(".pit select"); if(!sel) return;
+  try{ await api(`/api/plan/${sel.closest(".pit").dataset.pi}/category`, {category: sel.value}); }catch(err){ toast(err.message, "err"); }
+});
+$("planBox").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-pa]"); if(!b) return;
+  const row = b.closest(".pit"); await api(`/api/plan/${row.dataset.pi}/skip`, {}); row.classList.add("sk");
+});
+
+/* ================= Tabs ================= */
+let TAB = (location.hash || "#home").slice(1);
+function showTab(t){
+  if(!["home","work","files","system"].includes(t)) t = "home";
+  TAB = t;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll("main [data-tab]").forEach(el => {
+    const show = el.dataset.tab === t;
+    if(show && el.classList.contains("hidden")){ el.classList.remove("hidden"); el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; }
+    else if(!show) el.classList.add("hidden");
+  });
+  if(location.hash !== "#" + t) history.replaceState(null, "", "#" + t);
+  if(t === "system") loadSystem();
+  if(t === "work") renderDayReport();
+}
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); });
+window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+
+/* ================= Tasks ================= */
+function dueLabel(t){
+  if(t.days_left === null || t.days_left === undefined) return "";
+  if(t.days_left < 0) return `${-t.days_left} хоног хэтэрсэн`;
+  if(t.days_left === 0) return "Өнөөдөр"; if(t.days_left === 1) return "Маргааш";
+  return `${t.days_left} хоногийн дараа`;
+}
+function taskCard(t){
+  const cls = t.kind === "meeting" ? "meet" : t.kind === "followup" ? "fu" : (t.days_left < 0 ? "over" : t.days_left === 0 ? "today" : "");
+  const m = t.track || {};
+  const extra = t.kind === "meeting" ? `<button class="pri" data-ta="calendar">📅 Календарьт нэмэх</button>` : "";
+  return `<div class="task ${cls}" data-tid="${t.id}">
+    ${t.kind === "meeting" ? "<span>📅</span>" : `<input type="checkbox" data-ta="done" title="Хийсэн">`}
+    <div><div class="t1">${esc(t.title)}</div><div class="t2">${t.kind === "followup" ? "⏳ хариу хүлээж байна · " : ""}${esc(t.source_label || "")}${t.kind === "meeting" ? ` · ${esc(m.date||"")} ${esc(m.time||"")} ${esc(m.location||"")}` : ""}</div></div>
+    <div style="display:flex;gap:6px;align-items:center">${t.due ? `<span class="due">${dueLabel(t)}</span>` : ""}${extra}<button data-ta="dismiss" title="Хаах">✕</button></div></div>`;
+}
+function renderTasks(){
+  const open = S.tasks.open;
+  reconcile($("tlist"), open, taskCard, "Нээлттэй даалгавар алга. 👌");
+  $("tdone").innerHTML = S.tasks.done.slice(0,5).map(t => `<div class="lex">✓ ${esc(t.title)}</div>`).join("") || `<div class="empty">—</div>`;
+  setCount($("nT"), open.length);
+  const urgentWork = open.filter(t => t.days_left !== null && t.days_left !== undefined && t.days_left <= 0 && t.kind !== "meeting").length;
+  $("tbWork").textContent = urgentWork || "";
+}
+$("tlist").addEventListener("click", async e => {
+  const el = e.target.closest("[data-ta]"); if(!el) return;
+  const row = el.closest(".task"), tid = row.dataset.tid, a = el.dataset.ta;
+  try{
+    if(a === "calendar"){
+      el.disabled = true; await api(`/api/tasks/${tid}/calendar`, {}); leave(row, "sent"); toast("📅 Календарьт нэмэгдлээ", "ok");
+    } else { await api(`/api/tasks/${tid}/${a}`, {}); leave(row, a === "done" ? "sent" : "leave"); toast(a === "done" ? "✓ Хийсэн" : "Хаагдлаа", "ok"); }
+    setTimeout(load, 700);
+  }catch(err){ toast(err.message, "err"); el.disabled = false; }
+});
+$("tAdd").onclick = async () => {
+  const title = $("tTitle").value.trim(); if(!title) return;
+  await api("/api/tasks", {title, due: $("tDue").value}); $("tTitle").value = ""; $("tDue").value = ""; toast("✅ Нэмэгдлээ", "ok"); load();
+};
+$("tTitle").addEventListener("keydown", e => { if(e.key === "Enter") $("tAdd").click(); });
+
+/* ================= Day report ================= */
+const NOTE_CATS = ["бүртгэл","хурал цуглаан","уулзалт","зөвлөн туслах","цахим систем","сургалт","хөтөлбөр хэрэгжүүлэх","өөрийн хөгжил","тодорхойлолт","шилжилт хөдөлгөөн","амжилт","бусад"];
+let drSig = "";
+async function renderDayReport(force){
+  let r; try{ r = await api("/api/dayreport"); }catch(e){ return; }
+  const sig = JSON.stringify(r);
+  if(sig === drSig && !force) return; drSig = sig;
+  const box = $("drBox");
+  if(!r.items){
+    box.innerHTML = `<div class="stage" style="font-size:13px;color:var(--mut);margin-bottom:10px">Өдөр бүр ${esc("17:00")}-д Terre өнөөдрийн мэйл, хурал, хийсэн ажлаас ажлын тэмдэглэлийн ноорог бэлдэнэ. Та сонгосныг нь School Manager-т оруулна.</div>
+      <button class="pri" id="drBuild">✨ Одоо бэлдэх</button>`;
+    $("drBuild").onclick = buildReport; return;
+  }
+  const pend = r.items.filter(i => i.status === "pending").length;
+  box.innerHTML = `<div class="lst"><span><b>${r.stats.events}</b>хурал</span><span><b>${r.stats.sent}</b>илгээсэн хариу</span><span><b>${r.stats.activities}</b>үйлдэл</span><span style="margin-left:auto">${esc(r.date)} ${esc(r.created)}</span></div>
+    ${r.items.map((it, i) => `<div class="dri ${it.status}" data-i="${it.id}" style="animation-delay:${i*.06}s">
+      <input type="checkbox" ${it.status === "pending" ? "checked" : "disabled"}>
+      <div><input class="ttl" value="${esc(it.title)}" ${it.status !== "pending" ? "disabled" : ""}>
+        <div class="meta2"><select ${it.status !== "pending" ? "disabled" : ""}>${NOTE_CATS.map(c => `<option ${c===it.category?"selected":""}>${c}</option>`).join("")}</select>
+          <input class="hrs" type="number" step="0.5" min="0" value="${it.hours}" ${it.status !== "pending" ? "disabled" : ""}> цаг
+          ${it.time ? `· ${esc(it.time)}` : ""} ${it.result ? `· ${esc(it.result)}` : ""} ${it.status === "added" ? "· ✓ School Manager-т орсон" : ""}</div></div></div>`).join("") || `<div class="empty">Өнөөдөр бүртгэх зүйл олдсонгүй.</div>`}
+    <div class="acts" style="margin-top:10px">${pend ? `<button class="pri" id="drAdd">✓ Сонгосныг School Manager-т оруулах</button>` : ""}<button id="drRe">↻ Дахин бэлдэх</button></div>`;
+  if($("drAdd")) $("drAdd").onclick = async () => {
+    const ids = [], edits = {};
+    box.querySelectorAll(".dri").forEach(d => { const cb = d.querySelector("input[type=checkbox]"); if(cb.checked && !cb.disabled){ const id = +d.dataset.i; ids.push(id);
+      edits[id] = {title: d.querySelector(".ttl").value, category: d.querySelector("select").value, hours: +d.querySelector(".hrs").value}; } });
+    if(!ids.length) return toast("Юу ч сонгоогүй байна", "err");
+    try{ document.body.classList.add("busy"); const res = await api("/api/dayreport/add", {ids, edits}); toast(`✓ ${res.added.length} тэмдэглэл School Manager-т орлоо`, "ok"); renderDayReport(true); }
+    catch(e){ toast(e.message, "err"); } finally{ document.body.classList.remove("busy"); }
+  };
+  $("drRe").onclick = buildReport;
+}
+async function buildReport(){
+  $("drBox").innerHTML = `<div class="planp"><h3>✨ Өнөөдрийн ажлыг нэгтгэж байна…</h3><div class="pbar ind"><i></i></div></div>`;
+  document.body.classList.add("busy");
+  try{ await api("/api/dayreport/build", {}); }catch(e){ toast(e.message, "err"); }
+  document.body.classList.remove("busy"); renderDayReport(true);
+}
+
+/* ================= Search ================= */
+function openFile(path, reveal){ api("/api/open", {path, reveal: !!reveal}).catch(e => toast(e.message, "err")); }
+function showResults(list){
+  $("sRes").innerHTML = list.map((r, i) => `<div class="sres" style="animation-delay:${i*.04}s"><div>${FICON(r.name)}</div>
+    <div><div><b>${esc(r.name)}</b> <span class="why">${esc(r.folder)} · ${esc(r.date)}</span></div>
+    <div class="sn">${esc(r.snippet).replace(/\[/g,"<mark>").replace(/\]/g,"</mark>")}</div></div>
+    <div style="display:flex;gap:4px"><button data-open="${esc(r.path)}">Нээх</button><button data-reveal="${esc(r.path)}" title="Explorer-т харуулах">📂</button></div></div>`).join("")
+    || `<div class="empty">Олдсонгүй.</div>`;
+}
+$("sRes").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.open) openFile(b.dataset.open); if(b.dataset.reveal) openFile(b.dataset.reveal, true); });
+$("sGo").onclick = async () => { const q = $("sQ").value.trim(); if(!q) return; $("sAns").innerHTML = "";
+  const r = await api("/api/search?q=" + encodeURIComponent(q)); showResults(r.results);
+  $("sStat").textContent = `${r.stats.indexed} файл индекслэгдсэн · токен зарцуулаагүй`; };
+$("sAsk").onclick = async () => { const q = $("sQ").value.trim(); if(!q) return;
+  $("sAns").innerHTML = `<div class="answer">Уншиж байна…</div>`; document.body.classList.add("busy");
+  try{ const r = await api("/api/ask", {text: q}); typeInto($("sAns").firstChild, r.answer); showResults(r.sources); }
+  catch(e){ toast(e.message, "err"); } finally{ document.body.classList.remove("busy"); } };
+$("sQ").addEventListener("keydown", e => { if(e.key === "Enter") (e.ctrlKey ? $("sAsk") : $("sGo")).click(); });
+function typeInto(el, t){ let i = 0; t = t || ""; (function step(){ el.textContent = t.slice(0, i += 3); if(i < t.length) setTimeout(step, 12); })(); }
+
+/* ================= System: health, journal, learn ================= */
+async function loadSystem(){
+  try{
+    const [h, j, l] = await Promise.all([api("/api/health"), api("/api/journal?limit=120"), api("/api/learn")]);
+    $("hlist").innerHTML = h.items.map((r, i) => `<div class="hrow ${r.status}" style="animation-delay:${i*.04}s"><div class="d"></div><div><b>${esc(r.name)}</b>${r.last_ok ? `<div class="hm">✓ ${esc(r.last_ok)}</div>` : ""}</div>
+      <div><div class="hm">${esc(r.msg || (r.status === "ok" ? "Хэвийн" : ""))}</div>${r.hint ? `<div class="hint">→ ${esc(r.hint)}</div>` : ""}</div></div>`).join("")
+      + (h.desktop.hotkeys.length ? `<div class="why" style="margin-top:8px">Товчлол: ${h.desktop.hotkeys.map(esc).join(", ")}</div>` : "")
+      + (h.desktop.hotkey_errors.length ? `<div class="warn">Товчлол бүртгэгдсэнгүй: ${h.desktop.hotkey_errors.map(esc).join(", ")}</div>` : "")
+      + `<div class="why" style="margin-top:6px">Өгөгдөл: ${esc(h.home)}</div>`;
+    let day = "";
+    $("jlist").innerHTML = j.items.map((r, i) => { const d = r.ts.slice(0,10), hdr = d !== day ? `<div class="jday">${d}</div>` : ""; day = d;
+      return hdr + `<div class="jrow ${r.status === "undone" ? "undone" : ""}" style="animation-delay:${Math.min(i,20)*.02}s"><span>${esc(r.icon)}</span><span class="tm">${r.ts.slice(11,16)}</span>
+        <span title="${esc(r.detail || "")}">${esc(r.title)} <span class="who">· ${esc(r.who)}</span></span>
+        <span>${r.can_undo ? `<button data-undo="${r.id}">↶ Буцаах</button>` : ""}</span></div>`; }).join("") || `<div class="empty">Одоохондоо хоосон.</div>`;
+    const c = l.counts || {};
+    $("lbox").innerHTML = `<div class="lst"><span><b>${c.triage||0}</b>мэйлийн ангиллын засвар</span><span><b>${c.file||0}</b>файлын ангиллын засвар</span><span><b>${c.draft||0}</b>засаж илгээсэн ноорог</span></div>
+      <div class="lgrid"><div><div class="fsub"><span>Таны бичих хэв маяг (ноорогт ашиглана, засаж болно)</span></div>
+        <textarea id="styleTa" placeholder="5 ноорог засаж илгээсний дараа Terre өөрөө бөглөнө. Эсвэл одоо өөрөө бичиж болно: - Мэндчилгээг «Сайн байна уу, ___ багшаа» гэж эхэлнэ ...">${esc(l.style_profile || "")}</textarea>
+        <div class="acts"><button class="pri" id="styleSave">Хадгалах</button><button id="styleRe">✨ Жишээнээс дахин гаргах</button></div></div>
+        <div><div class="fsub"><span>Сүүлийн засварууд</span><button id="learnReset" style="padding:2px 9px;font-size:11px">Бүгдийг мартуулах</button></div>
+        ${(l.recent||[]).map(e => `<div class="lex">${{triage:"✉",file:"🗂",draft:"✎"}[e.kind]} ${esc(e.input)} → <b>${esc(e.output.slice(0,60))}</b></div>`).join("") || `<div class="empty">Та ангилал эсвэл ноорог засах бүрт энд нэмэгдэнэ.</div>`}</div></div>`;
+    $("styleSave").onclick = async () => { await api("/api/learn/style", {text: $("styleTa").value}); toast("🧠 Хадгалагдлаа", "ok"); };
+    $("styleRe").onclick = async () => { try{ const r = await api("/api/learn/rebuild", {}); $("styleTa").value = r.style_profile || ""; toast("🧠 Шинэчлэгдлээ", "ok"); }catch(e){ toast(e.message, "err"); } };
+    $("learnReset").onclick = async () => { if(!confirm("Terre-ийн сурсан бүх засвар, хэв маягийг устгах уу?")) return; await api("/api/learn/reset", {}); loadSystem(); };
+  }catch(e){}
+  $("demoBtn").textContent = S && S.demo ? "▶ Демо горимоос гарах" : "Демо горимд шилжих";
+}
+$("jlist").addEventListener("click", async e => { const b = e.target.closest("[data-undo]"); if(!b) return;
+  if(!confirm("Энэ үйлдлийг буцаах уу?")) return; b.disabled = true;
+  try{ await api(`/api/journal/${b.dataset.undo}/undo`, {}); toast("↶ Буцаагдлаа", "ok"); loadSystem(); load(); }catch(err){ toast(err.message, "err"); b.disabled = false; } });
+document.body.addEventListener("click", async e => { const b = e.target.closest("[data-sys]"); if(!b) return;
+  if(b.dataset.sys === "restart" && !confirm("Terre System-ийг дахин асаах уу?")) return;
+  try{ await api(`/api/system/${b.dataset.sys}`, {}); if(b.dataset.sys === "restart"){ toast("Дахин асааж байна…"); setTimeout(() => location.reload(), 6000); } }catch(err){ toast(err.message, "err"); } });
+$("demoBtn").onclick = async () => { const on = !S.demo;
+  if(!confirm(on ? "Демо горимд шилжих үү?" : "Демо горимоос гарч жинхэнэ холболтуудаар ажиллах уу? (config.yaml-д холболтуудаа тохируулсан байх ёстой)")) return;
+  await api("/api/settings/demo", {on}); await api("/api/system/restart", {}); toast("Дахин асааж байна…"); setTimeout(() => location.reload(), 7000); };
+function renderHealthDot(){ const h = S.health || {}; $("hdot").className = "hdot " + (h.overall === "error" ? "error" : h.overall === "warn" ? "warn" : ""); }
+
+/* ================= Voice (push-to-talk) ================= */
+const VOICE = {rec: null};
+async function startRec(onStop){
+  const stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true}});
+  const ctx = new (window.AudioContext || window.webkitAudioContext)(); const src = ctx.createMediaStreamSource(stream);
+  const proc = ctx.createScriptProcessor(4096, 1, 1); const chunks = []; let spoke = false, silentSince = 0; const t0 = performance.now();
+  proc.onaudioprocess = e => { const d = e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d));
+    let sum = 0; for(let i = 0; i < d.length; i += 8) sum += d[i]*d[i]; const rms = Math.sqrt(sum / (d.length/8));
+    document.querySelectorAll(".reactor").forEach(r => r.style.setProperty("--amp", Math.min(1, rms*6).toFixed(3)));
+    const now = performance.now();
+    if(rms > 0.02){ spoke = true; silentSince = 0; } else if(spoke && !silentSince) silentSince = now;
+    if((spoke && silentSince && now - silentSince > 1500) || now - t0 > 15000) stop(); };
+  src.connect(proc); proc.connect(ctx.destination);
+  let stopped = false;
+  async function stop(){ if(stopped) return; stopped = true; proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop());
+    const wav = encodeWav(chunks, ctx.sampleRate); await ctx.close(); onStop(wav); }
+  return {stop};
+}
+function encodeWav(chunks, rate, target = 16000){
+  const len = chunks.reduce((a, c) => a + c.length, 0), all = new Float32Array(len); let o = 0; for(const c of chunks){ all.set(c, o); o += c.length; }
+  const ratio = rate / target, n = Math.floor(len / ratio), pcm = new Int16Array(n);
+  for(let i = 0; i < n; i++){ const v = Math.max(-1, Math.min(1, all[Math.floor(i*ratio)])); pcm[i] = v < 0 ? v*0x8000 : v*0x7FFF; }
+  const buf = new ArrayBuffer(44 + pcm.length*2), dv = new DataView(buf), w = (p, s) => [...s].forEach((ch, i) => dv.setUint8(p+i, ch.charCodeAt(0)));
+  w(0,"RIFF"); dv.setUint32(4, 36 + pcm.length*2, true); w(8,"WAVE"); w(12,"fmt "); dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true);
+  dv.setUint32(24,target,true); dv.setUint32(28,target*2,true); dv.setUint16(32,2,true); dv.setUint16(34,16,true); w(36,"data"); dv.setUint32(40,pcm.length*2,true);
+  new Int16Array(buf, 44).set(pcm); return new Blob([buf], {type: "audio/wav"});
+}
+async function voiceToggle(){
+  if(VOICE.rec){ VOICE.rec.stop(); return; }
+  if(S && !S.has_gemini){ toast("Дуугаар командлахад Gemini API түлхүүр хэрэгтэй", "err"); return; }
+  try{
+    $("mic").classList.add("rec"); serverSpeaking = false;
+    VOICE.rec = await startRec(async wav => {
+      VOICE.rec = null; $("mic").classList.remove("rec"); document.body.classList.add("busy");
+      try{
+        const r = await fetch("/api/voice", {method: "POST", headers: {"Content-Type": "audio/wav"}, body: wav});
+        const d = await r.json(); if(!r.ok) throw new Error(d.detail || "алдаа");
+        if(d.text) $("cmdIn").value = d.text;
+        if(TAB !== "work") showTab("work");
+        handlePlan(d.plan, true);
+      }catch(e){ toast(e.message, "err"); } finally{ document.body.classList.remove("busy"); }
+    });
+  }catch(e){ $("mic").classList.remove("rec"); VOICE.rec = null; toast("Микрофон нээгдсэнгүй: " + e.message, "err"); }
+}
+$("mic").onclick = voiceToggle;
+function speakText(t){ if(!t) return; setupAnalyser(); const a = $("audio"); a.src = "/api/tts?text=" + encodeURIComponent(t.slice(0,500)); a.play().catch(()=>{}); }
+function handlePlan(r, speak){
+  $("answer").innerHTML = ""; $("proposal").innerHTML = "";
+  if(r.type === "macro"){ const m = MACROS.find(x => x.name === r.macro); if(m){ showProposal(m, r.params || {}, r.say); if(speak) speakText(r.say); } return; }
+  $("answer").innerHTML = `<div class="answer"></div>`; typeInto($("answer").firstChild, r.say || "");
+  if(r.type === "files" && r.sources){ $("answer").insertAdjacentHTML("beforeend", r.sources.slice(0,5).map(s => `<div class="lex">${FICON(s.name)} <a href="#" data-open="${esc(s.path)}" style="color:var(--cyan)">${esc(s.name)}</a> <span class="why">${esc(s.folder)}</span></div>`).join("")); }
+  if(speak) speakText(r.say);
+}
+$("answer").addEventListener("click", e => { const a = e.target.closest("[data-open]"); if(a){ e.preventDefault(); openFile(a.dataset.open); } });
+
+async function load(){
+  try{ S = await api("/api/state"); render(); }
+  catch(e){ $("sub").textContent = "Сервертэй холбогдсонгүй"; }
+}
+
+/* ================= Actions ================= */
+document.body.addEventListener("click", async ev => {
+  const b = ev.target.closest("button[data-a]"); if(!b) return;
+  const card = b.closest(".item"), id = card.dataset.id, a = b.dataset.a, ta = card.querySelector("textarea");
+  try{
+    b.disabled = true;
+    if(a === "send"){
+      if(!confirm("Энэ хариуг илгээх үү?\n\n" + ta.value.slice(0,300))) return;
+      await api(`/api/items/${id}/send`, {body: ta.value});
+      leave(card, "sent"); toast("✓ Хариу илгээгдлээ", "ok");
+    } else if(a === "redraft"){
+      const ins = prompt("Яаж засах вэ? (жишээ нь: илүү товч, англиар, мягмар гарагт уулзъя гэж нэм)"); if(!ins) return;
+      ta.classList.add("thinking");
+      try{ const r = await api(`/api/items/${id}/redraft`, {instruction: ins}); ta.value = r.draft; toast("✎ Ноорог шинэчлэгдлээ"); }
+      finally{ ta.classList.remove("thinking"); }
+      return;
+    } else if(a === "copy"){
+      await navigator.clipboard.writeText(ta.value); toast("📋 Хуулагдлаа"); return;
+    } else {
+      await api(`/api/items/${id}/${a}`, {});   // apply | dismiss | promote
+      leave(card);
+      toast({apply:"✓ Шийдэгдлээ", dismiss:"Алгаслаа", promote:"Зөвшөөрлийн жагсаалт руу шилжлээ"}[a]);
+    }
+    setTimeout(load, 500);
+  } catch(e){ toast("Алдаа: " + e.message, "err"); }
+  finally{ b.disabled = false; }
+});
+
+$("refresh").onclick = async () => {
+  document.body.classList.add("loading"); $("refresh").disabled = true;
+  try{ await api("/api/refresh", {}); await load(); toast("↻ Шинэчлэгдлээ"); }
+  catch(e){ toast("Алдаа: " + e.message, "err"); }
+  finally{ document.body.classList.remove("loading"); $("refresh").disabled = false; }
+};
+$("play").onclick = () => {
+  setupAnalyser(); if(actx && actx.state === "suspended") actx.resume();
+  const a = $("audio"); a.src = "/api/audio?t=" + Date.now();
+  a.play().catch(() => toast("Дуу хараахан бэлэн болоогүй байна.", "err"));
+};
+
+setInterval(async () => { try{ serverSpeaking = (await (await fetch("/api/speaking")).json()).on; }catch(e){} }, 800);
+showTab(TAB);
+load().then(() => { if(TAB === "work") renderDayReport(true); });
+setInterval(load, 20000);
+</script>
+</body>
+</html>

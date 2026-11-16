@@ -1,0 +1,35 @@
+"""Монгол хэлээр ярих: Microsoft Edge-ийн үнэгүй TTS (mn-MN хоолой) -> mp3 -> тоглуулах."""
+import asyncio
+import logging
+
+from .config import CFG, DATA
+
+log = logging.getLogger("terre.voice")
+BRIEFING_MP3 = DATA / "briefing.mp3"
+ALERT_MP3 = DATA / "alert.mp3"
+SPEAKING = {"on": False, "text": ""}   # самбар дээрх реакторын анимацад
+
+
+def enabled():
+    return bool(CFG.get("voice", {}).get("enabled"))
+
+
+async def synth(text, path):
+    import edge_tts
+    voice = CFG.get("voice", {}).get("name", "mn-MN-YesuiNeural")
+    await edge_tts.Communicate(text, voice).save(str(path))
+
+
+async def speak(text, path=BRIEFING_MP3, play=True):
+    if not enabled() or not text:
+        return
+    try:
+        await synth(text, path)
+        if play:
+            from playsound3 import playsound
+            SPEAKING.update(on=True, text=text)
+            await asyncio.to_thread(playsound, str(path))
+    except Exception as e:
+        log.warning("Дуу гаргаж чадсангүй: %s", e)
+    finally:
+        SPEAKING["on"] = False

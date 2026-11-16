@@ -1,0 +1,674 @@
+From 5216745cc9db3325c2ba2c013f11514e4fcd0ead Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 15 Nov 2026 10:49:25 +0800
+Subject: [PATCH 1/2] =?UTF-8?q?Terre=20Bridge:=20Terre=20System-=D1=82?=
+ =?UTF-8?q?=D1=8D=D0=B9=20=D1=85=D0=BE=D0=BB=D0=B1=D0=BE=D1=85=20=D0=B4?=
+ =?UTF-8?q?=D0=BE=D1=82=D0=BE=D0=BE=D0=B4=20=D1=85=D0=BE=D0=BB=D0=B1=D0=BE?=
+ =?UTF-8?q?=D0=BB=D1=82?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- terre-bridge.cjs: зөвхөн 127.0.0.1, асах бүрт шинэ token, %APPDATA%\TerreBridge-д мэдээлэл бичнэ
+- src/utils/terreBridge.ts: ирц, тэмдэглэл, төлөвлөгөө, экспорт, нөөцлөлийг React state-ээр гүйцэтгэнэ
+- Лиценз идэвхжээгүй үед тушаал хүлээж авахгүй; лицензийн логикт хүрээгүй
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01NeTSNNVJmAbsz4f5scct3n
+---
+ electron.cjs             |   7 +
+ package.json             |   1 +
+ src/App.tsx              |  11 +-
+ src/utils/terreBridge.ts | 338 +++++++++++++++++++++++++++++++++++++++
+ terre-bridge.cjs         | 144 +++++++++++++++++
+ 5 files changed, 500 insertions(+), 1 deletion(-)
+ create mode 100644 src/utils/terreBridge.ts
+ create mode 100644 terre-bridge.cjs
+
+diff --git a/electron.cjs b/electron.cjs
+index a748d7b..a610497 100644
+--- a/electron.cjs
++++ b/electron.cjs
+@@ -233,6 +233,13 @@ function createWindow() {
+ app.whenReady().then(() => {
+   createWindow();
+ 
++  // Terre System холболт (зөвхөн 127.0.0.1, token-той). Алдаа гарвал програм хэвийн ажиллана.
++  try {
++    require("./terre-bridge.cjs")({ app, session, getWindow: () => mainWindow });
++  } catch (e) {
++    console.error("Terre bridge failed to start:", e);
++  }
++
+   app.on("activate", () => {
+     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+   });
+diff --git a/package.json b/package.json
+index 9737abe..af7fa40 100644
+--- a/package.json
++++ b/package.json
+@@ -60,6 +60,7 @@
+       "dist/**/*",
+       "electron.cjs",
+       "preload.cjs",
++      "terre-bridge.cjs",
+       "package.json"
+     ],
+     "win": {
+diff --git a/src/App.tsx b/src/App.tsx
+index 29160f3..bc8bfcd 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,4 +1,4 @@
+-import React, { useState, useEffect, useMemo } from "react";
++import React, { useState, useEffect, useMemo, useRef } from "react";
+ import { RibbonHeader, TabType } from "./components/RibbonHeader";
+ import { DashboardView } from "./components/DashboardView";
+ import { CalendarView } from "./components/CalendarView";
+@@ -31,6 +31,7 @@ import {
+   performAutoBackupSnapshot,
+ } from "./utils/googleDriveSyncHelper";
+ import { Check, Sparkles, UserCheck } from "lucide-react";
++import { useTerreBridge, TerreContext } from "./utils/terreBridge";
+ 
+ export default function App() {
+   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+@@ -423,6 +424,14 @@ export default function App() {
+   }, [plans]);
+ 
+   // Quick save button
++  // Terre System (хувийн туслах)-тэй холбох: хамгийн сүүлийн state-ийг ref-ээр өгнө
++  const terreRef = useRef<TerreContext | null>(null);
++  terreRef.current = {
++    settings, plans, notes, teachers, curriculumAnalyses, curriculumEvaluations, lessonObservations,
++    setPlans, setNotes, setTeachers, setActiveTab, showToast, licensed: isLicenseActive,
++  };
++  useTerreBridge(terreRef);
++
+   const handleQuickSave = () => {
+     try {
+       localStorage.setItem("sms_settings", JSON.stringify(settings));
+diff --git a/src/utils/terreBridge.ts b/src/utils/terreBridge.ts
+new file mode 100644
+index 0000000..1c4531b
+--- /dev/null
++++ b/src/utils/terreBridge.ts
+@@ -0,0 +1,338 @@
++/**
++ * Terre Bridge (renderer тал) — Terre System-ээс ирсэн тушаалыг React state-ээр дамжуулж гүйцэтгэнэ.
++ * Electron main процессын terre-bridge.cjs нь window.__terreBridge.handle(action, params)-г дуудна.
++ * Лиценз, тохиргооны нууц мэдээлэл (API түлхүүр, лицензийн код)-ийг хэзээ ч гадагш өгөхгүй.
++ */
++import { useEffect, MutableRefObject } from "react";
++import type { TabType } from "../components/RibbonHeader";
++import type {
++  AppSettings, AttendanceStatus, CategoryType, CurriculumAnalysis, CurriculumEvaluation,
++  LessonObservation, NoteItem, PlanItem, Teacher,
++} from "../types";
++import { buildFullSystemSyncPayload } from "./googleDriveSyncHelper";
++import { generateAndDownloadReportDocx } from "./docxExport";
++import { exportAttendanceToExcel, exportPlansToExcel } from "./excelHelper";
++
++export interface TerreContext {
++  settings: AppSettings;
++  plans: PlanItem[];
++  notes: NoteItem[];
++  teachers: Teacher[];
++  curriculumAnalyses: CurriculumAnalysis[];
++  curriculumEvaluations: CurriculumEvaluation[];
++  lessonObservations: LessonObservation[];
++  setPlans: React.Dispatch<React.SetStateAction<PlanItem[]>>;
++  setNotes: React.Dispatch<React.SetStateAction<NoteItem[]>>;
++  setTeachers: React.Dispatch<React.SetStateAction<Teacher[]>>;
++  setActiveTab: (t: TabType) => void;
++  showToast?: (msg: string) => void;
++  licensed?: boolean;
++}
++
++const STATUS_WORDS: Record<string, AttendanceStatus> = {
++  и: "И", ирсэн: "И", ирлээ: "И",
++  ө: "Ө", өвчтэй: "Ө", өвчин: "Ө",
++  ч: "Ч", чөлөөтэй: "Ч", чөлөө: "Ч",
++  т: "Т", тасалсан: "Т", таслалт: "Т",
++  х: "Х", хоцорсон: "Х", хоцролт: "Х",
++};
++const STATUS_LABEL: Record<AttendanceStatus, string> = { И: "Ирсэн", Ө: "Өвчтэй", Ч: "Чөлөөтэй", Т: "Тасалсан", Х: "Хоцорсон" };
++const PLAN_STATUS: Record<string, PlanItem["status"]> = {
++  "төлөвлөсөн": "төлөвлөсөн", "хийгдэж байгаа": "хийгдэж_байгаа", "хийгдэж_байгаа": "хийгдэж_байгаа",
++  "биелсэн": "биелсэн", "хойшилсон": "хойшилсон",
++};
++const TABS: TabType[] = ["dashboard", "calendar", "plan", "notes", "curriculum", "report", "timetable", "attendance", "consolidation", "settings"];
++
++const pad = (n: number) => String(n).padStart(2, "0");
++const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
++const norm = (s: string) => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
++
++function findOne<T>(items: T[], query: string, label: (x: T) => string, what: string): T {
++  const q = norm(query);
++  if (!q) throw new Error(`${what} хоосон байна`);
++  const exact = items.filter((x) => norm(label(x)) === q);
++  if (exact.length === 1) return exact[0];
++  const tokens = q.split(" ");
++  const hits = items.filter((x) => tokens.every((t) => norm(label(x)).includes(t)));
++  if (hits.length === 1) return hits[0];
++  if (hits.length === 0) throw new Error(`"${query}" нэртэй ${what} олдсонгүй`);
++  throw new Error(`"${query}" олон ${what}-тай таарлаа: ${hits.slice(0, 6).map(label).join(", ")}`);
++}
++
++function monthRange(month?: string) {
++  const now = new Date();
++  const [y, m] = (month || `${now.getFullYear()}-${pad(now.getMonth() + 1)}`).split("-").map(Number);
++  return { y, m, start: new Date(y, m - 1, 1).getTime(), end: new Date(y, m, 0, 23, 59, 59).getTime(), title: `${y} оны ${m}-р сар` };
++}
++
++function save(key: string, value: unknown) {
++  try {
++    localStorage.setItem(key, JSON.stringify(value));
++  } catch (e) {
++    console.error("Terre bridge save failed", key, e);
++  }
++}
++
++function summary(c: TerreContext, date?: string) {
++  const today = date || ymd(new Date());
++  const counts: Record<string, number> = { И: 0, Ө: 0, Ч: 0, Т: 0, Х: 0 };
++  const absent: { name: string; status: string }[] = [];
++  for (const t of c.teachers) {
++    const s = (t.attendanceRecords && t.attendanceRecords[today]) || "И";
++    counts[s] = (counts[s] || 0) + 1;
++    if (s !== "И") absent.push({ name: t.fullName, status: STATUS_LABEL[s as AttendanceStatus] || s });
++  }
++  const { start, end } = monthRange(today.slice(0, 7));
++  const monthNotes = c.notes.filter((n) => {
++    const t = new Date(n.startDate).getTime();
++    return t >= start && t <= end;
++  });
++  const monthPlans = c.plans.filter((p) => {
++    const t1 = new Date(p.startDate || p.endDate).getTime();
++    const t2 = new Date(p.endDate || p.startDate).getTime();
++    return (t1 >= start && t1 <= end) || (t2 >= start && t2 <= end);
++  });
++  const byStatus: Record<string, number> = {};
++  monthPlans.forEach((p) => (byStatus[p.status] = (byStatus[p.status] || 0) + 1));
++  const in7 = ymd(new Date(Date.now() + 7 * 86400000));
++  const overdue = c.plans
++    .filter((p) => p.endDate && p.endDate < today && p.status !== "биелсэн")
++    .map((p) => ({ id: p.id, activity: p.activity, endDate: p.endDate, status: p.status }));
++  const upcoming = c.plans
++    .filter((p) => p.startDate >= today && p.startDate <= in7 && p.status === "төлөвлөсөн")
++    .map((p) => ({ id: p.id, activity: p.activity, startDate: p.startDate }));
++  return {
++    date: today,
++    school: c.settings.schoolName,
++    manager: c.settings.managerName,
++    teachers: { total: c.teachers.length, counts, absent },
++    notes: {
++      month: monthNotes.length,
++      monthHours: Math.round(monthNotes.reduce((a, n) => a + (Number(n.spentHours) || 0), 0) * 10) / 10,
++      today: c.notes.filter((n) => (n.startDate || "").startsWith(today)).length,
++    },
++    plans: { month: monthPlans.length, byStatus, overdue: overdue.slice(0, 15), upcoming: upcoming.slice(0, 15) },
++    teacherNames: c.teachers.map((t) => t.fullName),
++  };
++}
++
++function makeHandlers(ref: MutableRefObject<TerreContext | null>) {
++  const ctx = () => {
++    if (!ref.current) throw new Error("School Manager бэлэн биш байна");
++    return ref.current;
++  };
++  const toast = (m: string) => ctx().showToast?.(`🤖 Terre: ${m}`);
++
++  const handlers: Record<string, (p: any) => any> = {
++    info: () => ({ school: ctx().settings.schoolName, manager: ctx().settings.managerName, tabs: TABS }),
++
++    summary: (p) => summary(ctx(), p?.date),
++
++    teachers: (p) => {
++      const day = p?.date || ymd(new Date());
++      return ctx().teachers.map((t) => ({
++        id: t.id, name: t.fullName, profession: t.profession,
++        status: STATUS_LABEL[((t.attendanceRecords || {})[day] || "И") as AttendanceStatus],
++      }));
++    },
++
++    plans: (p) => {
++      let list = ctx().plans;
++      if (p?.month) {
++        const { start, end } = monthRange(p.month);
++        list = list.filter((x) => {
++          const t = new Date(x.startDate || x.endDate).getTime();
++          return t >= start && t <= end;
++        });
++      }
++      if (p?.status) list = list.filter((x) => x.status === (PLAN_STATUS[norm(p.status)] || p.status));
++      return list.slice(0, p?.limit || 100).map(({ id, activity, startDate, endDate, status, type }) => ({ id, activity, startDate, endDate, status, type }));
++    },
++
++    notes: (p) =>
++      [...ctx().notes]
++        .sort((a, b) => (b.startDate || "").localeCompare(a.startDate || ""))
++        .slice(0, p?.limit || 20)
++        .map(({ id, title, category, startDate, spentHours, resultConclusion }) => ({ id, title, category, startDate, spentHours, resultConclusion })),
++
++    set_attendance: (p) => {
++      const c = ctx();
++      const teacher = findOne(c.teachers, p?.teacher, (t) => t.fullName, "багш");
++      const status = STATUS_WORDS[norm(p?.status)];
++      if (!status) throw new Error(`Төлөв буруу: "${p?.status}" (Ирсэн/Өвчтэй/Чөлөөтэй/Тасалсан/Хоцорсон)`);
++      const day = p?.date || ymd(new Date());
++      c.setTeachers((prev) => {
++        const next = prev.map((t) => {
++          if (t.id !== teacher.id) return t;
++          const detail = (t.attendanceDetails || {})[day] || {};
++          return {
++            ...t,
++            attendanceRecords: { ...t.attendanceRecords, [day]: status },
++            attendanceDetails: {
++              ...t.attendanceDetails,
++              [day]: {
++                ...detail,
++                status,
++                ...(p?.note ? { note: String(p.note) } : {}),
++                ...(status === "Х" && p?.lateMinutes ? { lateMinutes: Number(p.lateMinutes) } : {}),
++              },
++            },
++          };
++        });
++        save("sms_teachers", next);
++        return next;
++      });
++      toast(`${teacher.fullName} — ${day}: ${STATUS_LABEL[status]}`);
++      return { teacher: teacher.fullName, date: day, status: STATUS_LABEL[status] };
++    },
++
++    add_note: (p) => {
++      const c = ctx();
++      if (!p?.title) throw new Error("Гарчиг (title) шаардлагатай");
++      const day = p.date || ymd(new Date());
++      const startTime = p.startTime || "09:00";
++      const hours = Number(p.hours) || 1;
++      const startMs = new Date(`${day}T${startTime}`).getTime();
++      const end = new Date(startMs + hours * 3600000);
++      let planId: string | undefined;
++      if (p.plan) planId = findOne(c.plans, p.plan, (x) => x.activity, "төлөвлөгөө").id;
++      const nowIso = new Date().toISOString();
++      const note: NoteItem = {
++        id: "note_" + Date.now(),
++        title: String(p.title),
++        category: (p.category || "бусад") as CategoryType,
++        planId,
++        isUnplanned: !planId,
++        startDate: `${day}T${startTime}`,
++        endDate: `${ymd(end)}T${pad(end.getHours())}:${pad(end.getMinutes())}`,
++        spentHours: hours,
++        participantsCount: Number(p.participants) || 0,
++        resultConclusion: String(p.result || ""),
++        cautionNotes: String(p.caution || ""),
++        improvementSuggestions: String(p.suggestion || ""),
++        images: [],
++        teacherName: p.teacherName || undefined,
++        createdAt: nowIso,
++        updatedAt: nowIso,
++      };
++      c.setNotes((prev) => {
++        const next = [note, ...prev];
++        save("sms_notes", next);
++        return next;
++      });
++      toast(`тэмдэглэл нэмлээ: ${note.title}`);
++      return { id: note.id, title: note.title };
++    },
++
++    set_plan_status: (p) => {
++      const c = ctx();
++      const plan = p?.id ? c.plans.find((x) => x.id === p.id) : findOne(c.plans, p?.plan, (x) => x.activity, "төлөвлөгөө");
++      if (!plan) throw new Error("Төлөвлөгөө олдсонгүй");
++      const status = PLAN_STATUS[norm(p?.status)];
++      if (!status) throw new Error(`Төлөв буруу: "${p?.status}"`);
++      c.setPlans((prev) => {
++        const next = prev.map((x) => (x.id === plan.id ? { ...x, status } : x));
++        save("sms_plans", next);
++        return next;
++      });
++      toast(`«${plan.activity}» → ${status.replace("_", " ")}`);
++      return { activity: plan.activity, status };
++    },
++
++    add_plan: (p) => {
++      const c = ctx();
++      if (!p?.activity) throw new Error("Үйл ажиллагаа (activity) шаардлагатай");
++      const today = ymd(new Date());
++      const plan: PlanItem = {
++        id: "plan_" + Date.now(),
++        dd: c.plans.length + 1,
++        activity: String(p.activity),
++        goal: String(p.goal || ""),
++        startDate: p.startDate || today,
++        endDate: p.endDate || p.startDate || today,
++        scope: String(p.scope || ""),
++        responsibleUnit: String(p.responsibleUnit || "Сургалтын алба"),
++        expectedResult: String(p.expectedResult || ""),
++        type: p.type === "жилийн" ? "жилийн" : "сарын",
++        status: "төлөвлөсөн",
++      };
++      c.setPlans((prev) => {
++        const next = [...prev, plan];
++        save("sms_plans", next);
++        return next;
++      });
++      toast(`төлөвлөгөө нэмлээ: ${plan.activity}`);
++      return { id: plan.id, activity: plan.activity };
++    },
++
++    navigate: (p) => {
++      if (!TABS.includes(p?.tab)) throw new Error(`Цонх буруу: ${p?.tab}`);
++      ctx().setActiveTab(p.tab);
++      return { tab: p.tab };
++    },
++
++    // main процесс will-download-аар баригдаж Terre-ийн заасан зам руу хадгалагдана
++    export: async (p) => {
++      const c = ctx();
++      const { y, m, start, end, title } = monthRange(p?.month);
++      if (p?.kind === "attendance_xlsx") {
++        exportAttendanceToExcel(c.teachers, y, m);
++      } else if (p?.kind === "plans_xlsx") {
++        exportPlansToExcel(c.plans);
++      } else if (p?.kind === "report_docx") {
++        const inRange = (d?: string) => {
++          if (!d) return false;
++          const t = new Date(d).getTime();
++          return t >= start && t <= end;
++        };
++        await generateAndDownloadReportDocx(
++          `${c.settings.schoolName || "Сургууль"} ${title} ажлын тайлан`,
++          c.notes.filter((n) => inRange(n.startDate)),
++          c.plans.filter((x) => inRange(x.startDate) || inRange(x.endDate)),
++          c.settings,
++          undefined,
++          "operational",
++          c.curriculumEvaluations.filter((e) => inRange(e.date)),
++          c.lessonObservations.filter((o) => inRange(o.date)),
++          c.teachers
++        );
++      } else {
++        throw new Error(`Экспортын төрөл буруу: ${p?.kind}`);
++      }
++      return { ok: true };
++    },
++
++    backup_payload: () => {
++      const c = ctx();
++      return JSON.stringify(
++        buildFullSystemSyncPayload({
++          settings: c.settings, plans: c.plans, notes: c.notes, teachers: c.teachers,
++          curriculumAnalyses: c.curriculumAnalyses, curriculumEvaluations: c.curriculumEvaluations,
++          lessonObservations: c.lessonObservations,
++        }),
++        null,
++        2
++      );
++    },
++  };
++  return handlers;
++}
++
++export function useTerreBridge(ref: MutableRefObject<TerreContext | null>) {
++  useEffect(() => {
++    const handlers = makeHandlers(ref);
++    (window as any).__terreBridge = {
++      handle: async (action: string, params: any) => {
++        const fn = handlers[action];
++        if (!fn) throw new Error(`Үл мэдэх үйлдэл: ${action}`);
++        if (action !== "info" && ref.current && ref.current.licensed === false) {
++          throw new Error("School Manager идэвхжээгүй (лиценз) байна");
++        }
++        return fn(params || {});
++      },
++    };
++    return () => {
++      delete (window as any).__terreBridge;
++    };
++  }, [ref]);
++}
+diff --git a/terre-bridge.cjs b/terre-bridge.cjs
+new file mode 100644
+index 0000000..368f128
+--- /dev/null
++++ b/terre-bridge.cjs
+@@ -0,0 +1,144 @@
++/**
++ * Terre Bridge — Terre System (хувийн туслах) School Manager-тэй ярилцах дотоод холболт.
++ *
++ * - Зөвхөн энэ компьютер дотор (127.0.0.1) сонсоно, гаднаас хандах боломжгүй.
++ * - Програм асах бүрт шинэ нууц token үүсгэж, %APPDATA%\TerreBridge\school-manager.json-д бичнэ.
++ *   Энэ файлыг уншиж чадах програм (тухайн Windows хэрэглэгч) л хандана.
++ * - Бүх өөрчлөлт React state-ээр дамжиж, програмын өөрийн хадгалалтын логикоор хадгалагдана.
++ * - Лиценз, машины ID-д огт хүрэхгүй.
++ */
++const http = require("http");
++const crypto = require("crypto");
++const fs = require("fs");
++const path = require("path");
++
++const MAX_BODY = 1024 * 1024;
++
++module.exports = function startTerreBridge({ app, session, getWindow }) {
++  const token = crypto.randomBytes(24).toString("hex");
++  const infoDir = path.join(app.getPath("appData"), "TerreBridge");
++  const infoFile = path.join(infoDir, "school-manager.json");
++  let pendingSave = null; // { path, resolve, reject, timer }
++
++  // Тайлан экспорт (a.click / XLSX.writeFile) → харилцах цонхгүйгээр Terre-ийн заасан зам руу хадгална
++  session.defaultSession.on("will-download", (_e, item) => {
++    if (!pendingSave) return;
++    const job = pendingSave;
++    pendingSave = null;
++    clearTimeout(job.timer);
++    try {
++      fs.mkdirSync(path.dirname(job.path), { recursive: true });
++    } catch (e) {}
++    item.setSavePath(job.path);
++    item.once("done", (_ev, state) => {
++      if (state === "completed") job.resolve(job.path);
++      else job.reject(new Error("Татаж хадгалах амжилтгүй: " + state));
++    });
++  });
++
++  function waitForDownload(savePath) {
++    return new Promise((resolve, reject) => {
++      const timer = setTimeout(() => {
++        if (pendingSave && pendingSave.path === savePath) pendingSave = null;
++        reject(new Error("Экспорт хугацаандаа дууссангүй"));
++      }, 60000);
++      pendingSave = { path: savePath, resolve, reject, timer };
++    });
++  }
++
++  async function callRenderer(win, action, params) {
++    const js =
++      "window.__terreBridge ? window.__terreBridge.handle(" +
++      JSON.stringify(action) + "," + JSON.stringify(params || {}) +
++      ") : Promise.reject(new Error('School Manager бүрэн ачаалагдаагүй байна'))";
++    return win.webContents.executeJavaScript(js, true);
++  }
++
++  async function handle(action, params) {
++    const win = getWindow();
++    if (!win || win.isDestroyed()) throw new Error("School Manager-ийн цонх нээгдээгүй байна");
++
++    if (action === "focus") {
++      if (win.isMinimized()) win.restore();
++      win.show();
++      win.focus();
++      return { ok: true };
++    }
++
++    if (action === "export") {
++      const savePath = params && params.path;
++      if (!savePath || !path.isAbsolute(savePath)) throw new Error("Хадгалах бүтэн зам (path) шаардлагатай");
++      if (params.kind === "backup") {
++        const json = await callRenderer(win, "backup_payload", params);
++        fs.mkdirSync(path.dirname(savePath), { recursive: true });
++        fs.writeFileSync(savePath, json, "utf8");
++        return { ok: true, path: savePath };
++      }
++      const done = waitForDownload(savePath);
++      try {
++        await callRenderer(win, "export", params);
++      } catch (e) {
++        if (pendingSave && pendingSave.path === savePath) {
++          clearTimeout(pendingSave.timer);
++          pendingSave = null;
++        }
++        throw e;
++      }
++      return { ok: true, path: await done };
++    }
++
++    return callRenderer(win, action, params);
++  }
++
++  const server = http.createServer((req, res) => {
++    const send = (code, obj) => {
++      res.writeHead(code, { "Content-Type": "application/json; charset=utf-8" });
++      res.end(JSON.stringify(obj));
++    };
++    const addr = req.socket.remoteAddress || "";
++    if (!["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(addr)) return send(403, { error: "forbidden" });
++    if (req.headers["x-terre-token"] !== token) return send(401, { error: "unauthorized" });
++
++    if (req.method === "GET" && req.url === "/ping") {
++      return send(200, { ok: true, app: "School Manager", version: app.getVersion() });
++    }
++    if (req.method !== "POST" || req.url !== "/action") return send(404, { error: "not found" });
++
++    let body = "";
++    req.on("data", (chunk) => {
++      body += chunk;
++      if (body.length > MAX_BODY) req.destroy();
++    });
++    req.on("end", async () => {
++      try {
++        const { action, params } = JSON.parse(body || "{}");
++        if (typeof action !== "string") throw new Error("action шаардлагатай");
++        const result = await handle(action, params);
++        send(200, { ok: true, result });
++      } catch (e) {
++        send(400, { ok: false, error: (e && e.message) || String(e) });
++      }
++    });
++  });
++
++  server.listen(0, "127.0.0.1", () => {
++    try {
++      fs.mkdirSync(infoDir, { recursive: true });
++      fs.writeFileSync(
++        infoFile,
++        JSON.stringify({ port: server.address().port, token, pid: process.pid, version: app.getVersion() }, null, 2),
++        "utf8"
++      );
++    } catch (e) {
++      console.error("Terre bridge info write failed:", e);
++    }
++  });
++
++  app.on("will-quit", () => {
++    try {
++      const cur = JSON.parse(fs.readFileSync(infoFile, "utf8"));
++      if (cur.pid === process.pid) fs.unlinkSync(infoFile);
++    } catch (e) {}
++    server.close();
++  });
++};
+-- 
+2.43.0
+
+
+From 7b99e39065c35068879d25ef35070ee35d8fbfab Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 15 Nov 2026 18:43:36 +0800
+Subject: [PATCH 2/2] =?UTF-8?q?Terre=20Bridge:=20=D0=B1=D1=83=D1=86=D0=B0?=
+ =?UTF-8?q?=D0=B0=D1=85=20=D2=AF=D0=B9=D0=BB=D0=B4=D0=BB=D2=AF=D2=AF=D0=B4?=
+ =?UTF-8?q?=20(delete=5Fnote,=20delete=5Fplan,=20=D3=A9=D0=BC=D0=BD=D3=A9?=
+ =?UTF-8?q?=D1=85=20=D1=82=D3=A9=D0=BB=D3=A9=D0=B2)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01NeTSNNVJmAbsz4f5scct3n
+---
+ src/utils/terreBridge.ts | 34 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/src/utils/terreBridge.ts b/src/utils/terreBridge.ts
+index 1c4531b..1f9ea0f 100644
+--- a/src/utils/terreBridge.ts
++++ b/src/utils/terreBridge.ts
+@@ -161,6 +161,7 @@ function makeHandlers(ref: MutableRefObject<TerreContext | null>) {
+       const status = STATUS_WORDS[norm(p?.status)];
+       if (!status) throw new Error(`Төлөв буруу: "${p?.status}" (Ирсэн/Өвчтэй/Чөлөөтэй/Тасалсан/Хоцорсон)`);
+       const day = p?.date || ymd(new Date());
++      const prevStatus = ((teacher.attendanceRecords || {})[day] || "И") as AttendanceStatus;
+       c.setTeachers((prev) => {
+         const next = prev.map((t) => {
+           if (t.id !== teacher.id) return t;
+@@ -183,7 +184,7 @@ function makeHandlers(ref: MutableRefObject<TerreContext | null>) {
+         return next;
+       });
+       toast(`${teacher.fullName} — ${day}: ${STATUS_LABEL[status]}`);
+-      return { teacher: teacher.fullName, date: day, status: STATUS_LABEL[status] };
++      return { teacher: teacher.fullName, date: day, status: STATUS_LABEL[status], prev: STATUS_LABEL[prevStatus] };
+     },
+ 
+     add_note: (p) => {
+@@ -236,7 +237,7 @@ function makeHandlers(ref: MutableRefObject<TerreContext | null>) {
+         return next;
+       });
+       toast(`«${plan.activity}» → ${status.replace("_", " ")}`);
+-      return { activity: plan.activity, status };
++      return { activity: plan.activity, status, prev: plan.status.replace("_", " "), id: plan.id };
+     },
+ 
+     add_plan: (p) => {
+@@ -265,6 +266,35 @@ function makeHandlers(ref: MutableRefObject<TerreContext | null>) {
+       return { id: plan.id, activity: plan.activity };
+     },
+ 
++    // Terre-ийн "буцаах" товчинд: зөвхөн Terre-ээр нэмсэн бичлэгийг ID-аар нь устгана
++    delete_note: (p) => {
++      const c = ctx();
++      if (!p?.id || !String(p.id).startsWith("note_")) throw new Error("Тэмдэглэлийн ID буруу");
++      const found = c.notes.find((n) => n.id === p.id);
++      if (!found) throw new Error("Тэмдэглэл олдсонгүй (аль хэдийн устсан байж магадгүй)");
++      c.setNotes((prev) => {
++        const next = prev.filter((n) => n.id !== p.id);
++        save("sms_notes", next);
++        return next;
++      });
++      toast(`тэмдэглэлийг буцаалаа: ${found.title}`);
++      return { id: p.id, title: found.title };
++    },
++
++    delete_plan: (p) => {
++      const c = ctx();
++      if (!p?.id || !String(p.id).startsWith("plan_")) throw new Error("Төлөвлөгөөний ID буруу");
++      const found = c.plans.find((x) => x.id === p.id);
++      if (!found) throw new Error("Төлөвлөгөө олдсонгүй");
++      c.setPlans((prev) => {
++        const next = prev.filter((x) => x.id !== p.id);
++        save("sms_plans", next);
++        return next;
++      });
++      toast(`төлөвлөгөөг буцаалаа: ${found.activity}`);
++      return { id: p.id, activity: found.activity };
++    },
++
+     navigate: (p) => {
+       if (!TABS.includes(p?.tab)) throw new Error(`Цонх буруу: ${p?.tab}`);
+       ctx().setActiveTab(p.tab);
+-- 
+2.43.0
+

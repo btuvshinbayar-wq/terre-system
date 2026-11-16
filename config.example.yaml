@@ -1,0 +1,133 @@
+# ============================================================
+#  TERRE SYSTEM тохиргоо. Энэ файлыг config.yaml нэрээр хуулж засна.
+# ============================================================
+
+owner_name: "Tuvshuu"          # Terre таныг ингэж дуудна
+timezone: "Asia/Ulaanbaatar"
+
+# Таны тухай товч мэдээлэл: хариу мэйлийн ноорогт ашиглагдана
+owner_context: |
+  Би сургуулийн удирдлагын ажилтан. Эцэг эх, багш нар, Боловсролын газартай
+  мэйлээр харилцдаг. Хариуг эелдэг, товч, албан ёсны хэлбэрээр бичнэ.
+  Гарын үсэг: "Хүндэтгэсэн, Tuvshuu"
+
+# true = хуурамч өгөгдлөөр ажиллана (холболтгүйгээр самбарыг турших)
+demo_mode: true
+
+refresh_minutes: 10            # хэдэн минут тутам мэйл/чат шалгах
+
+# true = спам, мэдээллийн захидлыг Terre өөрөө архивлана / уншсан болгоно.
+# false = зөвхөн санал болгоно, та самбараас "Хийх" дарна.
+# Хариу мэйл ХЭЗЭЭ Ч автоматаар явахгүй, үргэлж таны зөвшөөрлөөр явна.
+auto_actions: false
+
+startup:
+  speak: true                  # асахдаа дуугаар мэндчилэх
+  open_browser: true           # самбарыг автоматаар нээх
+
+server:
+  host: "127.0.0.1"
+  port: 8765
+
+gemini:
+  api_key: ""                  # https://aistudio.google.com/apikey (эсвэл GEMINI_API_KEY орчны хувьсагч)
+  model: "gemini-2.5-flash"         # ноорог, өдрийн мэдээлэл, тушаал
+  fast_model: "gemini-2.5-flash-lite"   # мэйл ангилах, файл ангилах (хямд)
+
+voice:
+  enabled: true
+  name: "mn-MN-YesuiNeural"    # эмэгтэй хоолой. Эрэгтэй: mn-MN-BataaNeural
+
+sources:
+  gmail:
+    enabled: false
+  google_calendar:
+    enabled: false
+  google_chat:                 # зөвхөн Google Workspace (байгууллагын) данс дээр ажиллана
+    enabled: false
+  outlook:                     # Outlook мэйл + календарь
+    enabled: false
+    client_id: ""              # Azure App registration-ийн Application (client) ID
+  # Бусад мэйл хаягууд (IMAP/SMTP) — хэдийг ч нэмж болно. Нууц үгийг setup_connections.bat асууж,
+  # Windows Credential Manager-т хадгална (энд бичихгүй).
+  # provider: yahoo | icloud | mailru | yandex | zoho | aol | gmx | (хоосон = өөрөө сервер бичих)
+  other_mail:
+    - name: "Сургуулийн мэйл"
+      enabled: false
+      email: "tuvshuu@school.edu.mn"
+      imap_host: "mail.school.edu.mn"   # hosting/IT-аас асууна (ихэвчлэн mail.<домэйн>)
+      imap_port: 993
+      smtp_host: "mail.school.edu.mn"
+      smtp_port: 465                    # 465 = SSL, 587 = STARTTLS
+      # username: ""                    # хоосон = email
+      # archive_folder: "Archive"       # архивлах хавтас (сервер бүрт өөр: "INBOX.Archive" гэх мэт)
+      # sent_folder: "Sent"             # илгээсэн мэйлийн хуулбар ("INBOX.Sent", "Sent Items"...)
+    - name: "Yahoo"
+      enabled: false
+      provider: yahoo
+      email: "you@yahoo.com"
+  telegram:
+    enabled: false
+    api_id: 0                  # https://my.telegram.org -> API development tools
+    api_hash: ""
+    max_chats: 40
+
+telegram_bot:                  # Утаснаас удирдах (Эхлэх цэс → "холболт тохируулах" дээр тохируулна)
+  enabled: false
+
+desktop:
+  hotkey_command: "win+shift+t"   # хаанаас ч тушаалын цонх нээх
+  hotkey_voice: "win+shift+v"     # хаанаас ч дуугаар ярих
+  app_window: true                # самбарыг програм шиг цонхонд нээх (Edge)
+  toasts: true                    # Windows мэдэгдэл
+  tray: true
+
+tasks:
+  follow_up: true              # Terre-ээр илгээсэн хариунд хариу ирэхгүй бол сануулах
+  follow_up_days: 3
+  remind_at: "08:30"           # хугацаа дөхсөн ажлыг сануулах цаг
+  calendar_target: auto        # хурлыг аль календарьт нэмэх: auto | google | outlook
+
+day_report:                    # Өдрийн тайлан → School Manager-ийн ажлын тэмдэглэл
+  enabled: true
+  at: "17:00"
+  weekends: false
+
+school_manager:                # Таны School Manager програм (Terre Bridge-тэй хувилбар)
+  enabled: true
+  exe: ""                      # хоосон = автоматаар хайна (C:\Program Files\School Manager\School Manager.exe)
+  open_at_startup: false       # Terre асахад School Manager-ийг ч асаах
+  # Өдөр бүр автоматаар хийх тушаалууд (тушаалын нэр самбарын товчтой ижил)
+  schedule:
+    - {command: "Бүрэн нөөцлөл хийх", at: "17:30"}
+  #  - {command: "Багшийн ирцийн хүснэгт (Excel)", at: "16:00"}
+
+files:                         # Файл татах, ангилах, эмхлэх
+  enabled: true
+  root: "~/Documents/Terre"    # ангилсан файлууд энд <Ангилал>/ хавтсанд очно
+  attachments: true            # мэйлийн хавсралтыг татах (спам гэж ангилсныхыг татахгүй)
+  sources:
+    - {path: "~/Downloads", mode: auto}     # auto = шууд зөөнө (самбараас буцааж болно)
+    - {path: "~/Desktop", mode: suggest}    # suggest = санал болгоод таны зөвшөөрлийг хүлээнэ
+    - {path: "~/Documents", mode: suggest}
+  min_age_minutes: 3           # татаж дуусаагүй файлд хүрэхгүй
+  since_days: 30               # эхний удаад үүнээс хуучин файлд хүрэхгүй
+  max_per_cycle: 25
+  rename:                      # Файлын нэр солих
+    enabled: true
+    only_messy: true           # зөвхөн утгагүй нэрийг (scan0001, IMG_1234, Document (3), download...) солино
+    use_ai: true               # Gemini агуулгаас нь нэр зохионо — ангилах дуудлагатай ХАМТ тул нэмэлт зардал бараг 0
+    file_template: "{name}"    # жишээ нь "{date} {name}" — {name} {date} {category}
+    attachment_template: "{date} {sender} - {name}"   # мэйлийн хавсралт: "2026-11-15 Боловсролын газар - Ирцийн маягт.xlsx"
+  categories:
+    - "Тайлан"
+    - "Тушаал, шийдвэр"
+    - "Албан бичиг"
+    - "Хичээлийн материал"
+    - "Шалгалт, дүн"
+    - "Сурагчийн бүртгэл"
+    - "Хурал, төлөвлөгөө"
+    - "Санхүү"
+    - "Зураг"
+    - "Програм, архив"
+    - "Бусад"

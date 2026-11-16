@@ -1,0 +1,7 @@
+config.yaml
+secrets/
+data/
+.venv/
+__pycache__/
+release/
+*.exe
