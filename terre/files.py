@@ -104,8 +104,9 @@ def _candidates():
     min_age = float(c.get("min_age_minutes", 3)) * 60
     since = time.time() - float(c.get("since_days", 30)) * 86400
     r = root()
-    sources = [(inbox(), "auto", "Хавсралт", r)] + [(X(s["path"]), s.get("mode", "suggest"), os.path.basename(X(s["path"])), r)
-                                                   for s in c.get("sources", [])]
+    # Downloads, Desktop, Documents зэрэг хавтсыг ӨӨРӨӨ цэгцлэхгүй. Зөвхөн Terre-ийн өөрийн хавсралтын хавтас
+    # болон хэрэглэгч самбарын «📁 Холбосон хавтсууд»-д зааж тохируулсан хавтсууд (config-ийн files.sources-ийг үл тооно).
+    sources = [(inbox(), "auto", "Хавсралт", r)]
     # Самбараас холбосон хавтсууд (шинээр орж ирсэн файлыг хянах)
     for f in connected_folders():
         if f["mode"] in ("auto", "suggest"):
@@ -307,6 +308,36 @@ def undo(fid):
     os.makedirs(os.path.dirname(back), exist_ok=True)
     shutil.move(f["dest"], back)
     _set(fid, status="undone")
+
+
+def _unconnected_moves():
+    """Холбоогүй хавтаснаас (Downloads, Desktop, Documents…) өмнөх тохиргоогоор зөөгдсөн файлууд."""
+    allowed = [X(inbox())] + [X(f["path"]) for f in connected_folders()]
+    with _lock:
+        rows = [dict(r) for r in _db.execute("SELECT * FROM files WHERE status='moved' AND key NOT GLOB 'demo[0-9]*'").fetchall()]
+    return [r for r in rows if r.get("src") and not any(_inside(X(r["src"]), a) for a in allowed)]
+
+
+def unconnected_count():
+    try:
+        return len(_unconnected_moves())
+    except Exception:
+        return 0
+
+
+def undo_unconnected():
+    """Тэдгээрийг анхны газар, анхны нэрээр нь буцаана. (буцаасан тоо, алдаатай файлууд)"""
+    done, failed = 0, []
+    for r in _unconnected_moves():
+        try:
+            undo(r["id"])
+            done += 1
+        except Exception as e:
+            failed.append(f"{r['name']}: {e}")
+    if done:
+        from . import journal
+        journal.add("file", f"Холбоогүй хавтаснаас зөөсөн {done} файлыг анхны газарт нь буцаав", "; ".join(failed)[:300])
+    return done, failed
 
 
 def recent(statuses, limit=30):

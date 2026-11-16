@@ -180,7 +180,8 @@ def state():
         "sm_running": engine.STATE.get("sm_running"),
         "sm_lists": _sm_lists(),
         "files": {"moved": files.recent(["moved"], 15), "suggested": files.recent(["suggested"], 30),
-                  "stats": files.stats(), "categories": files.categories(), "root": files.root()},
+                  "stats": files.stats(), "categories": files.categories(), "root": files.root(),
+                  "unconnected_moved": files.unconnected_count()},
         "folders": organizer.folders_overview(),
         "tasks": {"open": tasks.open_tasks(), "done": tasks.done_recent(8)},
         "health": health.report(),
@@ -356,6 +357,12 @@ async def sm_start():
 class FileBody(BaseModel):
     category: str | None = None
     newname: str | None = None
+
+
+@app.post("/api/files/undo-unconnected")
+async def files_undo_unconnected():
+    done, failed = await asyncio.to_thread(files.undo_unconnected)
+    return {"ok": True, "done": done, "failed": failed}
 
 
 @app.post("/api/files/{fid}/{action}")

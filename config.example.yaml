@@ -108,10 +108,8 @@ files:                         # Файл татах, ангилах, эмхлэ
   enabled: true
   root: "~/Documents/Terre"    # ангилсан файлууд энд <Ангилал>/ хавтсанд очно
   attachments: true            # мэйлийн хавсралтыг татах (спам гэж ангилсныхыг татахгүй)
-  sources:
-    - {path: "~/Downloads", mode: auto}     # auto = шууд зөөнө (самбараас буцааж болно)
-    - {path: "~/Desktop", mode: suggest}    # suggest = санал болгоод таны зөвшөөрлийг хүлээнэ
-    - {path: "~/Documents", mode: suggest}
+  # Downloads, Desktop, Documents зэрэг хавтсыг Terre өөрөө цэгцлэхгүй. Цэгцлэх хавтсаа самбарын
+  # «Файл» таб → «📁 Холбосон хавтсууд»-аас зааж тохируулна.
   min_age_minutes: 3           # татаж дуусаагүй файлд хүрэхгүй
   since_days: 30               # эхний удаад үүнээс хуучин файлд хүрэхгүй
   max_per_cycle: 25
