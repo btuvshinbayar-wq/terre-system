@@ -165,10 +165,12 @@ def _record(key, name, src, dest, cat, reason, origin, status, base=None, newnam
 
 
 # ---------------- Нэр солих ----------------
+# АНХААР: давталт дотор давталт (жишээ нь (\d+)*) бүү бич — олон цифртэй нэр дээр regex хязгааргүй удаан
+# ажиллаж, Python-ийг бүхэлд нь түгждэг (2026-11-16-нд Terre бүхэлдээ гацсан шалтгаан).
 MESSY = re.compile(r"""^(
     img|dsc|dcim|pxl|photo|image|scan|scanned|скан|document|doc|file|untitled|download|attachment|new|noname|
     новый|документ|шинэ|баримт|файл|copy|хуулбар|screenshot|screen\s?shot|capture|whatsapp|telegram|viber|cam|vid
-    )?[\s_\-]*(\(\d+\)|\d{1,}|[\s_\-.]|copy|хуулбар|microsoft|word|excel|баримт|документ|document|ажлын|хуудас)*$|^[0-9a-f\-]{16,}$|^\d[\d_\-\s]{5,}$""",
+    )?(\(\d+\)|\d|[\s_\-.]|copy|хуулбар|microsoft|word|excel|баримт|документ|document|ажлын|хуудас)*$|^[0-9a-f\-]{16,}$|^\d[\d_\-\s]{5,}$""",
     re.I | re.X)
 
 
