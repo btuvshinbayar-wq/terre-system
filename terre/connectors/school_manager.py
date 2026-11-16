@@ -415,6 +415,25 @@ def summary_from_data(data, date=None):
     }
 
 
+def agenda_from_data(data, date=None, days=7):
+    """Самбарын «Яаралтай» хэсэгт: өнөөдрийн, ойрын 7 хоногийн, хугацаа хэтэрсэн төлөвлөгөө (биелээгүй)."""
+    date = date or now().strftime("%Y-%m-%d")
+    until = (datetime.date.fromisoformat(date) + datetime.timedelta(days=days)).isoformat()
+    closed = ("биелсэн", "хойшилсон")
+
+    def row(p):
+        return {"id": p.get("id"), "activity": p.get("activity", ""), "startDate": p.get("startDate", ""),
+                "endDate": p.get("endDate", ""), "status": (p.get("status") or "").replace("_", " ")}
+    open_ = [p for p in data["plans"] if p.get("status") not in closed and p.get("activity")]
+    today = [p for p in open_ if _overlaps(p, date, date)]
+    upcoming = [p for p in open_ if date < (p.get("startDate") or "") <= until]
+    overdue = [p for p in open_ if (p.get("endDate") or p.get("startDate") or "9") < date]
+    key = lambda p: (p.get("startDate") or "", p.get("activity") or "")
+    return {"today": [row(p) for p in sorted(today, key=key)],
+            "upcoming": [row(p) for p in sorted(upcoming, key=key)],
+            "overdue": [row(p) for p in sorted(overdue, key=lambda p: p.get("endDate") or "")]}
+
+
 def _lists(data):
     if not data:
         return {}
@@ -445,7 +464,7 @@ def fetch_state():
     if summary is None:
         return None
     return {"summary": summary, "running": running, "source": "app" if running else "file",
-            "data_file": data_file(), **_lists(data)}
+            "data_file": data_file(), "agenda": agenda_from_data(data) if data else None, **_lists(data)}
 
 
 def metrics_from(state):

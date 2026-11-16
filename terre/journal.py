@@ -71,6 +71,8 @@ async def undo(aid):
             if hasattr(mod, "unarchive"):
                 await engine._call(mod.unarchive, item)
         store.update(u["item"], status=u["prev"])
+    elif t == "msg_action":
+        await engine.revert_msg_action(u)
     elif t == "sm":
         from .connectors import school_manager as sm
         await asyncio.to_thread(sm.call, u["action"], u["params"])

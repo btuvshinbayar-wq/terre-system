@@ -56,7 +56,7 @@ def fetch_unread(max_results=25):
             "body": _body(full["payload"])[:8000] or full.get("snippet", ""),
             "received": _iso(int(full.get("internalDate", 0))),
             "meta": {
-                "msg_id": m["id"], "thread_id": full.get("threadId"),
+                "msg_id": m["id"], "thread_id": full.get("threadId"), "from_addr": addr.lower(),
                 "rfc_id": h.get("message-id", ""), "references": h.get("references", ""),
                 "reply_to": h.get("reply-to") or h.get("from", ""),
                 "subject": h.get("subject", ""),
@@ -76,6 +76,23 @@ def apply_action(item, action):
     mid = item["meta"]["msg_id"]
     remove = ["UNREAD"] + (["INBOX"] if action == "archive" else [])
     svc().users().messages().modify(userId="me", id=mid, body={"removeLabelIds": remove}).execute()
+
+
+def mark_read(item):
+    svc().users().messages().modify(userId="me", id=item["meta"]["msg_id"], body={"removeLabelIds": ["UNREAD"]}).execute()
+
+
+def mark_unread(item):
+    svc().users().messages().modify(userId="me", id=item["meta"]["msg_id"], body={"addLabelIds": ["UNREAD"]}).execute()
+
+
+def trash(item):
+    """Хогийн сав (Trash) руу зөөнө — Gmail 30 хоног хадгалдаг, буцааж болно."""
+    svc().users().messages().trash(userId="me", id=item["meta"]["msg_id"]).execute()
+
+
+def untrash(item):
+    svc().users().messages().untrash(userId="me", id=item["meta"]["msg_id"]).execute()
 
 
 def unarchive(item):

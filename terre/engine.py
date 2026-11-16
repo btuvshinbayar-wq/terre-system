@@ -123,7 +123,13 @@ async def run_cycle():
         errors = []
         items = await fetch_messages(errors)
         new_urgent = []
-        fresh = [i for i in items if not store.exists(i["id"])][:MAX_TRIAGE_PER_CYCLE]
+        fresh = [i for i in items if not store.exists(i["id"])]
+        bl = set(blocked())
+        if bl and not DEMO:
+            for it in [i for i in fresh if sender_key(i) in bl]:
+                await _handle_blocked(it, errors)
+            fresh = [i for i in fresh if sender_key(i) not in bl]
+        fresh = fresh[:MAX_TRIAGE_PER_CYCLE]
         for it in fresh:
             t = await asyncio.to_thread(brain.triage, it)
             status = {"auto": "auto", "approve": "pending", "urgent": "urgent"}[t["category"]]
@@ -175,8 +181,11 @@ def _sm_brief():
     if not st:
         return "School Manager-ийн өгөгдөл олдсонгүй" if sm_enabled() else None
     s = st["summary"]
-    return {"absent_teachers": s["teachers"]["absent"], "overdue_plans": [p["activity"] for p in s["plans"]["overdue"]],
-            "upcoming_plans_7d": [f"{p['startDate']} {p['activity']}" for p in s["plans"]["upcoming"]],
+    ag = st.get("agenda") or {}
+    return {"absent_teachers": s["teachers"]["absent"],
+            "overdue_plans_count": len(ag.get("overdue", s["plans"]["overdue"])),   # нэрийг уншихгүй, зөвхөн тоо
+            "today_plans": [p["activity"] for p in ag.get("today", [])][:6],
+            "upcoming_plans_7d": [f"{p['startDate']} {p['activity']}" for p in (ag.get("upcoming") or s["plans"]["upcoming"])][:6],
             "notes_this_month": s["notes"]["month"]}
 
 
@@ -226,6 +235,143 @@ def dismiss(item_id, who="Та"):
     store.update(item_id, status="dismissed")
     journal.add("mail", f"Алгасав: {item.get('sender')} — {item.get('subject')}"[:200],
                 undo={"type": "msg_status", "item": item_id, "prev": item["status"]}, who=who)
+
+
+# ---------- Мэйлийн нэмэлт үйлдлүүд: уншсан, устгах, блоклох ----------
+class _Skip(Exception):
+    pass
+
+
+BLOCK_KEY = "blocked_senders"
+
+
+def blocked():
+    import json
+    try:
+        return json.loads(learn.kv_get(BLOCK_KEY, "[]")) or []
+    except ValueError:
+        return []
+
+
+def _save_blocked(lst):
+    import json
+    learn.kv_set(BLOCK_KEY, json.dumps(sorted(set(lst)), ensure_ascii=False))
+
+
+def sender_key(item):
+    """Блоклох түлхүүр: мэйл хаяг (байхгүй бол илгээгчийн нэр)."""
+    return ((item.get("meta") or {}).get("from_addr") or item.get("sender") or "").strip().lower()
+
+
+def _merge_meta(item_id, item, res):
+    if isinstance(res, dict) and res:
+        import json
+        store.update(item_id, meta=json.dumps({**item["meta"], **res}, ensure_ascii=False))
+
+
+async def mark_read(item_id, who="Та"):
+    item = store.get(item_id)
+    if not item:
+        raise KeyError(item_id)
+    if not DEMO and item["source"] != "gchat":      # Google Chat-д "уншсан" тэмдэглэх API байхгүй — зөвхөн Terre-д
+        mod = _connector(item["source"])
+        await _call(getattr(mod, "mark_read", None) or (lambda it: mod.apply_action(it, "mark_read")), item)
+    store.update(item_id, status="read")
+    journal.add("mail", f"Уншсан болгов: {item.get('sender')} — {item.get('subject')}"[:200],
+                undo={"type": "msg_action", "item": item_id, "prev": item["status"], "revert": "mark_unread"}, who=who)
+
+
+async def trash(item_id, who="Та"):
+    item = store.get(item_id)
+    if not item:
+        raise KeyError(item_id)
+    if not DEMO:
+        mod = _connector(item["source"])
+        if not hasattr(mod, "trash"):
+            raise RuntimeError("Энэ эх сурвалжийн мессежийг устгах боломжгүй (зөвхөн мэйл)")
+        _merge_meta(item_id, item, await _call(mod.trash, item))
+    store.update(item_id, status="trashed")
+    journal.add("mail", f"Хогийн сав руу зөөв: {item.get('sender')} — {item.get('subject')}"[:200],
+                undo={"type": "msg_action", "item": item_id, "prev": item["status"], "revert": "untrash"}, who=who)
+
+
+async def block(item_id, who="Та"):
+    item = store.get(item_id)
+    if not item:
+        raise KeyError(item_id)
+    key = sender_key(item)
+    if not key:
+        raise RuntimeError("Илгээгчийн хаяг тодорхойгүй")
+    trashed = False
+    if not DEMO:
+        mod = _connector(item["source"]) if item["source"] != "gchat" else None
+        if mod is None:
+            pass
+        elif hasattr(mod, "trash"):
+            _merge_meta(item_id, item, await _call(mod.trash, item))
+            trashed = True
+        else:
+            await _call(getattr(mod, "mark_read", None) or (lambda it: mod.apply_action(it, "mark_read")), item)
+    _save_blocked(blocked() + [key])
+    store.update(item_id, status="blocked")
+    journal.add("mail", f"Блоклов: {key}"[:200],
+                "Цаашид энэ илгээгчийн мэйлийг Terre автоматаар хогийн сав руу зөөнө",
+                undo={"type": "msg_action", "item": item_id, "prev": item["status"],
+                      "revert": "untrash" if trashed else "mark_unread", "unblock": key}, who=who)
+    return key
+
+
+async def revert_msg_action(u):
+    """journal.undo-оос дуудагдана."""
+    item = store.get(u["item"])
+    if item and not DEMO and u.get("revert"):
+        mod = _connector(item["source"])
+        fn = getattr(mod, u["revert"], None)
+        if fn:
+            await _call(fn, item)
+    if u.get("unblock"):
+        _save_blocked([b for b in blocked() if b != u["unblock"]])
+    if item:
+        store.update(u["item"], status=u["prev"])
+
+
+async def _handle_blocked(it, errors):
+    """Блоклосон илгээгчийн шинэ мэйл: Gemini-д илгээхгүй (токен хэмнэнэ), хогийн сав руу зөөнө."""
+    try:
+        if it["source"] == "gchat":
+            raise _Skip()
+        mod = _connector(it["source"])
+        if hasattr(mod, "trash"):
+            res = await _call(mod.trash, it)
+            if isinstance(res, dict):
+                it["meta"] = {**it.get("meta", {}), **res}
+        else:
+            await _call(getattr(mod, "mark_read", None) or (lambda x: mod.apply_action(x, "mark_read")), it)
+    except _Skip:
+        pass
+    except Exception as e:
+        errors.append(f"Блоклосон мэйл ({it['source']}): {e}")
+        return
+    store.insert(it, {"category": "auto", "summary": f"{it.get('sender')}: {it.get('subject')}", "reason": "Блоклосон илгээгч",
+                      "action": "none", "draft": ""}, "blocked")
+    journal.add("mail", f"Блоклосон илгээгчийн мэйлийг хогийн сав руу зөөв: {it.get('sender')} — {it.get('subject')}"[:200],
+                who="Terre", undo={"type": "msg_action", "item": it["id"], "prev": "auto", "revert": "untrash"})
+
+
+async def sm_plan_status(plan_id, status="биелсэн", who="Та"):
+    """School Manager-ийн төлөвлөгөөний төлөвийг id-аар солино (самбарын «Яаралтай» хэсгээс)."""
+    from .connectors import school_manager as sm
+    if not sm.is_running():
+        await asyncio.to_thread(sm.start)
+    r = await asyncio.to_thread(sm.call, "set_plan_status", {"id": plan_id, "status": status})
+    undo = (r or {}).pop("undo", None)
+    journal.add("sm", f"School Manager: «{(r or {}).get('activity', '')}» → {status}"[:200], who=who,
+                undo={"type": "sm", "action": undo["action"], "params": undo["params"]} if undo else None)
+    try:   # самбарын жагсаалтыг шууд шинэчилнэ
+        STATE["sm_state"] = await asyncio.to_thread(sm.fetch_state)
+    except Exception:
+        pass
+    return r
 
 
 def promote(item_id, draft):

@@ -158,9 +158,11 @@ def compose_briefing(calendar, counts, urgent, pending, metrics, errors):
 Доорх өгөгдлөөр эзэндээ ДУУГААР уншигдах өдрийн мэдээлэл зохио.
 
 Шаардлага:
-- Монгол хэлээр, 90-140 үг, markdown/жагсаалт/emoji БҮҮ ашигла (чангаар уншигдана).
-- Дараалал: мэндчилгээ -> өнөөдрийн хуваарь (цагтай) -> яаралтай зүйлс -> таны зөвшөөрөл хүлээж буй
-  зүйлс -> Terre өөрөө шийдсэн зүйлсийн тоо -> тоон үзүүлэлт -> богино урам өгөх төгсгөл.
+- Монгол хэлээр, 60-120 үг, markdown/жагсаалт/emoji БҮҮ ашигла (чангаар уншигдана).
+- Дараалал: мэндчилгээ ("greeting"-ийг яг тэр чигээр нь) -> өнөөдрийн хуваарь (цагтай) -> School Manager-т өнөөдөр
+  төлөвлөгдсөн ажлууд -> яаралтай зүйлс -> таны зөвшөөрөл хүлээж буй зүйлс -> Terre өөрөө шийдсэн зүйлсийн тоо -> тоон үзүүлэлт.
+- "Terre ажилдаа бэлэн", "Амжилттай өдөр болтугай" зэрэг хоосон мэндчилгээ, урам өгөх төгсгөл, ерөөл БҮҮ нэм. Сүүлийн мэдээллээр л дуусга.
+- Хугацаа хэтэрсэн ажлын НЭРИЙГ бүү дурд — зөвхөн тоог нь хэл ("хугацаа хэтэрсэн N ажил байна").
 - Холболтын алдаа байвал нэг өгүүлбэрээр дурд.
 - Өгөгдөлд байхгүй зүйл зохиохгүй.
 
@@ -199,7 +201,7 @@ def _heuristic(item):
 
 
 def _template_briefing(owner, calendar, counts, urgent, pending, metrics):
-    parts = [f"{greeting()}, {owner}. Terre ажилдаа бэлэн."]
+    parts = [f"{greeting()}, {owner}."]
     if calendar:
         ev = ", ".join(f"{e['time']}-д {e['title']}" for e in calendar[:5])
         parts.append(f"Өнөөдөр танд {len(calendar)} үйл явдал байна: {ev}.")
@@ -217,13 +219,14 @@ def _template_briefing(owner, calendar, counts, urgent, pending, metrics):
         ab = sm.get("absent_teachers") or []
         if ab:
             parts.append(f"Өнөөдөр {len(ab)} багш ирээгүй: " + ", ".join(f"{a['name']} {a['status'].lower()}" for a in ab[:4]) + ".")
-        if sm.get("overdue_plans"):
-            parts.append(f"Хугацаа хэтэрсэн {len(sm['overdue_plans'])} төлөвлөгөө байна: {sm['overdue_plans'][0]}.")
+        if sm.get("today_plans"):
+            parts.append(f"Өнөөдөр School Manager-т {len(sm['today_plans'])} ажил төлөвлөгдсөн: " + ", ".join(sm["today_plans"][:3]) + ".")
+        if sm.get("overdue_plans_count"):
+            parts.append(f"Хугацаа хэтэрсэн {sm['overdue_plans_count']} ажил байна.")
         if sm.get("upcoming_plans_7d"):
             parts.append(f"Энэ долоо хоногт: {sm['upcoming_plans_7d'][0]}.")
     elif sm:
         parts.append("School Manager хаалттай байна.")
-    parts.append("Амжилттай өдөр болтугай.")
     return " ".join(parts)
 
 

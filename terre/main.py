@@ -257,6 +257,43 @@ def dismiss(item_id: str):
     return {"ok": True}
 
 
+@app.post("/api/items/{item_id:path}/read")
+async def mark_read(item_id: str):
+    await _awrap(engine.mark_read(item_id))
+    return {"ok": True}
+
+
+@app.post("/api/items/{item_id:path}/trash")
+async def trash(item_id: str):
+    await _awrap(engine.trash(item_id))
+    return {"ok": True}
+
+
+@app.post("/api/items/{item_id:path}/block")
+async def block(item_id: str):
+    key = await _awrap(engine.block(item_id))
+    return {"ok": True, "blocked": key}
+
+
+@app.get("/api/blocked")
+def blocked_list():
+    return {"blocked": engine.blocked()}
+
+
+@app.post("/api/blocked/remove")
+def blocked_remove(b: dict):
+    key = str(b.get("sender", "")).strip().lower()
+    engine._save_blocked([x for x in engine.blocked() if x != key])
+    journal.add("mail", f"Блокоос гаргав: {key}"[:200], who="Та")
+    return {"ok": True}
+
+
+@app.post("/api/sm/plan/{plan_id}/status")
+async def sm_plan_status(plan_id: str, b: dict):
+    r = await _awrap(engine.sm_plan_status(plan_id, b.get("status") or "биелсэн"))
+    return {"ok": True, "result": r}
+
+
 @app.post("/api/items/{item_id:path}/redraft")
 async def redraft(item_id: str, b: RedraftBody):
     item = store.get(item_id)

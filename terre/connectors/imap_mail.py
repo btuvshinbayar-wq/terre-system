@@ -113,7 +113,7 @@ def parse(raw, acc, uid, uidvalidity):
         "body": body[:8000],
         "received": received,
         "meta": {
-            "account": acc["name"], "uid": uid, "uidvalidity": uidvalidity,
+            "account": acc["name"], "uid": uid, "uidvalidity": uidvalidity, "from_addr": (addr or "").lower(),
             "rfc_id": str(msg.get("Message-ID", "")), "references": str(msg.get("References", "")),
             "reply_to": str(msg.get("Reply-To") or msg.get("From", "")), "subject": str(msg.get("Subject", "")),
             "attachments": _attachments(msg),
@@ -183,6 +183,31 @@ def apply_action(item, action):
                         m.uid("EXPUNGE", uid)
                     except Exception:
                         pass
+    _with_message(item, do)
+
+
+def mark_read(item):
+    _with_message(item, lambda m, acc, uid: m.uid("STORE", uid, "+FLAGS", r"(\Seen)"))
+
+
+def mark_unread(item):
+    _with_message(item, lambda m, acc, uid: m.uid("STORE", uid, "-FLAGS", r"(\Seen)"))
+
+
+def trash(item):
+    """Хогийн сав руу зөөнө (config: trash_folder, анхдагч "Trash")."""
+    def do(m, acc, uid):
+        folder = acc.get("trash_folder") or "Trash"
+        m.uid("STORE", uid, "+FLAGS", r"(\Seen)")
+        if m.uid("MOVE", uid, folder)[0] == "OK":
+            return
+        if m.uid("COPY", uid, folder)[0] != "OK":
+            raise RuntimeError(f"'{folder}' хавтас олдсонгүй. config.yaml → trash_folder-д хогийн савны нэрийг бичнэ үү")
+        m.uid("STORE", uid, "+FLAGS", r"(\Deleted)")
+        try:
+            m.uid("EXPUNGE", uid)
+        except Exception:
+            pass
     _with_message(item, do)
 
 

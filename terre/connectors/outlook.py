@@ -87,7 +87,8 @@ def fetch_unread(top=25):
             "snippet": m.get("bodyPreview", ""),
             "body": " ".join(body.split())[:8000],
             "received": _local(m.get("receivedDateTime")),
-            "meta": {"msg_id": m["id"], "has_attachments": bool(m.get("hasAttachments"))},
+            "meta": {"msg_id": m["id"], "has_attachments": bool(m.get("hasAttachments")),
+                     "from_addr": (frm.get("address") or "").lower()},
         })
     return out
 
@@ -105,6 +106,25 @@ def apply_action(item, action):
         moved = _post(f"/me/messages/{mid}/move", {"destinationId": "archive"})
         item["meta"]["archived_id"] = moved.get("id")   # Outlook зөөхөд ID өөрчлөгддөг
         return {"archived_id": moved.get("id")}
+
+
+def mark_read(item):
+    _post(f"/me/messages/{item['meta']['msg_id']}", {"isRead": True}, method="PATCH")
+
+
+def mark_unread(item):
+    _post(f"/me/messages/{item['meta']['msg_id']}", {"isRead": False}, method="PATCH")
+
+
+def trash(item):
+    """'Deleted Items' руу зөөнө (буцааж болно)."""
+    moved = _post(f"/me/messages/{item['meta']['msg_id']}/move", {"destinationId": "deleteditems"})
+    return {"trashed_id": moved.get("id")}
+
+
+def untrash(item):
+    mid = item["meta"].get("trashed_id") or item["meta"]["msg_id"]
+    _post(f"/me/messages/{mid}/move", {"destinationId": "inbox"})
 
 
 def unarchive(item):

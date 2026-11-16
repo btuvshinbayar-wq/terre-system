@@ -127,6 +127,10 @@ main{padding:22px 32px 48px;display:grid;gap:18px;grid-template-columns:repeat(1
 .item{position:relative;border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:12px 14px;margin-bottom:10px;
       background:rgba(6,12,20,.75);overflow:hidden;transition:border-color .25s, transform .25s}
 .item:hover{transform:translateX(3px)}
+.urgent .item.smi{border-left-color:var(--cyan)} .urgent .item.smo{border-left-color:var(--amber, #f5b942)}
+.smrow{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:center;padding:5px 0;border-top:1px solid rgba(56,214,245,.08);font-size:12.5px}
+.smrow span:first-child{color:var(--mut)} .smrow button{padding:2px 8px;font-size:11px}
+button.dng:hover{border-color:rgba(255,93,108,.6);color:#ff8a95}
 .urgent .item{border-left-color:var(--red)} .auto .item{border-left-color:var(--green);padding:9px 12px}
 .urgent .item::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,93,108,.09),transparent 45%);
   animation:alarm 2.4s ease-in-out infinite}
@@ -369,7 +373,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
     <div id="planBox"></div>
     <div id="flist"></div>
   </section>
-  <section data-tab="home" class="card col urgent" style="--d:.35s"><h2>🔴 Яаралтай <span class="n" id="nU">0</span></h2><div class="list" id="urgent"></div></section>
+  <section data-tab="home" class="card col urgent" style="--d:.35s"><h2>🔴 Яаралтай <span class="n" id="nU">0</span></h2><div class="list" id="smAgenda"></div><div class="list" id="urgent"></div></section>
   <section data-tab="home" class="card col pending" style="--d:.45s"><h2>🟡 Таны зөвшөөрөл хэрэгтэй <span class="n" id="nP">0</span></h2><div class="list" id="pending"></div></section>
   <section data-tab="home" class="card col auto" style="--d:.55s"><h2>🟢 Terre шийдсэн <span class="n" id="nA">0</span></h2><div class="list" id="auto"></div></section>
   <section data-tab="work" class="card tk" style="--d:.12s"><h2>✅ Даалгавар, хугацаа <span class="n" id="nT">0</span></h2>
@@ -552,8 +556,39 @@ function itemCard(it){
     <div class="acts">
       ${it.source==="gchat" ? `<button data-a="copy">📋 Хуулах</button>` : `<button class="pri" data-a="send">✉ Илгээх</button>`}
       <button data-a="redraft">✎ Дахин бичүүлэх</button>
-      <button data-a="dismiss">Алгасах</button>
+      <button data-a="read" title="Мэйлийг уншсан болгоод жагсаалтаас хасна">✓ Уншсан</button>
+      <button data-a="dismiss" title="Зөвхөн Terre-ийн жагсаалтаас хасна, мэйлд хүрэхгүй">Алгасах</button>
+      ${MAILSRC.includes(it.source) ? `<button data-a="trash" class="dng" title="Хогийн сав руу зөөнө (буцааж болно)">🗑 Устгах</button>` : ""}
+      <button data-a="block" class="dng" title="Энэ илгээгчийн цаашдын мэйлийг Terre автоматаар хогийн сав руу зөөнө">⛔ Блоклох</button>
     </div></div>`;
+}
+const MAILSRC = ["gmail", "outlook", "imap"];
+const SMDATE = d => d ? d.slice(5).replace("-", "/") : "";
+function smCard(p, kind){
+  const range = p.endDate && p.endDate !== p.startDate ? `${SMDATE(p.startDate)}–${SMDATE(p.endDate)}` : SMDATE(p.startDate);
+  return `<div class="item smi" data-plan="${esc(p.id)}">
+    <div class="meta"><span class="src">SCHOOL MANAGER</span><span>${kind === "today" ? "Өнөөдөр" : "Удахгүй"}</span><span>${esc(range)}</span><span>${esc(p.status)}</span></div>
+    <div class="sum">${esc(p.activity)}</div>
+    <div class="acts"><button class="pri" data-sm="done">✓ Биелсэн</button></div></div>`;
+}
+function smOverdueCard(list){
+  return `<div class="item smi smo">
+    <div class="meta"><span class="src">SCHOOL MANAGER</span><span>Хугацаа хэтэрсэн</span></div>
+    <div class="sum">Хугацаа хэтэрсэн ${list.length} ажил</div>
+    <details><summary>Жагсаалт харах</summary>${list.map(p => `<div class="smrow" data-plan="${esc(p.id)}">
+      <span>${esc(SMDATE(p.endDate || p.startDate))}</span><span>${esc(p.activity)}</span><button data-sm="done" title="Биелсэн">✓</button></div>`).join("")}</details></div>`;
+}
+let smSig = "";
+function renderAgenda(){
+  const ag = (S.sm_state && S.sm_state.agenda) || {today: [], upcoming: [], overdue: []};
+  const sig = JSON.stringify(ag);
+  if(sig !== smSig){
+    smSig = sig;
+    $("smAgenda").innerHTML = [...ag.today.map(p => smCard(p, "today")), ...ag.upcoming.map(p => smCard(p, "soon")),
+      ...(ag.overdue.length ? [smOverdueCard(ag.overdue)] : [])].join("");
+    [...$("smAgenda").children].forEach((c, i) => { c.classList.add("enter"); c.style.animationDelay = (firstRender ? .5 + i*.08 : 0) + "s"; });
+  }
+  return ag.today.length + ag.upcoming.length + (ag.overdue.length ? 1 : 0);
 }
 function autoCard(it){
   const act = {archive:"архивлах", mark_read:"уншсан болгох"}[it.action], done = it.status === "auto_done";
@@ -570,7 +605,7 @@ function autoCard(it){
 function reconcile(el, items, render, emptyText){
   const keys = new Set(items.map(i => i.id + "|" + i.status));
   [...el.children].forEach(ch => {
-    if(ch.classList.contains("empty")){ if(items.length) ch.remove(); return; }
+    if(ch.classList.contains("empty")){ if(items.length || !emptyText) ch.remove(); return; }
     if(ch.dataset.key && !keys.has(ch.dataset.key)) leave(ch);
   });
   let prev = null;
@@ -586,7 +621,7 @@ function reconcile(el, items, render, emptyText){
     if(n !== ref) el.insertBefore(n, ref);
     prev = n;
   });
-  if(!items.length && !el.querySelector(".empty")) el.insertAdjacentHTML("beforeend", `<div class="empty">${emptyText}</div>`);
+  if(!items.length && emptyText && !el.querySelector(".empty")) el.insertAdjacentHTML("beforeend", `<div class="empty">${emptyText}</div>`);
 }
 function leave(n, cls="leave"){
   n.dataset.key = ""; n.style.maxHeight = n.scrollHeight + "px"; n.classList.remove("enter","fresh"); n.classList.add(cls);
@@ -639,10 +674,11 @@ function render(){
   renderMetrics(S.metrics);
   renderMacros(); renderFiles(); renderFolders(); renderTasks(); renderHealthDot();
   if(TAB === "work") renderDayReport();
-  reconcile($("urgent"), S.urgent, itemCard, "Яаралтай зүйл алга. 👌");
+  const nSm = renderAgenda();
+  reconcile($("urgent"), S.urgent, itemCard, nSm ? "" : "Яаралтай зүйл алга. 👌");
   reconcile($("pending"), S.pending, itemCard, "Хүлээгдэж буй зүйл алга.");
   reconcile($("auto"), S.auto, autoCard, "Одоохондоо хоосон.");
-  setCount($("nU"), S.urgent.length); setCount($("nP"), S.pending.length); setCount($("nA"), S.auto.length);
+  setCount($("nU"), S.urgent.length + nSm); setCount($("nP"), S.pending.length); setCount($("nA"), S.auto.length);
   $("errs").innerHTML = (S.errors||[]).map(e => `⚠ ${esc(e)}`).join("<br>");
   firstRender = false;
 }
@@ -1017,6 +1053,11 @@ $("sQ").addEventListener("keydown", e => { if(e.key === "Enter") (e.ctrlKey ? $(
 function typeInto(el, t){ let i = 0; t = t || ""; (function step(){ el.textContent = t.slice(0, i += 3); if(i < t.length) setTimeout(step, 12); })(); }
 
 /* ================= System: health, journal, learn ================= */
+document.body.addEventListener("click", async ev => {
+  const b = ev.target.closest("button[data-unblock]"); if(!b) return;
+  try{ await api("/api/blocked/remove", {sender: b.dataset.unblock}); toast("Блокоос гаргалаа", "ok"); loadSystem(); }
+  catch(e){ toast(e.message, "err"); }
+});
 async function loadSystem(){
   try{
     const [h, j, l] = await Promise.all([api("/api/health"), api("/api/journal?limit=120"), api("/api/learn")]);
@@ -1025,6 +1066,11 @@ async function loadSystem(){
       + (h.desktop.hotkeys.length ? `<div class="why" style="margin-top:8px">Товчлол: ${h.desktop.hotkeys.map(esc).join(", ")}</div>` : "")
       + (h.desktop.hotkey_errors.length ? `<div class="warn">Товчлол бүртгэгдсэнгүй: ${h.desktop.hotkey_errors.map(esc).join(", ")}</div>` : "")
       + `<div class="why" style="margin-top:6px">Өгөгдөл: ${esc(h.home)}</div>`;
+    try{
+      const bl = (await api("/api/blocked")).blocked || [];
+      if(bl.length) $("hlist").insertAdjacentHTML("beforeend", `<div class="fsub" style="margin-top:10px"><span>⛔ Блоклосон илгээгчид (${bl.length})</span></div>`
+        + bl.map(x => `<div class="smrow" style="grid-template-columns:1fr auto"><span style="color:inherit">${esc(x)}</span><button data-unblock="${esc(x)}">Блокоос гаргах</button></div>`).join(""));
+    }catch(e){}
     let day = "";
     $("jlist").innerHTML = j.items.map((r, i) => { const d = r.ts.slice(0,10), hdr = d !== day ? `<div class="jday">${d}</div>` : ""; day = d;
       return hdr + `<div class="jrow ${r.status === "undone" ? "undone" : ""}" style="animation-delay:${Math.min(i,20)*.02}s"><span>${esc(r.icon)}</span><span class="tm">${r.ts.slice(11,16)}</span>
@@ -1133,13 +1179,29 @@ document.body.addEventListener("click", async ev => {
     } else if(a === "copy"){
       await navigator.clipboard.writeText(ta.value); toast("📋 Хуулагдлаа"); return;
     } else {
-      await api(`/api/items/${id}/${a}`, {});   // apply | dismiss | promote
+      const who = card.querySelector(".meta span:nth-child(2)")?.textContent || "";
+      if(a === "trash" && !confirm("Энэ мэйлийг хогийн сав руу зөөх үү? (Журналаас буцааж болно)")) return;
+      if(a === "block" && !confirm(`«${who}»-ийг блоклох уу?\n\nЭнэ мэйл хогийн сав руу очиж, цаашид энэ илгээгчийн бүх мэйлийг Terre автоматаар хогийн сав руу зөөнө. Систем табаас блокоос гаргаж болно.`)) return;
+      await api(`/api/items/${id}/${a}`, {});   // apply | dismiss | promote | read | trash | block
       leave(card);
-      toast({apply:"✓ Шийдэгдлээ", dismiss:"Алгаслаа", promote:"Зөвшөөрлийн жагсаалт руу шилжлээ"}[a]);
+      toast({apply:"✓ Шийдэгдлээ", dismiss:"Алгаслаа", promote:"Зөвшөөрлийн жагсаалт руу шилжлээ",
+             read:"✓ Уншсан болголоо", trash:"🗑 Хогийн сав руу зөөлөө", block:`⛔ ${who} блоклогдлоо`}[a]);
     }
     setTimeout(load, 500);
   } catch(e){ toast("Алдаа: " + e.message, "err"); }
   finally{ b.disabled = false; }
+});
+
+document.body.addEventListener("click", async ev => {
+  const b = ev.target.closest("button[data-sm]"); if(!b) return;
+  const holder = b.closest("[data-plan]"), id = holder && holder.dataset.plan; if(!id) return;
+  try{
+    b.disabled = true;
+    await api(`/api/sm/plan/${encodeURIComponent(id)}/status`, {status: "биелсэн"});
+    toast("✓ School Manager-т биелсэн гэж тэмдэглэлээ", "ok");
+    if(holder.classList.contains("item")) leave(holder); else holder.remove();
+    smSig = ""; setTimeout(load, 800);
+  }catch(e){ toast("Алдаа: " + e.message, "err"); b.disabled = false; }
 });
 
 $("refresh").onclick = async () => {

@@ -56,6 +56,10 @@ async def apply_action(item, action):
     await c.send_read_acknowledge(item["meta"]["chat_id"])
 
 
+async def mark_read(item):
+    await apply_action(item, "mark_read")
+
+
 async def send_reply(item, body):
     c = await client()
     await c.send_message(item["meta"]["chat_id"], body)
