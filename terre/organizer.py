@@ -51,7 +51,7 @@ def _forbidden(path):
     if p == home:
         return "Хэрэглэгчийн үндсэн хавтсыг бүхэлд нь холбох боломжгүй (Documents, Desktop гэх мэт дэд хавтсыг сонгоно уу)"
     bad = [os.environ.get(k, "") for k in ("WINDIR", "PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMDATA", "APPDATA", "LOCALAPPDATA")]
-    bad.append(str(DATA.parent))                      # Terre өөрөө
+    bad.append(str(DATA.parent))                      # TED өөрөө
     for b in filter(None, bad):
         b = os.path.normcase(os.path.abspath(b))
         if p == b or p.startswith(b + os.sep):

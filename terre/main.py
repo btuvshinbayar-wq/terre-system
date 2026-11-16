@@ -27,11 +27,11 @@ def dashboard_token():
 
 
 TOKEN = dashboard_token()
-LOCKED_PAGE = """<!DOCTYPE html><html lang="mn"><meta charset="utf-8"><title>Terre System</title>
+LOCKED_PAGE = """<!DOCTYPE html><html lang="mn"><meta charset="utf-8"><title>TED</title>
 <body style="background:#050910;color:#d8e6f3;font:16px Segoe UI,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
-<div style="text-align:center"><div style="font-size:12px;letter-spacing:5px;color:#38d6f5">TERRE SYSTEM</div>
+<div style="text-align:center"><div style="font-size:12px;letter-spacing:5px;color:#38d6f5">TED</div>
 <h2 style="font-weight:400">Самбарыг tray icon-оос эсвэл Эхлэх цэснээс нээнэ үү</h2>
-<p style="color:#7d93ab">Аюулгүй байдлын үүднээс самбарыг зөвхөн Terre өөрөө нээж болно.</p></div></body></html>"""
+<p style="color:#7d93ab">Аюулгүй байдлын үүднээс самбарыг зөвхөн TED өөрөө нээж болно.</p></div></body></html>"""
 
 
 async def _wait_for_internet(timeout=60):
@@ -91,7 +91,7 @@ async def _watchdog():
         f = open(DATA / "hang.log", "a", encoding="utf-8")
     except OSError:
         return
-    f.write(f"\n=== Terre асав {datetime.datetime.now().isoformat(timespec='seconds')} ===\n")
+    f.write(f"\n=== TED асав {datetime.datetime.now().isoformat(timespec='seconds')} ===\n")
     f.flush()
     try:
         while True:
@@ -210,7 +210,7 @@ def _sources():
 
 
 def _sm_lists():
-    """Тушаалын талбарт санал болгох жагсаалт (School Manager-ийн жинхэнэ өгөгдөл + Terre-ийн эмхэлсэн файлууд)."""
+    """Тушаалын талбарт санал болгох жагсаалт (School Manager-ийн жинхэнэ өгөгдөл + TED-ийн эмхэлсэн файлууд)."""
     st = engine.STATE.get("sm_state") or {}
     out = {k: st.get(k, []) for k in ("teachers", "plans", "evaluations", "observations", "curriculum_teachers")}
     recent = [f.get("dest") or f.get("src") for f in files.recent(["moved"], 200)]
@@ -382,7 +382,7 @@ async def voice_command(request: Request):
 
 
 async def _wake_command(wav):
-    """«Терри» гэж дуудсаны дараах тушаал: текст болгох → ойлгох → (бүрэн бол) биелүүлэх → дуугаар хариулах."""
+    """«Хэй Тэд» гэж дуудсаны дараах тушаал: текст болгох → ойлгох → (бүрэн бол) биелүүлэх → дуугаар хариулах."""
     from . import wake
     text = await asyncio.to_thread(brain.transcribe, wav, "audio/wav")
     if not text:
@@ -477,7 +477,7 @@ async def file_action(fid: int, action: str, b: FileBody | None = None):
 
 @app.post("/api/open")
 def open_path(b: dict):
-    """Файлыг Windows дээр нээх / Explorer-т харуулах (зөвхөн индекслэсэн эсвэл Terre-ийн мэдэх файл)."""
+    """Файлыг Windows дээр нээх / Explorer-т харуулах (зөвхөн индекслэсэн эсвэл TED-ийн мэдэх файл)."""
     from . import search
     p = b.get("path", "")
     if not (search.is_indexed(p) or p.startswith(files.root())):

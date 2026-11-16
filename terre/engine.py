@@ -1,4 +1,4 @@
-"""Terre System-ийн гол мөчлөг: эх сурвалжуудаас татах -> ангилах -> (зөвшөөрөгдсөн бол) шийдэх -> хадгалах."""
+"""TED-ийн гол мөчлөг: эх сурвалжуудаас татах -> ангилах -> (зөвшөөрөгдсөн бол) шийдэх -> хадгалах."""
 import asyncio
 import collections
 import inspect
@@ -273,7 +273,7 @@ async def mark_read(item_id, who="Та"):
     item = store.get(item_id)
     if not item:
         raise KeyError(item_id)
-    if not DEMO and item["source"] != "gchat":      # Google Chat-д "уншсан" тэмдэглэх API байхгүй — зөвхөн Terre-д
+    if not DEMO and item["source"] != "gchat":      # Google Chat-д "уншсан" тэмдэглэх API байхгүй — зөвхөн TED-д
         mod = _connector(item["source"])
         await _call(getattr(mod, "mark_read", None) or (lambda it: mod.apply_action(it, "mark_read")), item)
     store.update(item_id, status="read")
@@ -315,7 +315,7 @@ async def block(item_id, who="Та"):
     _save_blocked(blocked() + [key])
     store.update(item_id, status="blocked")
     journal.add("mail", f"Блоклов: {key}"[:200],
-                "Цаашид энэ илгээгчийн мэйлийг Terre автоматаар хогийн сав руу зөөнө",
+                "Цаашид энэ илгээгчийн мэйлийг TED автоматаар хогийн сав руу зөөнө",
                 undo={"type": "msg_action", "item": item_id, "prev": item["status"],
                       "revert": "untrash" if trashed else "mark_unread", "unblock": key}, who=who)
     return key
@@ -355,7 +355,7 @@ async def _handle_blocked(it, errors):
     store.insert(it, {"category": "auto", "summary": f"{it.get('sender')}: {it.get('subject')}", "reason": "Блоклосон илгээгч",
                       "action": "none", "draft": ""}, "blocked")
     journal.add("mail", f"Блоклосон илгээгчийн мэйлийг хогийн сав руу зөөв: {it.get('sender')} — {it.get('subject')}"[:200],
-                who="Terre", undo={"type": "msg_action", "item": it["id"], "prev": "auto", "revert": "untrash"})
+                who="TED", undo={"type": "msg_action", "item": it["id"], "prev": "auto", "revert": "untrash"})
 
 
 async def sm_plan_status(plan_id, status="биелсэн", who="Та"):
@@ -379,7 +379,7 @@ def promote(item_id, draft):
     learn.record_triage(item, "хариу шаардлагатай (эзэн зассан)")
     store.update(item_id, status="pending", draft=draft)
     journal.add("learn", f"Ангилал засав → хариу бичих: {item.get('subject')}"[:200],
-                "Terre дараа ижил төрлийн мэйлийг ингэж ангилна", undo={"type": "msg_status", "item": item_id, "prev": item["status"]})
+                "TED дараа ижил төрлийн мэйлийг ингэж ангилна", undo={"type": "msg_status", "item": item_id, "prev": item["status"]})
 
 
 # ---------- School Manager тушаал ----------

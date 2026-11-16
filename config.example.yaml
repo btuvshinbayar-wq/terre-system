@@ -1,8 +1,8 @@
 # ============================================================
-#  TERRE SYSTEM тохиргоо. Энэ файлыг config.yaml нэрээр хуулж засна.
+#  TED тохиргоо. Энэ файлыг config.yaml нэрээр хуулж засна.
 # ============================================================
 
-owner_name: "Tuvshuu"          # Terre таныг ингэж дуудна
+owner_name: "Tuvshuu"          # TED таныг ингэж дуудна
 timezone: "Asia/Ulaanbaatar"
 
 # Таны тухай товч мэдээлэл: хариу мэйлийн ноорогт ашиглагдана
@@ -16,7 +16,7 @@ demo_mode: true
 
 refresh_minutes: 10            # хэдэн минут тутам мэйл/чат шалгах
 
-# true = спам, мэдээллийн захидлыг Terre өөрөө архивлана / уншсан болгоно.
+# true = спам, мэдээллийн захидлыг TED өөрөө архивлана / уншсан болгоно.
 # false = зөвхөн санал болгоно, та самбараас "Хийх" дарна.
 # Хариу мэйл ХЭЗЭЭ Ч автоматаар явахгүй, үргэлж таны зөвшөөрлөөр явна.
 auto_actions: false
@@ -37,9 +37,9 @@ gemini:
 voice:
   enabled: true
   name: "mn-MN-YesuiNeural"    # эмэгтэй хоолой. Эрэгтэй: mn-MN-BataaNeural
-  wake:                        # «Терри» гэж дуудахад сонсож тушаал биелүүлэх (README 3.10)
+  wake:                        # «Хэй Тэд» гэж дуудахад сонсож тушаал биелүүлэх (README 3.10)
     enabled: false
-    words: ["terry", "terra"]  # дуудах үг (компьютер дээр интернэтгүй таньдаг англи загвар)
+    words: ["hey ted"]         # дуудах үг: «Хэй Тэд» (компьютер дээр интернэтгүй таньдаг англи загвар)
     auto_run: true             # бүрэн ойлгосон School Manager-ийн тушаалыг шууд биелүүлэх (журналаас буцаана). Мэйл хэзээ ч илгээхгүй
 
 sources:
@@ -87,7 +87,7 @@ desktop:
   tray: true
 
 tasks:
-  follow_up: true              # Terre-ээр илгээсэн хариунд хариу ирэхгүй бол сануулах
+  follow_up: true              # TED-ээр илгээсэн хариунд хариу ирэхгүй бол сануулах
   follow_up_days: 3
   remind_at: "08:30"           # хугацаа дөхсөн ажлыг сануулах цаг
   calendar_target: auto        # хурлыг аль календарьт нэмэх: auto | google | outlook
@@ -97,12 +97,12 @@ day_report:                    # Өдрийн тайлан → School Manager-и
   at: "17:00"
   weekends: false
 
-school_manager:                # Таны School Manager Lite програм (Terre Bridge-тэй хувилбар)
+school_manager:                # Таны School Manager Lite програм (TED Bridge-тэй хувилбар)
   enabled: true
   exe: ""                      # хоосон = автоматаар хайна (C:\Program Files\SchoolManager\SchoolManager.exe)
   data_dir: ""                 # хоосон = програмын сонгосон хавтас (data-location.json). Жишээ: 'D:\work\2026-2027\SchoolManager-Data'
-                               #   Програм хаалттай үед Terre эндээс sm-data-mirror.json-ийг ЗӨВХӨН уншиж самбарт харуулна
-  open_at_startup: false       # Terre асахад School Manager-ийг ч асаах
+                               #   Програм хаалттай үед TED эндээс sm-data-mirror.json-ийг ЗӨВХӨН уншиж самбарт харуулна
+  open_at_startup: false       # TED асахад School Manager-ийг ч асаах
   # Өдөр бүр автоматаар хийх тушаалууд (тушаалын нэр самбарын товчтой ижил)
   schedule:
     - {command: "Бүрэн нөөцлөл хийх", at: "17:30"}
@@ -112,7 +112,7 @@ files:                         # Файл татах, ангилах, эмхлэ
   enabled: true
   root: "~/Documents/Terre"    # ангилсан файлууд энд <Ангилал>/ хавтсанд очно
   attachments: true            # мэйлийн хавсралтыг татах (спам гэж ангилсныхыг татахгүй)
-  # Downloads, Desktop, Documents зэрэг хавтсыг Terre өөрөө цэгцлэхгүй. Цэгцлэх хавтсаа самбарын
+  # Downloads, Desktop, Documents зэрэг хавтсыг TED өөрөө цэгцлэхгүй. Цэгцлэх хавтсаа самбарын
   # «Файл» таб → «📁 Холбосон хавтсууд»-аас зааж тохируулна.
   min_age_minutes: 3           # татаж дуусаагүй файлд хүрэхгүй
   since_days: 30               # эхний удаад үүнээс хуучин файлд хүрэхгүй

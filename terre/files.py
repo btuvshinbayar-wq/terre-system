@@ -104,7 +104,7 @@ def _candidates():
     min_age = float(c.get("min_age_minutes", 3)) * 60
     since = time.time() - float(c.get("since_days", 30)) * 86400
     r = root()
-    # Downloads, Desktop, Documents зэрэг хавтсыг ӨӨРӨӨ цэгцлэхгүй. Зөвхөн Terre-ийн өөрийн хавсралтын хавтас
+    # Downloads, Desktop, Documents зэрэг хавтсыг ӨӨРӨӨ цэгцлэхгүй. Зөвхөн TED-ийн өөрийн хавсралтын хавтас
     # болон хэрэглэгч самбарын «📁 Холбосон хавтсууд»-д зааж тохируулсан хавтсууд (config-ийн files.sources-ийг үл тооно).
     sources = [(inbox(), "auto", "Хавсралт", r)]
     # Самбараас холбосон хавтсууд (шинээр орж ирсэн файлыг хянах)
@@ -134,7 +134,7 @@ def connected_folders():
         return [dict(r) for r in _db.execute("SELECT * FROM folders ORDER BY id").fetchall()]
 
 
-def _journal_move(key, shown, newname, cat, origin, who="Terre"):
+def _journal_move(key, shown, newname, cat, origin, who="TED"):
     from . import journal
     with _lock:
         r = _db.execute("SELECT id FROM files WHERE key=?", (key,)).fetchone()
@@ -167,7 +167,7 @@ def _record(key, name, src, dest, cat, reason, origin, status, base=None, newnam
 
 # ---------------- Нэр солих ----------------
 # АНХААР: давталт дотор давталт (жишээ нь (\d+)*) бүү бич — олон цифртэй нэр дээр regex хязгааргүй удаан
-# ажиллаж, Python-ийг бүхэлд нь түгждэг (2026-11-16-нд Terre бүхэлдээ гацсан шалтгаан).
+# ажиллаж, Python-ийг бүхэлд нь түгждэг (2026-11-16-нд TED бүхэлдээ гацсан шалтгаан).
 MESSY = re.compile(r"""^(
     img|dsc|dcim|pxl|photo|image|scan|scanned|скан|document|doc|file|untitled|download|attachment|new|noname|
     новый|документ|шинэ|баримт|файл|copy|хуулбар|screenshot|screen\s?shot|capture|whatsapp|telegram|viber|cam|vid
@@ -376,7 +376,7 @@ def save_attachment(filename, data, sender="", date=None):
 
 
 def register_generated(path, origin):
-    """Terre-ийн өөрөө гаргасан файлыг (тайлан, нөөц) 'эмхэлсэн' жагсаалтад харуулна."""
+    """TED-ийн өөрөө гаргасан файлыг (тайлан, нөөц) 'эмхэлсэн' жагсаалтад харуулна."""
     try:
         name = os.path.basename(path)
         cat = os.path.basename(os.path.dirname(path))

@@ -1,4 +1,4 @@
-"""Telegram bot — Terre-ийг утаснаас удирдах.
+"""Telegram bot — TED-ийг утаснаас удирдах.
 
 - Зөвхөн таны (эзний) чатад хариулна, бусад хүнд юу ч хэлэхгүй.
 - Яаралтай мэйл ирвэл мэдэгдэнэ: ноорог харах → "✅ Тийм, илгээ" гэсэн 2 алхмаар илгээнэ.
@@ -129,7 +129,7 @@ def _handle_text(text):
     from . import brain, engine, search, store, tasks
     t = text.strip()
     if t in ("/start", "/help", "/menu"):
-        return send("Сайн байна уу! Би Terre. Тушаалаа бичих эсвэл дуут мессеж илгээнэ үү.\n"
+        return send("Сайн байна уу! Би TED. Тушаалаа бичих эсвэл дуут мессеж илгээнэ үү.\n"
                     "Жишээ: «[багшийн нэр] багшийг өвчтэй гэж тэмдэглэ», «А-145 тушаалд юу гэж байсан бэ?», «Энэ сарын тайланг гарга»",
                     keyboard=True)
     if t.startswith("📋") or t == "/today":
@@ -299,7 +299,7 @@ def setup_interactive():
             if m.get("text", "").startswith("/start"):
                 from . import learn
                 learn.kv_set("tg_chat_id", str(m["chat"]["id"]))
-                api("sendMessage", chat_id=m["chat"]["id"], text="✓ Terre System холбогдлоо! Зөвхөн танд хариулна.",
+                api("sendMessage", chat_id=m["chat"]["id"], text="✓ TED холбогдлоо! Зөвхөн танд хариулна.",
                     reply_markup=MENU)
                 print(f"  ✓ Таны чат холбогдлоо ({m['from'].get('first_name', '')}). config.yaml → telegram_bot.enabled: true")
                 return

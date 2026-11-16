@@ -1,4 +1,4 @@
-"""Үйлдлийн журнал: Terre-ийн хийсэн бүх зүйл, мөр бүрийг буцаах боломжтой."""
+"""Үйлдлийн журнал: TED-ийн хийсэн бүх зүйл, мөр бүрийг буцаах боломжтой."""
 import asyncio
 import json
 import logging
@@ -17,7 +17,7 @@ ICONS = {"mail": "✉", "archive": "🗄", "file": "🗂", "folder": "📁", "sm
          "report": "📝", "voice": "🎙", "telegram": "📱", "learn": "🧠", "system": "🔧"}
 
 
-def add(kind, title, detail="", undo=None, who="Terre"):
+def add(kind, title, detail="", undo=None, who="TED"):
     """undo: {"type": ..., ...} эсвэл None (буцаах боломжгүй)."""
     with _lock:
         cur = _db.execute("INSERT INTO activity(ts,kind,icon,title,detail,undo,status,who) VALUES (?,?,?,?,?,?,?,?)",

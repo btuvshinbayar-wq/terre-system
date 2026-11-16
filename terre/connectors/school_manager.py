@@ -1,10 +1,10 @@
-"""School Manager Lite холболт — Terre Bridge (файлын шуудангийн хайрцаг).
+"""School Manager Lite холболт — TED Bridge (файлын шуудангийн хайрцаг).
 
 School Manager Lite (Neutralino) асахдаа %APPDATA%\\TerreBridge\\school-manager.json-д нууц token,
-хайрцгийн замыг бичиж, 5 секунд тутам "heartbeat" шинэчилнэ. Terre тушаалаа inbox\\<id>.json-д бичээд,
+хайрцгийн замыг бичиж, 5 секунд тутам "heartbeat" шинэчилнэ. TED тушаалаа inbox\\<id>.json-д бичээд,
 outbox\\<id>.json-оос хариуг уншина. Бүх өөрчлөлт програмын өөрийн React state-ээр дамжиж хадгалагдана.
 
-Програм хаалттай үед ч Terre өгөгдлийн файлаас (sm-data-mirror.json) зөвхөн УНШИНА:
+Програм хаалттай үед ч TED өгөгдлийн файлаас (sm-data-mirror.json) зөвхөн УНШИНА:
 самбарын тоо, багш, төлөвлөгөөний жагсаалт. Өгөгдлийн файлд хэзээ ч бичихгүй.
 Лиценз, Machine ID, Gemini түлхүүрийг уншихгүй, хадгалахгүй.
 """
@@ -37,7 +37,7 @@ OPT = {"optional": True}
 MONTH = {"name": "month", "label": "Сар (YYYY-MM, хоосон = энэ сар)", **OPT}
 DATE = {"name": "date", "label": "Огноо (YYYY-MM-DD, хоосон = өнөөдөр)", **OPT}
 
-# group: самбар дээр товчийг бүлэглэх; kind=export бол файл Terre-ийн хавтаст хадгалагдана
+# group: самбар дээр товчийг бүлэглэх; kind=export бол файл TED-ийн хавтаст хадгалагдана
 COMMANDS = [
     # ---------- Ирц & цаг ----------
     {"group": "Ирц & цаг", "name": "Багшийн ирц тэмдэглэх", "action": "set_attendance",
@@ -230,7 +230,7 @@ def is_running():
 def call(action, params=None, timeout=90):
     info = _info()
     if not info or not _alive(info):
-        raise RuntimeError("School Manager хаалттай байна (эсвэл Terre Bridge-тэй шинэ хувилбар суугаагүй)")
+        raise RuntimeError("School Manager хаалттай байна (эсвэл TED Bridge-тэй шинэ хувилбар суугаагүй)")
     inbox, outbox = info["inbox"], info["outbox"]
     cid = f"t{int(time.time() * 1000)}_{secrets.token_hex(4)}"
     msg = {"id": cid, "token": info["token"], "ts": int(time.time() * 1000), "action": action, "params": params or {}}
@@ -245,7 +245,7 @@ def call(action, params=None, timeout=90):
             data = _read_json(out)
             if data is not None:
                 try:
-                    os.remove(out)   # Terre-ийн өөрийн түр хариу файл
+                    os.remove(out)   # TED-ийн өөрийн түр хариу файл
                 except OSError:
                     pass
                 if not data.get("ok"):
@@ -288,7 +288,7 @@ def start(wait=60):
                 return True
             except RuntimeError:
                 pass
-    raise RuntimeError("School Manager асаалаа, гэвч Terre Bridge хариу өгсөнгүй (Terre-тэй хувилбар суулгасан эсэхийг шалгана уу)")
+    raise RuntimeError("School Manager асаалаа, гэвч TED Bridge хариу өгсөнгүй (TED-тэй хувилбар суулгасан эсэхийг шалгана уу)")
 
 
 # ======================= Өгөгдлийн файл (зөвхөн унших) =======================
@@ -319,10 +319,10 @@ def diagnose():
     info = _read_json(_info_path())
     f = data_file()
     if info and info.get("transport") == "file" and _alive(info):
-        return "ok", "Програм нээлттэй, Terre Bridge холбогдсон", ""
+        return "ok", "Програм нээлттэй, TED Bridge холбогдсон", ""
     where = f"Өгөгдөл: {f}" if f else f"Өгөгдлийн файл олдсонгүй ({data_dir()})"
     if not info:
-        return ("warn" if f else "error"), f"Програм Terre Bridge-гүй эсвэл хэзээ ч асаагүй. {where}", \
+        return ("warn" if f else "error"), f"Програм TED Bridge-гүй эсвэл хэзээ ч асаагүй. {where}", \
             "School Manager-ийн шинэ кодоор (git pull → build-neutralino.bat) Lite installer хийж суулгаад програмаа нээнэ үү" \
             + ("" if f else ". config.yaml → school_manager.data_dir-д өгөгдлийн хавтсыг бичнэ үү")
     return ("warn" if f else "error"), f"Програм хаалттай. {where}", \

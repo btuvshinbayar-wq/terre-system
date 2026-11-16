@@ -35,7 +35,7 @@ def create_event(m):
     if t == "google":
         from googleapiclient.discovery import build
         from .connectors.google_auth import creds
-        body = {"summary": m["title"], "location": m.get("location", ""), "description": "Terre System нэмсэн",
+        body = {"summary": m["title"], "location": m.get("location", ""), "description": "TED нэмсэн",
                 "start": {"date": start.isoformat()} if allday else {"dateTime": start.isoformat()},
                 "end": {"date": end.isoformat()} if allday else {"dateTime": end.isoformat()}}
         ev = build("calendar", "v3", credentials=creds(), cache_discovery=False).events().insert(

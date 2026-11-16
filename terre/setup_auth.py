@@ -19,7 +19,7 @@ if os.name == "nt":
 def _basics():
     import getpass
     print(f"Тохиргооны файл: {CONFIG_FILE}\n")
-    name = input(f"Таны нэр (Terre таныг ингэж дуудна) [{CFG.get('owner_name', '')}]: ").strip()
+    name = input(f"Таны нэр (TED таныг ингэж дуудна) [{CFG.get('owner_name', '')}]: ").strip()
     if name:
         save_config_value(["owner_name"], name)
     if not gemini_key():
@@ -33,7 +33,7 @@ def _basics():
 
 
 def main():
-    print("=== Terre System: холболтууд тохируулах ===\n")
+    print("=== TED: холболтууд тохируулах ===\n")
     _basics()
     if any(source_enabled(s) for s in ("gmail", "google_calendar", "google_chat")):
         print("[Google] Браузер нээгдэнэ, данс сонгоод зөвшөөрнө үү...")
@@ -71,11 +71,11 @@ def main():
         except Exception as e:
             print(f"  ✗ Telegram bot: {e}")
     if CFG.get("school_manager", {}).get("enabled"):
-        print("\n[School Manager] Terre Bridge-тэй хувилбар суулгасан байх хэрэгтэй (README 3.5).")
+        print("\n[School Manager] TED Bridge-тэй хувилбар суулгасан байх хэрэгтэй (README 3.5).")
     if DEMO and input("\nДемо горимоос гарч жинхэнэ холболтуудаар ажиллах уу? (y/N): ").strip().lower() == "y":
         save_config_value(["demo_mode"], False)
         print("  ✓ demo_mode: false")
-    print("\nБэлэн. Terre System-ийг дахин асаахад (tray → хаах → Эхлэх цэснээс нээх) шинэ холболтууд идэвхжинэ.")
+    print("\nБэлэн. TED-ийг дахин асаахад (tray → хаах → Эхлэх цэснээс нээх) шинэ холболтууд идэвхжинэ.")
     input("\nEnter дарж хаана уу...")
 
 

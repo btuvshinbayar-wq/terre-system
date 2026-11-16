@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TERRE SYSTEM</title>
+<title>TED</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2713%27 fill=%27none%27 stroke=%27%2338d6f5%27 stroke-width=%273%27 stroke-dasharray=%2714 6%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%275%27 fill=%27%23bff4ff%27/%3E%3C/svg%3E">
 <style>
 :root{--bg:#050910;--panel:rgba(12,20,33,.78);--line:#1a2b40;--cyan:#38d6f5;--cyan2:#0f8fb0;--txt:#d8e6f3;--mut:#7d93ab;
@@ -333,7 +333,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
 <header>
   <div class="reactor" id="reactor"></div>
   <div class="grow">
-    <div class="brand">TERRE SYSTEM</div>
+    <div class="brand">TED</div>
     <h1 id="hello">Холбогдож байна...</h1>
     <div class="sub"><span class="dot"></span><span id="sub">Систем эхэлж байна</span><span id="wakeTag"></span></div>
   </div>
@@ -352,7 +352,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
   <section data-tab="home" class="card cal" style="--d:.15s"><h2>Календарь</h2><div class="tl" id="cal"></div></section>
   <section data-tab="home" class="card met" style="--d:.25s"><h2>Тоон үзүүлэлт</h2><div class="mgrid" id="met"></div></section>
   <section data-tab="work" class="card sm" style="--d:.3s"><h2>⚙ School Manager <span id="smStatus"></span></h2>
-    <div class="cmd"><input id="cmdIn" placeholder="Terre-д тушаал өгөх… жишээ нь: [багшийн нэр] багшийг өнөөдөр өвчтэй гэж тэмдэглэ" autocomplete="off">
+    <div class="cmd"><input id="cmdIn" placeholder="TED-д тушаал өгөх… жишээ нь: [багшийн нэр] багшийг өнөөдөр өвчтэй гэж тэмдэглэ" autocomplete="off">
       <button class="pri" id="cmdGo">➤</button></div>
     <div id="answer"></div><div id="proposal"></div><div id="running"></div>
     <div class="chips" id="chips"></div>
@@ -379,7 +379,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
   </section>
   <section data-tab="home" class="card col urgent" style="--d:.35s"><h2>🔴 Яаралтай <span class="n" id="nU">0</span></h2><div class="list" id="smAgenda"></div><div class="list" id="urgent"></div></section>
   <section data-tab="home" class="card col pending" style="--d:.45s"><h2>🟡 Таны зөвшөөрөл хэрэгтэй <span class="n" id="nP">0</span></h2><div class="list" id="pending"></div></section>
-  <section data-tab="home" class="card col auto" style="--d:.55s"><h2>🟢 Terre шийдсэн <span class="n" id="nA">0</span></h2><div class="list" id="auto"></div></section>
+  <section data-tab="home" class="card col auto" style="--d:.55s"><h2>🟢 TED шийдсэн <span class="n" id="nA">0</span></h2><div class="list" id="auto"></div></section>
   <section data-tab="work" class="card tk" style="--d:.12s"><h2>✅ Даалгавар, хугацаа <span class="n" id="nT">0</span></h2>
     <div class="fadd"><input id="tTitle" placeholder="Шинэ даалгавар…"><input id="tDue" type="date" style="flex:0 0 150px;min-width:0"><button id="tAdd">Нэмэх</button></div>
     <div id="tlist"></div><div class="fsub"><span>Сүүлд хийсэн</span></div><div id="tdone"></div></section>
@@ -395,7 +395,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
       <button data-sys="folder">📂 Өгөгдлийн хавтас</button><button data-sys="restart">↻ Дахин асаах</button>
       <button id="demoBtn"></button></div></section>
   <section data-tab="system" class="card jr" style="--d:.12s"><h2>📜 Үйлдлийн журнал</h2><div id="jlist"></div></section>
-  <section data-tab="system" class="card lr" style="--d:.2s"><h2>🧠 Terre-ийн сурсан зүйл</h2><div id="lbox"></div></section>
+  <section data-tab="system" class="card lr" style="--d:.2s"><h2>🧠 TED-ийн сурсан зүйл</h2><div id="lbox"></div></section>
   <div class="errs" data-tab="home" id="errs"></div>
 </main>
 
@@ -504,7 +504,7 @@ function endBoot(){ $("boot").classList.add("out"); setTimeout(() => $("boot").r
 async function boot(){
   if(booted || RM){ $("boot").remove(); return; }
   $("boot").onclick = endBoot;
-  $("bootTitle").innerHTML = [..."TERRE SYSTEM"].map((ch,i) => `<span style="animation-delay:${.15+i*.07}s">${ch===" "?"&nbsp;":ch}</span>`).join("");
+  $("bootTitle").innerHTML = [..."TED"].map((ch,i) => `<span style="animation-delay:${.15+i*.07}s">${ch===" "?"&nbsp;":ch}</span>`).join("");
   let sources = [];
   try{ sources = (await (await fetch("/api/state")).json()).sources || []; }catch(e){}
   const lines = ["Цөм систем эхэлж байна", "Санах ой ачааллаж байна", ...sources.map(s => `${s} холболт`), "Бүх систем хэвийн"];
@@ -561,9 +561,9 @@ function itemCard(it){
       ${it.source==="gchat" ? `<button data-a="copy">📋 Хуулах</button>` : `<button class="pri" data-a="send">✉ Илгээх</button>`}
       <button data-a="redraft">✎ Дахин бичүүлэх</button>
       <button data-a="read" title="Мэйлийг уншсан болгоод жагсаалтаас хасна">✓ Уншсан</button>
-      <button data-a="dismiss" title="Зөвхөн Terre-ийн жагсаалтаас хасна, мэйлд хүрэхгүй">Алгасах</button>
+      <button data-a="dismiss" title="Зөвхөн TED-ийн жагсаалтаас хасна, мэйлд хүрэхгүй">Алгасах</button>
       ${MAILSRC.includes(it.source) ? `<button data-a="trash" class="dng" title="Хогийн сав руу зөөнө (буцааж болно)">🗑 Устгах</button>` : ""}
-      <button data-a="block" class="dng" title="Энэ илгээгчийн цаашдын мэйлийг Terre автоматаар хогийн сав руу зөөнө">⛔ Блоклох</button>
+      <button data-a="block" class="dng" title="Энэ илгээгчийн цаашдын мэйлийг TED автоматаар хогийн сав руу зөөнө">⛔ Блоклох</button>
     </div></div>`;
 }
 const MAILSRC = ["gmail", "outlook", "imap"];
@@ -1005,7 +1005,7 @@ async function renderDayReport(force){
   if(sig === drSig && !force) return; drSig = sig;
   const box = $("drBox");
   if(!r.items){
-    box.innerHTML = `<div class="stage" style="font-size:13px;color:var(--mut);margin-bottom:10px">Өдөр бүр ${esc("17:00")}-д Terre өнөөдрийн мэйл, хурал, хийсэн ажлаас ажлын тэмдэглэлийн ноорог бэлдэнэ. Та сонгосныг нь School Manager-т оруулна.</div>
+    box.innerHTML = `<div class="stage" style="font-size:13px;color:var(--mut);margin-bottom:10px">Өдөр бүр ${esc("17:00")}-д TED өнөөдрийн мэйл, хурал, хийсэн ажлаас ажлын тэмдэглэлийн ноорог бэлдэнэ. Та сонгосныг нь School Manager-т оруулна.</div>
       <button class="pri" id="drBuild">✨ Одоо бэлдэх</button>`;
     $("drBuild").onclick = buildReport; return;
   }
@@ -1083,13 +1083,13 @@ async function loadSystem(){
     const c = l.counts || {};
     $("lbox").innerHTML = `<div class="lst"><span><b>${c.triage||0}</b>мэйлийн ангиллын засвар</span><span><b>${c.file||0}</b>файлын ангиллын засвар</span><span><b>${c.draft||0}</b>засаж илгээсэн ноорог</span></div>
       <div class="lgrid"><div><div class="fsub"><span>Таны бичих хэв маяг (ноорогт ашиглана, засаж болно)</span></div>
-        <textarea id="styleTa" placeholder="5 ноорог засаж илгээсний дараа Terre өөрөө бөглөнө. Эсвэл одоо өөрөө бичиж болно: - Мэндчилгээг «Сайн байна уу, ___ багшаа» гэж эхэлнэ ...">${esc(l.style_profile || "")}</textarea>
+        <textarea id="styleTa" placeholder="5 ноорог засаж илгээсний дараа TED өөрөө бөглөнө. Эсвэл одоо өөрөө бичиж болно: - Мэндчилгээг «Сайн байна уу, ___ багшаа» гэж эхэлнэ ...">${esc(l.style_profile || "")}</textarea>
         <div class="acts"><button class="pri" id="styleSave">Хадгалах</button><button id="styleRe">✨ Жишээнээс дахин гаргах</button></div></div>
         <div><div class="fsub"><span>Сүүлийн засварууд</span><button id="learnReset" style="padding:2px 9px;font-size:11px">Бүгдийг мартуулах</button></div>
         ${(l.recent||[]).map(e => `<div class="lex">${{triage:"✉",file:"🗂",draft:"✎"}[e.kind]} ${esc(e.input)} → <b>${esc(e.output.slice(0,60))}</b></div>`).join("") || `<div class="empty">Та ангилал эсвэл ноорог засах бүрт энд нэмэгдэнэ.</div>`}</div></div>`;
     $("styleSave").onclick = async () => { await api("/api/learn/style", {text: $("styleTa").value}); toast("🧠 Хадгалагдлаа", "ok"); };
     $("styleRe").onclick = async () => { try{ const r = await api("/api/learn/rebuild", {}); $("styleTa").value = r.style_profile || ""; toast("🧠 Шинэчлэгдлээ", "ok"); }catch(e){ toast(e.message, "err"); } };
-    $("learnReset").onclick = async () => { if(!confirm("Terre-ийн сурсан бүх засвар, хэв маягийг устгах уу?")) return; await api("/api/learn/reset", {}); loadSystem(); };
+    $("learnReset").onclick = async () => { if(!confirm("TED-ийн сурсан бүх засвар, хэв маягийг устгах уу?")) return; await api("/api/learn/reset", {}); loadSystem(); };
   }catch(e){}
   $("demoBtn").textContent = S && S.demo ? "▶ Демо горимоос гарах" : "Демо горимд шилжих";
 }
@@ -1097,7 +1097,7 @@ $("jlist").addEventListener("click", async e => { const b = e.target.closest("[d
   if(!confirm("Энэ үйлдлийг буцаах уу?")) return; b.disabled = true;
   try{ await api(`/api/journal/${b.dataset.undo}/undo`, {}); toast("↶ Буцаагдлаа", "ok"); loadSystem(); load(); }catch(err){ toast(err.message, "err"); b.disabled = false; } });
 document.body.addEventListener("click", async e => { const b = e.target.closest("[data-sys]"); if(!b) return;
-  if(b.dataset.sys === "restart" && !confirm("Terre System-ийг дахин асаах уу?")) return;
+  if(b.dataset.sys === "restart" && !confirm("TED-ийг дахин асаах уу?")) return;
   try{ await api(`/api/system/${b.dataset.sys}`, {}); if(b.dataset.sys === "restart"){ toast("Дахин асааж байна…"); setTimeout(() => location.reload(), 6000); } }catch(err){ toast(err.message, "err"); } });
 $("demoBtn").onclick = async () => { const on = !S.demo;
   if(!confirm(on ? "Демо горимд шилжих үү?" : "Демо горимоос гарч жинхэнэ холболтуудаар ажиллах уу? (config.yaml-д холболтуудаа тохируулсан байх ёстой)")) return;
@@ -1185,7 +1185,7 @@ document.body.addEventListener("click", async ev => {
     } else {
       const who = card.querySelector(".meta span:nth-child(2)")?.textContent || "";
       if(a === "trash" && !confirm("Энэ мэйлийг хогийн сав руу зөөх үү? (Журналаас буцааж болно)")) return;
-      if(a === "block" && !confirm(`«${who}»-ийг блоклох уу?\n\nЭнэ мэйл хогийн сав руу очиж, цаашид энэ илгээгчийн бүх мэйлийг Terre автоматаар хогийн сав руу зөөнө. Систем табаас блокоос гаргаж болно.`)) return;
+      if(a === "block" && !confirm(`«${who}»-ийг блоклох уу?\n\nЭнэ мэйл хогийн сав руу очиж, цаашид энэ илгээгчийн бүх мэйлийг TED автоматаар хогийн сав руу зөөнө. Систем табаас блокоос гаргаж болно.`)) return;
       await api(`/api/items/${id}/${a}`, {});   // apply | dismiss | promote | read | trash | block
       leave(card);
       toast({apply:"✓ Шийдэгдлээ", dismiss:"Алгаслаа", promote:"Зөвшөөрлийн жагсаалт руу шилжлээ",

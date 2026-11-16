@@ -26,7 +26,7 @@ def warn(name, msg):
 def _hint(msg):
     m = (msg or "").lower()
     if any(w in m for w in ("invalid_grant", "нэвтрээгүй", "expired", "token", "unauthorized", "401", "setup_auth")):
-        return "Нэвтрэлт дууссан байж магадгүй → Эхлэх цэс → «Terre System — холболт тохируулах»"
+        return "Нэвтрэлт дууссан байж магадгүй → Эхлэх цэс → «TED — холболт тохируулах»"
     if any(w in m for w in ("getaddrinfo", "timed out", "connection", "network", "11001")):
         return "Интернэт холболтоо шалгана уу"
     if "хаалттай" in m:
@@ -86,7 +86,7 @@ def report():
         from . import wake
         if wake.enabled():
             st = wake.STATE["status"]
-            rows.append({"name": "Дуудах үг («Терри»)", "status": {"idle": "ok", "listening": "ok", "thinking": "ok", "error": "error"}.get(st, "pending"),
+            rows.append({"name": "Дуудах үг («Хэй Тэд»)", "status": {"idle": "ok", "listening": "ok", "thinking": "ok", "error": "error"}.get(st, "pending"),
                          "msg": wake.STATE["msg"] or st,
                          "hint": "Админ PowerShell: & \"C:\\Program Files\\Terre System\\python\\python.exe\" -m pip install vosk sounddevice"
                                  if "суугаагүй" in (wake.STATE["msg"] or "") else ""})

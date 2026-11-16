@@ -1,4 +1,4 @@
-"""Дуудах үг: "Терри / Terre" гэж дуудахад сонсож, хэлсэн тушаалыг биелүүлнэ (утасны Siri шиг).
+"""Дуудах үг: "Хэй Тэд / TED" гэж дуудахад сонсож, хэлсэн тушаалыг биелүүлнэ (утасны Siri шиг).
 
 Нууцлал, зардал:
 - Дуудах үгийг компьютер дээрээ, интернэтгүйгээр Vosk-оор таньдаг. Өрөөний яриа гадагш гарахгүй, токен зарцуулахгүй.
@@ -28,8 +28,8 @@ MODEL_NAME = "vosk-model-small-en-us-0.15"
 MODEL_URL = f"https://alphacephei.com/vosk/models/{MODEL_NAME}.zip"
 RATE = 16000
 BLOCK = 1600                     # 0.1 сек
-# "Terre" монгол дуудлагаараа англи загварт "terry / terra"-тай ойролцоо сонсогддог
-DEFAULT_WORDS = ["terry", "terra"]
+# "Тэд" ганцаараа монгол ярианд ("тэд" = they) байнга гардаг тул хоёр үгтэй "Хэй Тэд" (hey ted) гэж дуудна
+DEFAULT_WORDS = ["hey ted"]
 
 STATE = {"status": "off", "msg": "", "heard": ""}   # off | loading | idle | listening | thinking | error
 _thread = None
@@ -64,7 +64,7 @@ def _model_path():
     with zipfile.ZipFile(tmp) as z:
         z.extractall(DATA)
     try:
-        os.remove(tmp)       # Terre-ийн өөрийн түр файл
+        os.remove(tmp)       # TED-ийн өөрийн түр файл
     except OSError:
         pass
     return p
@@ -145,21 +145,22 @@ def _loop(loop, handler):
     from . import voice
     try:
         with sd.RawInputStream(samplerate=RATE, blocksize=BLOCK, dtype="int16", channels=1, callback=cb):
-            _set("idle", "«Терри» гэж дуудаарай")
+            _set("idle", "«Хэй Тэд» гэж дуудаарай")
             log.info("Дуудах үг идэвхжлээ: %s", words)
             while not _stop.is_set():
                 try:
                     data = q.get(timeout=1)
                 except queue.Empty:
                     continue
-                if voice.SPEAKING.get("on"):        # Terre өөрөө ярьж байхад сонсохгүй
+                if voice.SPEAKING.get("on"):        # TED өөрөө ярьж байхад сонсохгүй
                     rec.Reset()
                     continue
                 if rec.AcceptWaveform(data):
                     text = json.loads(rec.Result()).get("text", "")
                 else:
                     text = json.loads(rec.PartialResult()).get("partial", "")
-                if not any(w in text.split() for w in words):
+                padded = f" {text} "
+                if not any(f" {w} " in padded for w in words):
                     continue
                 rec.Reset()
                 _set("listening", "Сонсож байна…")
@@ -175,7 +176,7 @@ def _loop(loop, handler):
                     _beep(700, 90)
                 while not q.empty():                 # хариу ярьж байх хооронд хуримтлагдсаныг хаяна
                     q.get_nowait()
-                _set("idle", "«Терри» гэж дуудаарай")
+                _set("idle", "«Хэй Тэд» гэж дуудаарай")
     except Exception as e:
         _set("error", f"Микрофон нээгдсэнгүй: {e}")
         log.warning("Дуудах үг: %s", e)

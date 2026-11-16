@@ -83,7 +83,7 @@ def toast(title, body, path="/"):
         return
     try:
         from winotify import Notification, audio
-        n = Notification(app_id="Terre System", title=title[:80], msg=body[:200],
+        n = Notification(app_id="TED", title=title[:80], msg=body[:200],
                          icon=str(_icon_path) if _icon_path.exists() else "", launch=url(path))
         n.set_audio(audio.Default, loop=False)
         n.show()
@@ -145,9 +145,9 @@ def _tray(on_refresh, on_quit):
         pystray.MenuItem("Холболт тохируулах", lambda: run_setup()),
         pystray.MenuItem("Өгөгдлийн хавтас", lambda: os.startfile(str(DATA.parent))),
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("Terre System-ийг хаах", lambda icon, item: (icon.stop(), on_quit())),
+        pystray.MenuItem("TED-ийг хаах", lambda icon, item: (icon.stop(), on_quit())),
     )
-    icon = pystray.Icon("terre", img, "Terre System", menu)
+    icon = pystray.Icon("terre", img, "TED", menu)
     STATUS["tray"] = True
     icon.run()
 
@@ -165,7 +165,7 @@ def pick_folder():
     if not IS_WIN:
         raise RuntimeError("Зөвхөн Windows дээр")
     ps = ("Add-Type -AssemblyName System.Windows.Forms;"
-          "$f=New-Object System.Windows.Forms.FolderBrowserDialog;$f.Description='Terre-д холбох хавтас сонгох';"
+          "$f=New-Object System.Windows.Forms.FolderBrowserDialog;$f.Description='TED-д холбох хавтас сонгох';"
           "$f.ShowNewFolderButton=$false;"
           "$o=New-Object System.Windows.Forms.Form;$o.TopMost=$true;"
           "if($f.ShowDialog($o) -eq 'OK'){[Console]::OutputEncoding=[Text.Encoding]::UTF8;Write-Output $f.SelectedPath}")

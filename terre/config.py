@@ -11,7 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent      # програмын 
 
 
 def _user_dir():
-    """Тохиргоо, өгөгдөл хадгалах газар. Суулгасан хувилбарт %APPDATA%\\Terre System."""
+    """Тохиргоо, өгөгдөл хадгалах газар. Суулгасан хувилбарт %APPDATA%\\TED."""
     if os.environ.get("TERRE_HOME"):
         return pathlib.Path(os.environ["TERRE_HOME"])
     if (ROOT / "installed.flag").exists() or not os.access(ROOT, os.W_OK):

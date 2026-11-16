@@ -1,4 +1,4 @@
-"""`python -m terre` — Terre System-ийг асаана."""
+"""`python -m terre` — TED-ийг асаана."""
 import asyncio
 import logging
 import os
