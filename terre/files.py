@@ -71,12 +71,15 @@ def extract_text(path, limit=3000):
         if ext in (".xlsx", ".xlsm"):
             import openpyxl
             wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-            rows = []
-            for ws in wb.worksheets[:2]:
-                rows.append(f"[{ws.title}]")
-                for row in ws.iter_rows(max_row=25, values_only=True):
-                    rows.append(" | ".join(str(c) for c in row if c is not None))
-            return "\n".join(rows)[:limit]
+            try:   # read_only горимд файл нээлттэй үлддэг тул заавал хаана (эс бөгөөс зөөхөд WinError 32)
+                rows = []
+                for ws in wb.worksheets[:2]:
+                    rows.append(f"[{ws.title}]")
+                    for row in ws.iter_rows(max_row=25, values_only=True):
+                        rows.append(" | ".join(str(c) for c in row if c is not None))
+                return "\n".join(rows)[:limit]
+            finally:
+                wb.close()
         if ext in (".txt", ".csv", ".md", ".json", ".html", ".xml"):
             with open(path, encoding="utf-8", errors="ignore") as f:
                 return f.read(limit)
