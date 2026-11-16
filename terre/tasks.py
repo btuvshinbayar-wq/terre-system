@@ -162,9 +162,9 @@ def demo_seed():
     add("2-р улирлын ирцийн нэгдсэн тайлан ирүүлэх", (d + datetime.timedelta(days=1)).isoformat(), "task", "demo:1",
         "Боловсролын газар")
     add("11б ангийн mock test-ийн дүнг нэгтгэх", (d + datetime.timedelta(days=4)).isoformat(), "task", "demo:5",
-        "Г. Энхжаргал")
-    add("Хариу хүлээж байна: Б. Сарантуяа — SAT хичээлийн талаар", (d - datetime.timedelta(days=1)).isoformat(),
-        "followup", "demo:2", "Б. Сарантуяа", {"source": "gmail"})
-    add("📅 ЗАН-ийн нэгдсэн хурал", (d + datetime.timedelta(days=3)).isoformat(), "meeting", "demo:8", "Д. Мөнхзул",
+        "Сургалтын менежер")
+    add("Хариу хүлээж байна: эцэг эх — SAT хичээлийн талаар", (d - datetime.timedelta(days=1)).isoformat(),
+        "followup", "demo:2", "Эцэг эх", {"source": "gmail"})
+    add("📅 ЗАН-ийн нэгдсэн хурал", (d + datetime.timedelta(days=3)).isoformat(), "meeting", "demo:8", "ЗАН ахлагч",
         {"date": (d + datetime.timedelta(days=3)).isoformat(), "time": "14:00", "title": "ЗАН-ийн нэгдсэн хурал",
          "location": "Хурлын заал"})

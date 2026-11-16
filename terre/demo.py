@@ -51,3 +51,34 @@ def calendar():
         {"time": "14:00", "title": "Эцэг эхийн уулзалт", "location": "Хурлын заал", "source": "Google"},
         {"time": "16:30", "title": "Боловсролын газрын онлайн хурал", "location": "Teams", "source": "Outlook"},
     ]
+
+
+def purge():
+    """Жинхэнэ горимд: демо горимын үед мэдээллийн санд үлдсэн зохиомол бичлэгүүдийг цэвэрлэнэ.
+
+    Зөвхөн Terre-ийн өөрийн демо бичлэгүүдийг (id нь "demo"-оор эхэлдэг) хасна. Компьютер дээрх файл, хавтсанд хүрэхгүй —
+    демо хавтасны холболтыг л салгана.
+    """
+    from . import files, store
+    n = 0
+    with store._lock:
+        n += store._db.execute("DELETE FROM items WHERE id LIKE 'demo:%'").rowcount
+        store._db.commit()
+    with files._lock:
+        db = files._db
+        n += db.execute("DELETE FROM files WHERE key GLOB 'demo[0-9]*'").rowcount
+        try:
+            n += db.execute("DELETE FROM tasks WHERE source_item LIKE 'demo:%'").rowcount
+        except Exception:
+            pass
+        for r in db.execute("SELECT id FROM folders WHERE path LIKE '%TerreDemo%'").fetchall():
+            try:
+                job_ids = [j[0] for j in db.execute("SELECT id FROM jobs WHERE folder_id=?", (r[0],)).fetchall()]
+                for jid in job_ids:
+                    db.execute("DELETE FROM plan WHERE job_id=?", (jid,))
+                db.execute("DELETE FROM jobs WHERE folder_id=?", (r[0],))
+            except Exception:
+                pass
+            n += db.execute("DELETE FROM folders WHERE id=?", (r[0],)).rowcount
+        db.commit()
+    return n

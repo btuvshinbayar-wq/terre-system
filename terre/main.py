@@ -48,6 +48,14 @@ async def _startup_sequence():
     st = CFG.get("startup", {})
     if st.get("open_browser", True):
         desktop.open_window("/")
+    if not DEMO:
+        try:
+            from . import demo
+            gone = await asyncio.to_thread(demo.purge)
+            if gone:
+                log.info("Демо горимын %s бичлэгийг цэвэрлэлээ", gone)
+        except Exception as e:
+            log.warning("Демо бичлэг цэвэрлэж чадсангүй: %s", e)
     await _wait_for_internet()
     try:
         await engine.run_cycle()
