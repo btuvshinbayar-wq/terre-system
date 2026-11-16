@@ -1,6 +1,7 @@
 """FastAPI сервер: самбар + API + далд давтамжит шалгалт."""
 import asyncio
 import contextlib
+import datetime
 import logging
 import os
 import secrets
@@ -82,6 +83,23 @@ async def _background_loop():
             log.exception("Далд шалгалт амжилтгүй")
 
 
+async def _watchdog():
+    """Сервер 30 сек-ээс удаан гацвал бүх урсгалын байдлыг data/hang.log-д бичнэ (алдааг олоход)."""
+    import faulthandler
+    try:
+        f = open(DATA / "hang.log", "a", encoding="utf-8")
+    except OSError:
+        return
+    f.write(f"\n=== Terre асав {datetime.datetime.now().isoformat(timespec='seconds')} ===\n")
+    f.flush()
+    try:
+        while True:
+            faulthandler.dump_traceback_later(30, repeat=True, file=f)   # 5 сек тутам цагийг дахин эхлүүлнэ
+            await asyncio.sleep(5)
+    finally:
+        faulthandler.cancel_dump_traceback_later()
+
+
 @contextlib.asynccontextmanager
 async def lifespan(app):
     global LOOP
@@ -90,7 +108,7 @@ async def lifespan(app):
     if telegram_bot.start(LOOP):
         health.ok("Telegram bot", "Ажиллаж байна")
     tasks_ = [asyncio.create_task(_startup_sequence()), asyncio.create_task(_background_loop()),
-              asyncio.create_task(engine.scheduler_loop())]
+              asyncio.create_task(engine.scheduler_loop()), asyncio.create_task(_watchdog())]
     yield
     for t in tasks_:
         t.cancel()

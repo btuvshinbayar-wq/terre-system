@@ -30,7 +30,9 @@ def _gemini():
     global _client
     if _client is None:
         from google import genai
-        _client = genai.Client(api_key=gemini_key())
+        from google.genai import types
+        # 90 сек-ийн хязгаар: Google талд гацсан хүсэлт Terre-ийг бүхэлд нь хүлээлгэхгүй
+        _client = genai.Client(api_key=gemini_key(), http_options=types.HttpOptions(timeout=90_000))
     return _client
 
 
