@@ -70,7 +70,15 @@ def report():
         add(a.get("name") or a.get("email"), bool(a.get("enabled")))
     add("Telegram", source_enabled("telegram"))
     add("Telegram bot", bool((CFG.get("telegram_bot") or {}).get("enabled")))
-    add("School Manager", bool(CFG.get("school_manager", {}).get("enabled")))
+    if CFG.get("school_manager", {}).get("enabled"):
+        try:
+            from .connectors import school_manager as _sm
+            st, msg, hint = _sm.diagnose()
+            rows.append({"name": "School Manager", "status": st, "msg": msg, "hint": hint})
+        except Exception as e:
+            rows.append({"name": "School Manager", "status": "error", "msg": str(e), "hint": ""})
+    else:
+        add("School Manager", False)
     add("Файл эмхлэгч", bool(CFG.get("files", {}).get("enabled", True)))
     add("Файлын хайлт", True)
     add("Дуу", bool(CFG.get("voice", {}).get("enabled")))

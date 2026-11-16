@@ -303,11 +303,30 @@ def data_dir():
     info = _read_json(_info_path()) or {}
     if info.get("dataDir"):
         return info["dataDir"]
-    base = os.path.join(_appdata(), "school-manager")
-    loc = _read_json(os.path.join(base, "data-location.json")) or {}
-    if isinstance(loc.get("dir"), str) and loc["dir"].strip() and os.path.isdir(loc["dir"].strip()):
-        return loc["dir"].strip()
-    return base
+    bases = [os.path.join(_appdata(), n) for n in ("school-manager", "School Manager")]
+    for base in bases:
+        loc = _read_json(os.path.join(base, "data-location.json")) or {}
+        if isinstance(loc.get("dir"), str) and loc["dir"].strip() and os.path.isdir(loc["dir"].strip()):
+            return loc["dir"].strip()
+    for base in bases:
+        if os.path.exists(os.path.join(base, MIRROR)):
+            return base
+    return bases[0]
+
+
+def diagnose():
+    """'Систем' табын эрүүл мэндэд: (төлөв, тайлбар, засах заавар)."""
+    info = _read_json(_info_path())
+    f = data_file()
+    if info and info.get("transport") == "file" and _alive(info):
+        return "ok", "Програм нээлттэй, Terre Bridge холбогдсон", ""
+    where = f"Өгөгдөл: {f}" if f else f"Өгөгдлийн файл олдсонгүй ({data_dir()})"
+    if not info:
+        return ("warn" if f else "error"), f"Програм Terre Bridge-гүй эсвэл хэзээ ч асаагүй. {where}", \
+            "School Manager-ийн шинэ кодоор (git pull → build-neutralino.bat) Lite installer хийж суулгаад програмаа нээнэ үү" \
+            + ("" if f else ". config.yaml → school_manager.data_dir-д өгөгдлийн хавтсыг бичнэ үү")
+    return ("warn" if f else "error"), f"Програм хаалттай. {where}", \
+        "School Manager-ийг нээнэ үү" + ("" if f else ". config.yaml → school_manager.data_dir-д өгөгдлийн хавтсыг бичнэ үү")
 
 
 def data_file():
