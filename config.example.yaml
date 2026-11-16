@@ -37,6 +37,10 @@ gemini:
 voice:
   enabled: true
   name: "mn-MN-YesuiNeural"    # эмэгтэй хоолой. Эрэгтэй: mn-MN-BataaNeural
+  wake:                        # «Терри» гэж дуудахад сонсож тушаал биелүүлэх (README 3.10)
+    enabled: false
+    words: ["terry", "terra"]  # дуудах үг (компьютер дээр интернэтгүй таньдаг англи загвар)
+    auto_run: true             # бүрэн ойлгосон School Manager-ийн тушаалыг шууд биелүүлэх (журналаас буцаана). Мэйл хэзээ ч илгээхгүй
 
 sources:
   gmail:

@@ -5,6 +5,7 @@ import datetime
 import logging
 import os
 import secrets
+import time
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
@@ -107,6 +108,9 @@ async def lifespan(app):
     from . import telegram_bot
     if telegram_bot.start(LOOP):
         health.ok("Telegram bot", "Ажиллаж байна")
+    from . import wake
+    if wake.start(LOOP, _wake_command):
+        log.info("Дуудах үг эхэллээ")
     tasks_ = [asyncio.create_task(_startup_sequence()), asyncio.create_task(_background_loop()),
               asyncio.create_task(engine.scheduler_loop()), asyncio.create_task(_watchdog())]
     yield
@@ -224,7 +228,14 @@ def _commands_for_ui():
 
 @app.get("/api/speaking")
 def speaking():
-    return {"on": voice.SPEAKING["on"]}
+    from . import wake
+    vp = engine.STATE.get("voice_plan")
+    return {"on": voice.SPEAKING["on"], "wake": wake.STATE["status"], "voice_plan_ts": vp["ts"] if vp else 0}
+
+
+@app.get("/api/voice-plan")
+def voice_plan():
+    return engine.STATE.get("voice_plan") or {}
 
 
 # ======================= Мессеж =======================
@@ -368,6 +379,46 @@ async def voice_command(request: Request):
         return {"text": "", "plan": {"type": "answer", "say": "Сонсогдсонгүй. Дахин оролдоно уу."}}
     journal.add("voice", f"Дуут тушаал: «{text}»", who="Та")
     return {"text": text, "plan": await _awrap(_plan(text))}
+
+
+async def _wake_command(wav):
+    """«Терри» гэж дуудсаны дараах тушаал: текст болгох → ойлгох → (бүрэн бол) биелүүлэх → дуугаар хариулах."""
+    from . import wake
+    text = await asyncio.to_thread(brain.transcribe, wav, "audio/wav")
+    if not text:
+        await voice.speak("Сонсогдсонгүй, дахин хэлнэ үү.", path=DATA / "say.mp3")
+        return
+    wake.STATE["heard"] = text
+    journal.add("voice", f"Дуут тушаал: «{text}»", who="Та")
+    try:
+        plan = await _plan(text)
+    except Exception as e:
+        await voice.speak("Ойлгож чадсангүй.", path=DATA / "say.mp3")
+        log.warning("Дуут тушаал: %s", e)
+        return
+    say = plan.get("say") or ""
+    if plan.get("type") == "macro":
+        cmd = next((c for c in engine.commands() if c["name"] == plan.get("macro")), None)
+        params = {k: v for k, v in (plan.get("params") or {}).items() if str(v).strip()}
+        missing = [p["label"] for p in (cmd or {}).get("params", []) if not p.get("optional") and p["name"] not in params]
+        auto = (CFG.get("voice") or {}).get("wake", {}).get("auto_run", True)
+        if cmd and not missing and auto:
+            entry = await engine.run_command(cmd["name"], params, who="Дуут тушаал")
+            lines = [l.lstrip("✓→ ").strip() for l in entry.get("log", []) if l]
+            lines = [l for l in lines if ":\\" not in l and not l.startswith("School Manager дээр")]
+            say = ("Хийлээ. " + ". ".join(lines[:2])) if entry.get("ok") else ("Чадсангүй. " + " ".join(lines[:1]))
+        else:
+            engine.STATE["voice_plan"] = {"text": text, "plan": {**plan, "params": params}, "ts": time.time()}
+            say = (f"{plan.get('macro')} — {', '.join(missing)} хэлээгүй байна. Самбар дээр бөглөөд ажиллуулна уу."
+                   if missing else f"{plan.get('macro')} бэлэн. Самбар дээр ажиллуулна уу.")
+            try:
+                from . import desktop
+                desktop.open_window("/")
+            except Exception:
+                pass
+    else:
+        engine.STATE["voice_plan"] = {"text": text, "plan": plan, "ts": time.time()}
+    await voice.speak(say[:450], path=DATA / "say.mp3")
 
 
 @app.get("/api/tts")

@@ -44,50 +44,26 @@ def _fast():
     return CFG.get("gemini", {}).get("fast_model") or _model()
 
 
-def _cfg(**kw):
-    """Gemini тохиргоо. 2.5 Flash-ийн 'бодох' токеныг унтраана — зардлын ~80%-ийг хэмнэнэ."""
+def _cfg(model=None, **kw):
+    """Gemini тохиргоо. 2.5 загварт 'бодох' токеныг унтраана (зардлын ~80% хэмнэлт).
+    Gemini 3.x загварууд thinking_budget-ийг хүлээж авдаггүй (400 INVALID_ARGUMENT) — тэдэнд анхдагч
+    (Flash-Lite-д хамгийн бага) бодох түвшнийг үлдээнэ."""
     from google.genai import types
-    return types.GenerateContentConfig(thinking_config=types.ThinkingConfig(thinking_budget=0), **kw)
+    if model and str(model).startswith("gemini-2"):
+        return types.GenerateContentConfig(thinking_config=types.ThinkingConfig(thinking_budget=0), **kw)
+    return types.GenerateContentConfig(**kw)
 
 
 def _gen(model, prompt, **kw):
     try:
-        return _gemini().models.generate_content(model=model, contents=prompt, config=_cfg(**kw))
+        return _gemini().models.generate_content(model=model, contents=prompt, config=_cfg(model, **kw))
     except Exception as e:
-        if "thinking" in str(e).lower():   # зарим загвар thinking_budget=0-г дэмждэггүй
+        msg = str(e).lower()
+        if "thinking" in msg or "invalid_argument" in msg:   # тохиргоог дэмжихгүй загвар — энгийн тохиргоогоор дахин
             from google.genai import types
             return _gemini().models.generate_content(model=model, contents=prompt,
                                                      config=types.GenerateContentConfig(**kw))
         raise
-
-
-TRIAGE_PROMPT = """Чи бол {owner}-ийн хувийн туслах Terre. Доорх мессежийг ангил.
-
-Эзний тухай:
-{context}
-
-Ангилал:
-- "auto": хариу шаардлагагүй (сурталчилгаа, мэдээллийн захидал, автомат мэдэгдэл, баталгаажуулалт,
-  групп чатын ерөнхий яриа). action-д "archive" (мэйл) эсвэл "mark_read" (чат) эсвэл "none".
-- "approve": эзэн хариу өгөх эсвэл шийдвэр гаргах ёстой. Хариу ноорог бич.
-- "urgent": өнөөдөр/маргааш хугацаатай, удирдлага эсвэл албан байгууллагын шаардлага,
-  аюулгүй байдлын сэрэмжлүүлэг, хүүхдийн аюулгүй байдал. Хэрэгтэй бол ноорог бич.
-
-Дүрэм:
-- summary: монголоор 1 өгүүлбэр, хэн юу хүсч байгааг тодорхой.
-- draft: мессеж ирсэн хэлээр нь (монгол/англи), эзний өмнөөс, товч, эелдэг.
-  Мэдэхгүй баримт (огноо, тоо, амлалт) зохиож болохгүй — оронд нь [ХААЛТАНД] үлдээ.
-- "auto" бол draft хоосон.
-- task: эзэнд ногдох тодорхой ажил байвал богино тушаал хэлбэрээр ("Ирцийн тайлан ирүүлэх"), үгүй бол "".
-- deadline: хугацаа заасан бол YYYY-MM-DD (өнөөдөр {today}, "баасан гаригт", "маргааш"-ийг огноо болго), үгүй бол "".
-- meeting_*: хурал, уулзалт, сургалтад урьсан бол огноо, цаг, нэр, байршил; үгүй бол бүгд "".
-{examples}
-Эх сурвалж: {source}
-Илгээгч: {sender}
-Гарчиг: {subject}
-Агуулга:
-{body}
-"""
 
 
 def triage(item):
@@ -348,7 +324,7 @@ def transcribe(audio_bytes, mime="audio/wav"):
     prompt = ("Энэ бичлэгт хүн Terre гэдэг туслахдаа тушаал өгч эсвэл асуулт асууж байна. Яриаг ҮГЧЛЭН бичгээр буулга "
               "(ихэвчлэн монгол хэл, заримдаа англи). Зөвхөн буулгасан текстийг буцаа. Яриа сонсогдохгүй бол хоосон буцаа.")
     try:
-        resp = _gemini().models.generate_content(model=_fast(), contents=[prompt, part], config=_cfg(temperature=0))
+        resp = _gemini().models.generate_content(model=_fast(), contents=[prompt, part], config=_cfg(_fast(), temperature=0))
         return (resp.text or "").strip().strip('"«»')
     except Exception as e:
         log.warning("Дуу таних алдаа: %s", e)

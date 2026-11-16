@@ -59,6 +59,10 @@ body::after{content:"";position:fixed;left:0;right:0;height:160px;top:-160px;z-i
 header{display:flex;align-items:center;gap:22px;padding:18px 32px;border-bottom:1px solid var(--line);
        background:linear-gradient(180deg,rgba(5,9,16,.6),transparent);backdrop-filter:blur(6px);position:sticky;top:0;z-index:20}
 header .reactor{width:76px;height:76px}
+#wakeTag{font-size:12px;color:var(--cyan);letter-spacing:.06em;margin-left:10px;animation:slideIn .3s both}
+body.wake-listen header .reactor{filter:drop-shadow(0 0 18px rgba(56,214,245,.95)) drop-shadow(0 0 36px rgba(56,214,245,.6));animation:wakePulse 1s ease-in-out infinite}
+body.wake-think header .reactor{filter:drop-shadow(0 0 16px rgba(255,190,85,.85));animation:wakePulse 1.6s ease-in-out infinite}
+@keyframes wakePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .brand{font-size:11px;letter-spacing:5px;color:var(--cyan);opacity:.85}
 h1{margin:2px 0 0;font-size:23px;font-weight:600}
 .sub{color:var(--mut);font-size:13px;display:flex;gap:10px;align-items:center}
@@ -331,7 +335,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
   <div class="grow">
     <div class="brand">TERRE SYSTEM</div>
     <h1 id="hello">Холбогдож байна...</h1>
-    <div class="sub"><span class="dot"></span><span id="sub">Систем эхэлж байна</span></div>
+    <div class="sub"><span class="dot"></span><span id="sub">Систем эхэлж байна</span><span id="wakeTag"></span></div>
   </div>
   <nav class="tabs" id="tabs">
     <button data-tab="home" class="on">Нүүр</button><button data-tab="work">Ажил <span class="tb" id="tbWork"></span></button>
@@ -1216,7 +1220,26 @@ $("play").onclick = () => {
   a.play().catch(() => toast("Дуу хараахан бэлэн болоогүй байна.", "err"));
 };
 
-setInterval(async () => { try{ serverSpeaking = (await (await fetch("/api/speaking")).json()).on; }catch(e){} }, 800);
+let lastVoicePlan = 0, lastWake = "";
+setInterval(async () => {
+  try{
+    const sp = await (await fetch("/api/speaking")).json();
+    serverSpeaking = sp.on;
+    if(sp.wake !== lastWake){
+      lastWake = sp.wake;
+      document.body.classList.toggle("wake-listen", sp.wake === "listening");
+      document.body.classList.toggle("wake-think", sp.wake === "thinking");
+      $("wakeTag").textContent = {listening: "🎙 Сонсож байна…", thinking: "✨ Ойлгож байна…"}[sp.wake] || "";
+    }
+    if(sp.voice_plan_ts && sp.voice_plan_ts !== lastVoicePlan){
+      const first = !lastVoicePlan; lastVoicePlan = sp.voice_plan_ts;
+      if(!first){
+        const vp = await api("/api/voice-plan");
+        if(vp.plan){ if(vp.text) $("cmdIn").value = vp.text; if(TAB !== "work") showTab("work"); handlePlan(vp.plan, false); }
+      }
+    }
+  }catch(e){}
+}, 800);
 showTab(TAB);
 load().then(() => { if(TAB === "work") renderDayReport(true); });
 setInterval(load, 20000);

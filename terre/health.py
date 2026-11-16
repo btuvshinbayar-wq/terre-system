@@ -82,6 +82,16 @@ def report():
     add("Файл эмхлэгч", bool(CFG.get("files", {}).get("enabled", True)))
     add("Файлын хайлт", True)
     add("Дуу", bool(CFG.get("voice", {}).get("enabled")))
+    try:
+        from . import wake
+        if wake.enabled():
+            st = wake.STATE["status"]
+            rows.append({"name": "Дуудах үг («Терри»)", "status": {"idle": "ok", "listening": "ok", "thinking": "ok", "error": "error"}.get(st, "pending"),
+                         "msg": wake.STATE["msg"] or st,
+                         "hint": "Админ PowerShell: & \"C:\\Program Files\\Terre System\\python\\python.exe\" -m pip install vosk sounddevice"
+                                 if "суугаагүй" in (wake.STATE["msg"] or "") else ""})
+    except Exception:
+        pass
     add("Товчлол", bool((CFG.get("desktop") or {}).get("hotkeys", True)))
     try:
         root = os.path.expanduser(CFG.get("files", {}).get("root", "~/Documents"))

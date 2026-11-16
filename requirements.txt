@@ -19,3 +19,5 @@ playsound3>=2.2
 winotify>=1.1; sys_platform == "win32"
 pystray>=0.19; sys_platform == "win32"
 Pillow>=10
+vosk>=0.3.45          # дуудах үг (компьютер дээр)
+sounddevice>=0.4.6
