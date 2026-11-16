@@ -109,7 +109,7 @@ def add_items(ids, edits=None):
         it["status"] = "added"
         it["note_id"] = r.get("id")
         journal.add("report", f"Өдрийн тайлан → тэмдэглэл: {it['title']}", it["category"],
-                    undo=None if DEMO else {"type": "sm", "action": "delete_note", "params": {"id": r.get("id")}}, who="Та")
+                    undo=None if DEMO else {"type": "sm", "action": "remove_terre_note", "params": {"id": r.get("id")}}, who="Та")
         added.append(it["title"])
     _save(rep)
     return added

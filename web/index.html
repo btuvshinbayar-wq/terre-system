@@ -164,6 +164,9 @@ textarea.thinking{background:linear-gradient(90deg,#04080e 0,#0c2233 50%,#04080e
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .chip{border-radius:20px;padding:6px 14px;position:relative;overflow:hidden}
 .chip small{color:var(--mut);margin-left:6px}
+.chipgrp{flex-basis:100%;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:6px 0 -2px;
+  display:flex;align-items:center;gap:8px;animation:slideIn .4s both}
+.chipgrp::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(56,214,245,.35),transparent)}
 .chip::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(56,214,245,.18),transparent);transform:translateX(-100%)}
 .chip:hover::after{animation:flash .8s}
 #proposal:empty{display:none}
@@ -341,7 +344,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
   <section data-tab="home" class="card cal" style="--d:.15s"><h2>Календарь</h2><div class="tl" id="cal"></div></section>
   <section data-tab="home" class="card met" style="--d:.25s"><h2>Тоон үзүүлэлт</h2><div class="mgrid" id="met"></div></section>
   <section data-tab="work" class="card sm" style="--d:.3s"><h2>⚙ School Manager <span id="smStatus"></span></h2>
-    <div class="cmd"><input id="cmdIn" placeholder="Terre-д тушаал өгөх… жишээ нь: Болд багшийг өнөөдөр өвчтэй гэж тэмдэглэ" autocomplete="off">
+    <div class="cmd"><input id="cmdIn" placeholder="Terre-д тушаал өгөх… жишээ нь: [багшийн нэр] багшийг өнөөдөр өвчтэй гэж тэмдэглэ" autocomplete="off">
       <button class="pri" id="cmdGo">➤</button></div>
     <div id="answer"></div><div id="proposal"></div><div id="running"></div>
     <div class="chips" id="chips"></div>
@@ -651,11 +654,16 @@ function renderMacros(){
   const sig = JSON.stringify(S.macros.map(m => m.name));
   if($("chips").dataset.sig !== sig){
     $("chips").dataset.sig = sig; MACROS = S.macros;
-    $("chips").innerHTML = MACROS.map((m, i) => `<button class="chip" data-m="${i}" title="${esc(m.description)}">▶ ${esc(m.name)}${m.schedule ? `<small>⏱ ${esc(m.schedule)}</small>` : ""}</button>`).join("")
-      || `<div class="empty">Тушаал алга.</div>`;
+    let lastGrp = null;
+    $("chips").innerHTML = MACROS.map((m, i) => {
+      const head = m.group && m.group !== lastGrp ? `<div class="chipgrp">${esc(m.group)}</div>` : "";
+      lastGrp = m.group;
+      return head + `<button class="chip" data-m="${i}" title="${esc(m.description)}">▶ ${esc(m.name)}${m.schedule ? `<small>⏱ ${esc(m.schedule)}</small>` : ""}</button>`;
+    }).join("") || `<div class="empty">Тушаал алга.</div>`;
   }
+  const fromFile = !S.sm_running && S.sm_state && S.sm_state.source === "file";
   $("smStatus").innerHTML = S.sm_running ? `<span class="pill on">Нээлттэй</span>`
-    : `<span class="pill off">Хаалттай <button id="smOpen">Нээх</button></span>`;
+    : `<span class="pill off" title="${fromFile ? "Тоонууд өгөгдлийн файлаас (зөвхөн унших)" : ""}">Хаалттай${fromFile ? " · файлаас" : ""} <button id="smOpen">Нээх</button></span>`;
   const so = $("smOpen"); if(so) so.onclick = async () => { so.disabled = true; so.textContent = "Асааж байна…";
     try{ await api("/api/sm/start", {}); toast("School Manager нээгдлээ", "ok"); } catch(e){ toast("Алдаа: " + e.message, "err"); } load(); };
   $("mlog").innerHTML = (S.macro_log||[]).slice(0,5).map(e =>

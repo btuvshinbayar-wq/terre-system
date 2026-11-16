@@ -93,14 +93,16 @@ day_report:                    # Өдрийн тайлан → School Manager-и
   at: "17:00"
   weekends: false
 
-school_manager:                # Таны School Manager програм (Terre Bridge-тэй хувилбар)
+school_manager:                # Таны School Manager Lite програм (Terre Bridge-тэй хувилбар)
   enabled: true
-  exe: ""                      # хоосон = автоматаар хайна (C:\Program Files\School Manager\School Manager.exe)
+  exe: ""                      # хоосон = автоматаар хайна (C:\Program Files\SchoolManager\SchoolManager.exe)
+  data_dir: ""                 # хоосон = програмын сонгосон хавтас (data-location.json). Жишээ: 'D:\work\2026-2027\SchoolManager-Data'
+                               #   Програм хаалттай үед Terre эндээс sm-data-mirror.json-ийг ЗӨВХӨН уншиж самбарт харуулна
   open_at_startup: false       # Terre асахад School Manager-ийг ч асаах
   # Өдөр бүр автоматаар хийх тушаалууд (тушаалын нэр самбарын товчтой ижил)
   schedule:
     - {command: "Бүрэн нөөцлөл хийх", at: "17:30"}
-  #  - {command: "Багшийн ирцийн хүснэгт (Excel)", at: "16:00"}
+  #  - {command: "Цагийн тооцоо (Excel)", at: "16:00"}
 
 files:                         # Файл татах, ангилах, эмхлэх
   enabled: true

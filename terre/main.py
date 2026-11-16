@@ -152,7 +152,7 @@ def state():
         "sm": DEMO or engine.sm_enabled(),
         "macros": _commands_for_ui(),
         "sm_running": engine.STATE.get("sm_running"),
-        "sm_lists": {k: (engine.STATE.get("sm_state") or {}).get(k, []) for k in ("teachers", "plans")},
+        "sm_lists": _sm_lists(),
         "files": {"moved": files.recent(["moved"], 15), "suggested": files.recent(["suggested"], 30),
                   "stats": files.stats(), "categories": files.categories(), "root": files.root()},
         "folders": organizer.folders_overview(),
@@ -178,10 +178,21 @@ def _sources():
     return out
 
 
+def _sm_lists():
+    """Тушаалын талбарт санал болгох жагсаалт (School Manager-ийн жинхэнэ өгөгдөл + Terre-ийн эмхэлсэн файлууд)."""
+    st = engine.STATE.get("sm_state") or {}
+    out = {k: st.get(k, []) for k in ("teachers", "plans", "evaluations", "observations", "curriculum_teachers")}
+    recent = [f.get("dest") or f.get("src") for f in files.recent(["moved"], 200)]
+    recent = [p for p in recent if p]
+    out["docs"] = [p for p in recent if p.lower().endswith((".docx", ".doc", ".pdf", ".xlsx", ".xls"))][:60]
+    out["jsons"] = [p for p in recent if p.lower().endswith(".json")][:40]
+    return out
+
+
 def _commands_for_ui():
     sched = {j["command"]: j["at"] for j in (CFG.get("school_manager", {}).get("schedule") or [])}
     return [{"name": c["name"], "description": c.get("description", ""), "params": c.get("params", []),
-             "schedule": sched.get(c["name"])} for c in engine.commands()]
+             "group": c.get("group", ""), "schedule": sched.get(c["name"])} for c in engine.commands()]
 
 
 @app.get("/api/speaking")
@@ -259,7 +270,11 @@ class MacroBody(BaseModel):
 def _cmd_context():
     st = engine.STATE.get("sm_state") or {}
     import datetime
+    s = st.get("summary") or {}
     return {"teachers": st.get("teachers", []), "plans": st.get("plans", [])[:80], "today": datetime.date.today().isoformat(),
+            "evaluations": st.get("evaluations", [])[:120], "observations": st.get("observations", [])[:80],
+            "curriculum_teachers": st.get("curriculum_teachers", []),
+            "sm_summary": {k: s.get(k) for k in ("teachers", "notes", "plans", "curriculum", "observations")} if s else {},
             "tasks": [t["title"] + (f" ({t['due']})" if t.get("due") else "") for t in tasks.open_tasks()][:20],
             "calendar": engine.STATE.get("calendar", [])}
 

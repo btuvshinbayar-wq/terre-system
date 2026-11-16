@@ -84,13 +84,14 @@ async def fetch_calendar(errors):
 async def fetch_metrics(errors):
     """School Manager-ийн төлөв + тоон үзүүлэлт."""
     if DEMO:
-        STATE["sm_state"], STATE["sm_running"] = demo.sm_state(), True
-        return demo.metrics()
+        # Демо горимд School Manager-ийн зохиомол өгөгдөл харуулахгүй
+        STATE["sm_state"], STATE["sm_running"] = None, False
+        return []
     if not sm_enabled():
         return []
     from .connectors import school_manager as sm
     state = await _safe("School Manager", sm.fetch_state, errors, None)
-    STATE["sm_state"], STATE["sm_running"] = state, state is not None
+    STATE["sm_state"], STATE["sm_running"] = state, bool(state and state.get("running"))
     return sm.metrics_from(state)
 
 
@@ -172,7 +173,7 @@ async def run_cycle():
 def _sm_brief():
     st = STATE.get("sm_state")
     if not st:
-        return "School Manager хаалттай" if sm_enabled() else None
+        return "School Manager-ийн өгөгдөл олдсонгүй" if sm_enabled() else None
     s = st["summary"]
     return {"absent_teachers": s["teachers"]["absent"], "overdue_plans": [p["activity"] for p in s["plans"]["overdue"]],
             "upcoming_plans_7d": [f"{p['startDate']} {p['activity']}" for p in s["plans"]["upcoming"]],
