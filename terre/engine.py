@@ -111,9 +111,15 @@ def commands():
 async def _check_mail():
     await run_cycle()
     u, p = store.by_status(["urgent"], 50), store.by_status(["pending"], 50)
-    say = f"Мэйл шалгалаа. Яаралтай {len(u)}, таны хариу хүлээж буй {len(p)} мессеж байна."
-    if u:
-        say += f" Хамгийн яаралтай нь: {u[0].get('summary', '')}"
+    from .config import EN
+    if EN():
+        say = f"Mail checked. {len(u)} urgent, {len(p)} waiting for your reply."
+        if u:
+            say += f" The most urgent: {u[0].get('summary', '')}"
+    else:
+        say = f"Мэйл шалгалаа. Яаралтай {len(u)}, таны хариу хүлээж буй {len(p)} мессеж байна."
+        if u:
+            say += f" Хамгийн яаралтай нь: {u[0].get('summary', '')}"
     return {"log": [say], "say": say}
 
 

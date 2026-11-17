@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="mn">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>TED</title>
@@ -47,18 +47,18 @@ button:hover{border-color:var(--cyan2)} button.pri{background:var(--cyan2);borde
   <div class="core"><svg viewBox="0 0 100 100"><g class="glow">
     <circle class="ring r1" cx="50" cy="50" r="47"/><circle class="ring r2" cx="50" cy="50" r="36"/><circle class="ring r3" cx="50" cy="50" r="27"/>
     <g class="dot"><circle cx="50" cy="50" r="15" fill="#7fe8ff" opacity=".55"/><circle cx="50" cy="50" r="7" fill="#effdff"/></g></g></svg></div>
-  <div><div class="brand">TED</div><div class="state" id="state">Юу хийх вэ?</div></div>
+  <div><div class="brand">TED</div><div class="state" id="state">What can I do for you?</div></div>
 </div>
-<div class="row"><input id="q" placeholder="Тушаал эсвэл асуулт…" autocomplete="off" autofocus><button id="mic" title="Дуугаар">🎙</button><button class="pri" id="go">➤</button></div>
+<div class="row"><input id="q" placeholder="A command or a question (English or Mongolian)…" autocomplete="off" autofocus><button id="mic" title="Speak">🎙</button><button class="pri" id="go">➤</button></div>
 <div id="out"><div class="hint">
-  Жишээ:<br><b>«[багшийн нэр] багшийг өнөөдөр өвчтэй гэж тэмдэглэ»</b><br><b>«А-145 тушаалд юу гэж байсан бэ?»</b><br>
-  <b>«Энэ сарын ажлын тайланг гарга»</b><br><b>«Маргааш ямар хурал байгаа вэ?»</b><br><br>Esc — хаах · 🎙 дараад ярь, чимээгүй болоход өөрөө илгээнэ</div></div>
+  Examples:<br><b>“Mark [teacher] as sick today”</b><br><b>“Check my mail”</b><br>
+  <b>“Schedule a meeting tomorrow at 3 pm”</b><br><b>“What meetings do I have tomorrow?”</b><br><br>Esc — close · press 🎙 and speak; it sends when you stop</div></div>
 <audio id="audio"></audio>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => (s ?? "").toString().replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let COMMANDS = [], HAS_AI = true;
-fetch("/api/state").then(r => r.json()).then(s => { COMMANDS = s.macros || []; HAS_AI = s.has_gemini; window.LISTS = s.sm_lists || {}; });
+fetch("/api/state").then(r => r.json()).then(s => { COMMANDS = s.macros || []; HAS_AI = s.voice_ok; window.LISTS = s.sm_lists || {}; });
 const setState = t => $("state").textContent = t;
 function typeInto(el, t){ let i = 0; t = t || ""; (function st(){ el.textContent = t.slice(0, i += 3); if(i < t.length) setTimeout(st, 12); })(); }
 function speak(t){ if(!t) return; const a = $("audio"); a.src = "/api/tts?text=" + encodeURIComponent(t.slice(0, 500)); a.play().catch(()=>{}); }
@@ -66,22 +66,22 @@ function speak(t){ if(!t) return; const a = $("audio"); a.src = "/api/tts?text="
 function show(plan, heard, voice){
   const out = $("out"); out.innerHTML = heard ? `<div class="heard">🎙 «${esc(heard)}»</div>` : "";
   if(plan.type === "macro"){
-    const m = COMMANDS.find(c => c.name === plan.macro); if(!m){ out.insertAdjacentHTML("beforeend", `<div class="ans">Тушаал олдсонгүй.</div>`); return; }
+    const m = COMMANDS.find(c => c.name === plan.macro); if(!m){ out.insertAdjacentHTML("beforeend", `<div class="ans">Command not found.</div>`); return; }
     const p = plan.params || {};
-    out.insertAdjacentHTML("beforeend", `<div class="prop"><b>${esc(m.name)}</b><div class="state">${esc(plan.say || "")}</div>
-      ${(m.params||[]).map(x => `<label>${esc(x.label)}${x.optional ? " (заавал биш)" : ""}</label>` + (x.choices
-        ? `<select data-p="${esc(x.name)}"><option value="">—</option>${x.choices.map(c => `<option ${c === p[x.name] ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>`
+    out.insertAdjacentHTML("beforeend", `<div class="prop"><b>${esc(m.title || m.name)}</b><div class="state">${esc(plan.say || "")}</div>
+      ${(m.params||[]).map(x => `<label>${esc(x.label)}${x.optional ? " (optional)" : ""}</label>` + (x.choices
+        ? `<select data-p="${esc(x.name)}"><option value="">—</option>${x.choices.map(c => `<option value="${esc(c)}" ${c === p[x.name] ? "selected" : ""}>${esc((x.choice_labels||{})[c] && x.choice_labels[c] !== c ? x.choice_labels[c] + " · " + c : c)}</option>`).join("")}</select>`
         : `<input data-p="${esc(x.name)}" value="${esc(p[x.name] || "")}" ${x.suggest ? `list="dl${esc(x.name)}"` : ""}>${x.suggest && LISTS[x.suggest] ? `<datalist id="dl${esc(x.name)}">${LISTS[x.suggest].map(v => `<option value="${esc(v)}">`).join("")}</datalist>` : ""}`)).join("")}
-      <div class="acts"><button class="pri" id="run">▶ Ажиллуулах</button><button id="no">Болих</button></div></div>`);
+      <div class="acts"><button class="pri" id="run">▶ Run</button><button id="no">Cancel</button></div></div>`);
     $("no").onclick = () => out.innerHTML = "";
     $("run").onclick = async () => {
       const params = {}; out.querySelectorAll("[data-p]").forEach(e => params[e.dataset.p] = e.value.trim());
-      const miss = (m.params||[]).find(x => !x.optional && !params[x.name]); if(miss){ setState(`«${miss.label}» хоосон байна`); return; }
-      document.body.classList.add("busy"); setState("Ажиллуулж байна…");
+      const miss = (m.params||[]).find(x => !x.optional && !params[x.name]); if(miss){ setState(`“${miss.label}” is empty`); return; }
+      document.body.classList.add("busy"); setState("Running…");
       const r = await (await fetch("/api/macros/run", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: m.name, params})})).json();
       document.body.classList.remove("busy");
-      out.innerHTML = `<div class="ans">${r.ok ? "✓" : "✗"} ${esc(m.name)}\n${esc((r.log||[]).join("\n"))}</div>`;
-      setState(r.ok ? "Боллоо" : "Алдаа гарлаа"); if(voice) speak(r.ok ? "Боллоо." : "Алдаа гарлаа.");
+      out.innerHTML = `<div class="ans">${r.ok ? "✓" : "✗"} ${esc(m.title || m.name)}\n${esc((r.log||[]).join("\n"))}</div>`;
+      setState(r.ok ? "Done" : "Something went wrong"); if(voice) speak(r.ok ? "Done." : "Sorry, something went wrong.");
     };
     if(voice) speak(plan.say);
     return;
@@ -94,16 +94,16 @@ $("out").addEventListener("click", e => { const a = e.target.closest("[data-open
 
 async function send(){
   const text = $("q").value.trim(); if(!text) return;
-  document.body.classList.add("busy"); setState("Бодож байна…");
+  document.body.classList.add("busy"); setState("Thinking…");
   try{ const r = await fetch("/api/command", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text})});
-    const d = await r.json(); if(!r.ok) throw new Error(d.detail); show(d); setState("Юу хийх вэ?"); $("q").value = ""; }
-  catch(e){ setState("Алдаа: " + e.message); } finally{ document.body.classList.remove("busy"); }
+    const d = await r.json(); if(!r.ok) throw new Error(d.detail); show(d); setState("What can I do for you?"); $("q").value = ""; }
+  catch(e){ setState("Error: " + e.message); } finally{ document.body.classList.remove("busy"); }
 }
 $("go").onclick = send;
 $("q").addEventListener("keydown", e => { if(e.key === "Enter") send(); });
 document.addEventListener("keydown", e => { if(e.key === "Escape") window.close(); });
 
-/* ---- Дуу ---- */
+/* ---- Voice ---- */
 let rec = null;
 async function startRec(onStop){
   const stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true}});
@@ -127,16 +127,16 @@ async function startRec(onStop){
 }
 async function toggleVoice(){
   if(rec){ rec.stop(); return; }
-  if(!HAS_AI){ setState("Дуугаар командлахад Gemini түлхүүр хэрэгтэй"); return; }
+  if(!HAS_AI){ setState("Voice needs a Gemini key or offline English (vosk)"); return; }
   try{
-    document.body.classList.add("listen"); $("mic").classList.add("rec"); setState("Сонсож байна… ярина уу");
+    document.body.classList.add("listen"); $("mic").classList.add("rec"); setState("Listening… go ahead");
     rec = await startRec(async wav => {
-      rec = null; document.body.classList.remove("listen"); $("mic").classList.remove("rec"); document.body.classList.add("busy"); setState("Ойлгож байна…");
+      rec = null; document.body.classList.remove("listen"); $("mic").classList.remove("rec"); document.body.classList.add("busy"); setState("Thinking…");
       try{ const r = await fetch("/api/voice", {method: "POST", headers: {"Content-Type": "audio/wav"}, body: wav}); const d = await r.json();
-        if(!r.ok) throw new Error(d.detail); show(d.plan, d.text, true); setState("Юу хийх вэ?"); }
-      catch(e){ setState("Алдаа: " + e.message); } finally{ document.body.classList.remove("busy"); }
+        if(!r.ok) throw new Error(d.detail); show(d.plan, d.text, true); setState("What can I do for you?"); }
+      catch(e){ setState("Error: " + e.message); } finally{ document.body.classList.remove("busy"); }
     });
-  }catch(e){ document.body.classList.remove("listen"); $("mic").classList.remove("rec"); rec = null; setState("Микрофон нээгдсэнгүй: " + e.message); }
+  }catch(e){ document.body.classList.remove("listen"); $("mic").classList.remove("rec"); rec = null; setState("Could not open the microphone: " + e.message); }
 }
 $("mic").onclick = toggleVoice;
 if(new URLSearchParams(location.search).get("voice") === "1") setTimeout(toggleVoice, 400);

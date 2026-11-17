@@ -2,7 +2,7 @@
 
 Нууцлал, зардал:
 - Дуудах үгийг компьютер дээрээ, интернэтгүйгээр Vosk-оор таньдаг. Өрөөний яриа гадагш гарахгүй, токен зарцуулахгүй.
-- Дуудсаны ДАРАА хэлсэн тушаалын бичлэгийг л Gemini-д илгээж текст болгоно.
+- Дуудсаны ДАРАА хэлсэн тушаалыг англиар бол компьютер дээрээ (stt.py), монголоор бол Gemini-ээр текст болгоно.
 
 Хэрэгцээ: pip install vosk sounddevice  (README 3.10). Загварыг (≈40 MB) анх асаахад өөрөө татна.
 Тохиргоо: config.yaml → voice.wake (enabled, words, auto_run).
@@ -154,8 +154,8 @@ def _loop(loop, handler):
         _set("error", "vosk, sounddevice суугаагүй (README 3.10)")
         return
     try:
-        vosk.SetLogLevel(-1)
-        model = vosk.Model(str(_model_path()))
+        from . import stt
+        model = stt.model()            # англи тушаал таних хэсэгтэй нэг загвар (санах ой хэмнэнэ)
     except Exception as e:
         _set("error", f"Загвар ачаалж чадсангүй: {e}")
         return

@@ -3,6 +3,8 @@
 Энэ project бол **TED**: Windows дээр ажилладаг хувийн AI туслах (өмнөх нэрс "Terre System", "Jarvis" — эдгээрийг ашиглахгүй).
 Эзэн нь Tuvshuu — сургалтын менежер, програм хөгжүүлэлтийг AI-тай хамт зохион байгуулдаг (мэргэжлийн хөгжүүлэгч биш).
 Харилцаа **монгол хэлээр**. Тайлбарыг товч, алхам алхмаар.
+TED өөрөө эзэнд **англиар** мэдээлнэ (`language: en` — эзэн англи хэлээ сайжруулж байгаа): «Good morning, Sir», нэр хэлэхгүй.
+Тушаалыг англи/монголоор хүлээж авна. Мэйлийн хариу ноорог ирсэн мэйлийн хэлээр. School Manager-ийн утгууд монголоор.
 
 ## Байнгын шаардлагууд
 - **Нэр:** "TED" (монголоор «Тэд», дуудах үг «Хэй Тэд»). "Terre", "Jarvis" гэж хэзээ ч бүү нэрлэ. Харин дотоод техникийн
@@ -28,7 +30,8 @@
 - `connectors/`: gmail, gcal, gchat, outlook, imap_mail, telegram (Telethon), school_manager (файлын хайрцаг + mirror унших)
 - `files.py`, `organizer.py` файл/хавтас цэгцлэх; `search.py` FTS5 хайлт; `tasks.py`, `calendar_write.py`;
   `dayreport.py`; `journal.py` (буцаах); `health.py`; `learn.py`; `telegram_bot.py`; `desktop.py` (tray, товчлол, toast, Edge app цонх)
-- `web/index.html` самбар (Нүүр/Ажил/Файл/Систем табууд), `web/quick.html` товчлолын жижиг цонх
+- `web/index.html` самбар (Нүүр = HUD: TED реактор төвд + зангилаанууд, drawer, дуут dock; Ажил/Файл/Систем табууд)
+- `i18n.py` самбарын англи шошго (дотоод нэр монголоор), `stt.py` англи тушаалыг offline (Vosk) таних, `web/quick.html` товчлолын жижиг цонх
 - Суулгасан хувилбарт тохиргоо, өгөгдөл `%APPDATA%\Terre System\` (`installed.flag` байгаа үед)
 
 ## Хөгжүүлэх

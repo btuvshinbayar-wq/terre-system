@@ -8,7 +8,11 @@ import datetime
 import io
 import os
 
-from .config import CFG, now, source_enabled
+from .config import CFG, EN, now, source_enabled
+
+
+def _L(mn, en):
+    return en if EN() else mn
 
 DRIVE_ROLES = {"Харах": "reader", "Сэтгэгдэл бичих": "commenter", "Засах": "writer"}
 OPT = {"optional": True}
@@ -113,7 +117,7 @@ def drive_upload(p):
     f = svc.files().create(body=body, media_body=MediaFileUpload(path, resumable=True),
                            fields="id,name,webViewLink").execute()
     return {"log": [f"✓ Drive-д байршууллаа: {f['name']}", f"🔗 {f.get('webViewLink', '')}"],
-            "undo": {"type": "drive", "op": "trash", "id": f["id"]}, "say": f"{f['name']} файлыг Drive-д байршууллаа"}
+            "undo": {"type": "drive", "op": "trash", "id": f["id"]}, "say": _L(f"{f['name']} файлыг Drive-д байршууллаа", "I uploaded the file to Drive")}
 
 
 def drive_download(p, files_root):
@@ -144,7 +148,7 @@ def drive_download(p, files_root):
         _, done = dl.next_chunk()
     with open(dest, "wb") as out:
         out.write(buf.getvalue())
-    return {"log": [f"✓ Татлаа: {dest}"], "file": dest, "say": f"{name} файлыг татаж Drive хавтаст хадгаллаа"}
+    return {"log": [f"✓ Татлаа: {dest}"], "file": dest, "say": _L(f"{name} файлыг татаж Drive хавтаст хадгаллаа", "I downloaded the file to your Drive folder")}
 
 
 def drive_share(p):
@@ -158,16 +162,16 @@ def drive_share(p):
                                     sendNotificationEmail=True, fields="id").execute()
     return {"log": [f"✓ «{f['name']}» файлыг {email}-тэй хуваалцлаа ({p.get('role') or 'Харах'})", f"🔗 {f.get('webViewLink', '')}"],
             "undo": {"type": "drive", "op": "unshare", "id": f["id"], "perm": perm["id"]},
-            "say": f"{f['name']} файлыг хуваалцлаа"}
+            "say": _L(f"{f['name']} файлыг хуваалцлаа", "I shared the file")}
 
 
 def drive_find(p):
     hits = _find(_drive(), p["name"].strip(), limit=10)
     if not hits:
-        return {"log": ["Олдсонгүй"], "say": "Drive дээр тийм файл олдсонгүй"}
+        return {"log": ["Олдсонгүй"], "say": _L("Drive дээр тийм файл олдсонгүй", "I couldn't find that file on Drive")}
     lines = [f"• {f['name']} ({f.get('modifiedTime', '')[:10]})" for f in hits]
     return {"log": [f"Drive-аас {len(hits)} файл олдлоо:"] + lines,
-            "say": f"{len(hits)} файл олдлоо. Хамгийн сүүлийнх нь {hits[0]['name']}"}
+            "say": _L(f"{len(hits)} файл олдлоо. Хамгийн сүүлийнх нь {hits[0]['name']}", f"I found {len(hits)} files. The newest is {hits[0]['name']}")}
 
 
 def drive_undo(u):
@@ -209,7 +213,8 @@ def meeting(p):
     if attendees:
         log.append(f"✉ Урилга очлоо: {', '.join(attendees)}")
     return {"log": log, "undo": {"type": "calendar", "provider": "google", "id": ev["id"]},
-            "say": f"{body['summary']} уулзалтыг {start.month}-р сарын {start.day}-нд {start:%H:%M}-д товлолоо"
+            "say": _L(f"{body['summary']} уулзалтыг {start.month}-р сарын {start.day}-нд {start:%H:%M}-д товлолоо",
+                      f"The meeting is scheduled for {start:%B} {start.day} at {start:%H:%M}")
                    + (", Meet холбоос үүслээ" if link else "")}
 
 

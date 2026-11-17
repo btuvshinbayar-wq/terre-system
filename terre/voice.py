@@ -1,4 +1,4 @@
-"""Монгол хэлээр ярих: Microsoft Edge-ийн үнэгүй TTS (mn-MN хоолой) -> mp3 -> тоглуулах."""
+"""Ярих: Microsoft Edge-ийн үнэгүй TTS (API түлхүүргүй) -> mp3 -> тоглуулах. Англи эсвэл монгол хоолой (config: language)."""
 import asyncio
 import logging
 
@@ -16,7 +16,10 @@ def enabled():
 
 async def synth(text, path):
     import edge_tts
-    voice = CFG.get("voice", {}).get("name", "mn-MN-YesuiNeural")
+    from .config import EN
+    v = CFG.get("voice", {}) or {}
+    # Англи горимд англи хоолой (Британи эр хоолой — JARVIS маягийн), монгол горимд монгол хоолой
+    voice = v.get("name_en", "en-GB-RyanNeural") if EN() else v.get("name", "mn-MN-YesuiNeural")
     await edge_tts.Communicate(text, voice).save(str(path))
 
 

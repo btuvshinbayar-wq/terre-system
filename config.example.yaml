@@ -3,7 +3,10 @@
 # ============================================================
 
 owner_name: "Tuvshuu"          # мэйлийн гарын үсэгт
-address: "Эрхэм ээ"           # TED таныг ингэж дуудна (мэндчилгээ, дуу). Гарын үсэгт owner_name
+language: "en"                 # TED таньд ямар хэлээр мэдээлэх вэ: "en" = англиар (мэндчилгээ, мэдээ, хариу, хоолой), "mn" = монголоор.
+                               # Тушаалыг аль ч хэлээр өгч болно. Мэйлийн хариу ноорог ирсэн мэйлийн хэлээрээ.
+address_en: "Sir"              # англи горимд: "Good morning, Sir"
+address: "Эрхэм ээ"           # монгол горимд TED таныг ингэж дуудна. Гарын үсэгт owner_name
 timezone: "Asia/Ulaanbaatar"
 
 # Таны тухай товч мэдээлэл: хариу мэйлийн ноорогт ашиглагдана
@@ -37,7 +40,10 @@ gemini:
 
 voice:
   enabled: true
-  name: "mn-MN-YesuiNeural"    # эмэгтэй хоолой. Эрэгтэй: mn-MN-BataaNeural
+  name: "mn-MN-YesuiNeural"    # монгол хоолой (эмэгтэй). Эрэгтэй: mn-MN-BataaNeural
+  name_en: "en-GB-RyanNeural"  # англи хоолой (Британи эр). Бусад: en-US-GuyNeural, en-GB-SoniaNeural, en-US-JennyNeural
+  offline_english: true        # англиар хэлсэн тушаалыг компьютер дээрээ, API-гүй таних (pip install vosk; README 3.10)
+  offline_min_confidence: 0.80 # үүнээс бүдэг бол (жишээ нь монголоор хэлсэн) Gemini-ээр таниулна
   wake:                        # «Хэй Тэд» гэж дуудахад сонсож тушаал биелүүлэх (README 3.10)
     enabled: false
     words: ["hey ted"]         # дуудах үг: «Хэй Тэд» (компьютер дээр интернэтгүй таньдаг англи загвар)

@@ -42,8 +42,21 @@ DEMO = bool(CFG.get("demo_mode"))
 FROZEN = (ROOT / "installed.flag").exists()
 
 
+def lang():
+    """TED таньд ямар хэлээр мэдээлэл өгөх вэ (config: language). "en" = англиар (анхдагч), "mn" = монголоор.
+    Тушаалыг аль ч хэлээр өгч болно. Мэйлийн хариу ноорог ирсэн мэйлийн хэлээрээ хэвээр."""
+    return "mn" if str(CFG.get("language", "en")).lower().startswith("mn") else "en"
+
+
+def EN():
+    return lang() == "en"
+
+
 def address():
-    """TED таныг ингэж дуудна (config: address). Гарын үсэгт owner_name хэвээр."""
+    """TED таныг ингэж дуудна. Англи горимд нэргүйгээр "Sir" (config: address_en),
+    монгол горимд config: address. Гарын үсэгт owner_name хэвээр."""
+    if EN():
+        return str(CFG.get("address_en") or "Sir").strip()
     return str(CFG.get("address") or CFG.get("owner_name") or "").strip()
 
 
@@ -77,6 +90,8 @@ def gemini_key():
 
 def greeting():
     h = now().hour
+    if EN():
+        return "Good morning" if h < 12 else "Good afternoon" if h < 18 else "Good evening"
     if h < 11:
         return "Өглөөний мэнд"
     if h < 17:

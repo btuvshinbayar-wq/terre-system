@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="mn">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -80,10 +80,11 @@ button.pri{background:var(--cyan2);border-color:var(--cyan2);color:#fff} button.
 button:disabled{opacity:.5;cursor:wait}
 #refresh .ic{display:inline-block} .loading #refresh .ic{animation:spin .9s linear infinite}
 
-main{padding:22px 32px 48px;display:grid;gap:18px;grid-template-columns:repeat(12,1fr)}
+main{padding:22px 32px 120px;display:grid;gap:18px;grid-template-columns:repeat(12,1fr)}
 .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;overflow:hidden;
       backdrop-filter:blur(8px);opacity:0;animation:rise .7s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:var(--d,0s);
       transition:border-color .3s, box-shadow .3s}
+.card{scroll-margin-top:120px}
 .card:hover{border-color:#24405d;box-shadow:0 0 30px rgba(56,214,245,.06)}
 .card::after{content:"";position:absolute;top:0;left:-40%;width:40%;height:1px;
   background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:sweep 7s linear infinite;animation-delay:var(--d,0s)}
@@ -306,8 +307,102 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
 .lex{font-size:12px;color:var(--mut);padding:4px 0;border-bottom:1px solid rgba(26,43,64,.6)}
 @media(max-width:1100px){.tk,.dr,.hl,.jr{grid-column:span 12} .lgrid{grid-template-columns:1fr} .tabs button{padding:6px 9px}}
 
+/* ---------- HUD: TED in the centre, linked nodes around it ---------- */
+body.t-home{background:#031026;overflow:hidden}
+body.t-home.hud-compact{overflow:auto}
+body.t-home::before{background:linear-gradient(rgba(56,214,245,.03) 1px,transparent 1px) 0 0/100% 4px,
+  radial-gradient(circle at 50% 54%,rgba(28,132,226,.50),rgba(12,70,150,.30) 34%,rgba(4,24,56,.15) 58%,transparent 80%)}
+body.t-home main{display:none}
+body.t-home header .reactor,body.t-home header .hhello,body.t-home header .clock{display:none}
+body.t-home header{justify-content:flex-end}
+body.t-home header{border-bottom-color:transparent;background:none;backdrop-filter:none;padding:14px 28px}
+#hud{position:relative;height:calc(100vh - 66px);min-height:560px}
+#hudLines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.hl-link{fill:none;stroke:rgba(56,214,245,.32);stroke-width:1.2}
+.hl-flow{fill:none;stroke:rgba(150,238,255,.85);stroke-width:1.5;stroke-dasharray:2 16;animation:flow 2.4s linear infinite}
+.hl-tail{fill:none;stroke:rgba(56,214,245,.22);stroke-width:1}
+.hl-end{fill:#38d6f5;opacity:.75}
+.hl-link.amber{stroke:rgba(255,190,85,.42)} .hl-link.red{stroke:rgba(255,93,108,.5)}
+.hl-spark{fill:#effdff;filter:drop-shadow(0 0 5px #38d6f5)}
+.hl-ring{fill:none;stroke:rgba(56,214,245,.12);stroke-width:1;stroke-dasharray:2 6}
+@keyframes flow{to{stroke-dashoffset:-36}}
+.hleft{position:absolute;left:28px;top:0;width:300px;z-index:3;animation:slideIn .7s both}
+.hclk{font:200 56px/1 "Segoe UI",sans-serif;letter-spacing:2px;color:#ecfcff;font-variant-numeric:tabular-nums;text-shadow:0 0 22px rgba(56,214,245,.55)}
+.hclk s{font-size:20px;text-decoration:none;color:var(--cyan);margin-left:3px}
+.hdate{font-size:11.5px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-top:8px}
+.hgreet{margin-top:16px;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#c8f6ff;font-weight:600}
+.hbrief{margin-top:8px;font-size:13.5px;line-height:1.7;color:#c4d8ea;max-height:36vh;overflow:auto;padding-right:8px;
+  -webkit-mask-image:linear-gradient(#000 85%,transparent);mask-image:linear-gradient(#000 85%,transparent)}
+.hattn{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px}
+.achip{border-radius:14px;padding:4px 11px;font-size:12px;background:rgba(6,20,38,.65);border-color:rgba(56,214,245,.25);animation:slideIn .4s both}
+.achip b{font-weight:600;margin-right:3px} .achip.red{border-color:rgba(255,93,108,.55);color:#ffa3ad} .achip.amber{border-color:rgba(255,190,85,.5);color:#ffd28a}
+.hleft .errs{margin-top:10px;font-size:12px}
+.hpill{position:absolute;left:50%;top:2px;transform:translateX(-50%);z-index:4;border-radius:20px;padding:6px 16px;font-size:11px;
+  letter-spacing:2.5px;text-transform:uppercase;background:rgba(5,16,32,.7);border-color:rgba(56,214,245,.35);display:flex;align-items:center;gap:9px;color:#bfefff}
+.hpill i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:breathe 2s infinite}
+.hpill.off i{background:#55687e;box-shadow:none;animation:none} .hpill.paused i{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:none}
+.hpill.listen{border-color:var(--cyan);box-shadow:0 0 22px rgba(56,214,245,.45)} .hpill.listen i{background:var(--cyan);animation:breathe .5s infinite}
+.hpill.think i{background:var(--amber);animation:breathe .5s infinite}
+.hcore{position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;pointer-events:none;--cs:300px}
+.hcore .reactor{width:var(--cs);height:var(--cs)}
+.hcore .halo{position:absolute;width:calc(var(--cs)*2);height:calc(var(--cs)*2);left:50%;top:calc(var(--cs)/2);border-radius:50%;z-index:-1;
+  transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(120,230,255,.30),rgba(56,214,245,.10) 36%,transparent 66%);animation:haloP 5s ease-in-out infinite}
+@keyframes haloP{50%{transform:translate(-50%,-50%) scale(1.07);opacity:.75}}
+.hname{margin-top:-2px;font-size:15px;letter-spacing:12px;padding-left:12px;color:#e2fbff;text-shadow:0 0 14px var(--cyan)}
+.hstate{font-size:10.5px;letter-spacing:4px;color:var(--cyan);opacity:.85;margin-top:3px;text-transform:uppercase}
+body.wake-listen .hcore .reactor,body.speaking .hcore .reactor{filter:drop-shadow(0 0 22px rgba(56,214,245,.95)) drop-shadow(0 0 50px rgba(56,214,245,.55))}
+body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))}
+.hnode{position:absolute;transform:translate(-50%,-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:none;border:0;padding:6px 8px;border-radius:12px;animation:nodeIn .8s cubic-bezier(.2,.8,.2,1) both}
+.hnode:hover{box-shadow:none;background:rgba(56,214,245,.06)}
+.hnode:active{transform:translate(-50%,-50%) scale(.95)} #hud.compact .hnode:active{transform:scale(.95)}
+.hpill:active{transform:translateX(-50%) scale(.96)} #hud.compact .hpill:active{transform:scale(.96)}
+#dock:active{transform:translateX(-50%)}
+.hnode .nd{position:relative;width:18px;height:18px;border-radius:50%;border:2px solid var(--cyan);transition:transform .25s;
+  background:radial-gradient(circle,#e8fdff 0 22%,rgba(56,214,245,.4) 28%,rgba(4,18,36,.85) 70%);animation:ndPulse 3.2s infinite}
+.hnode.amber .nd{border-color:var(--amber);animation-name:ndPulseA} .hnode.red .nd{border-color:var(--red);animation:ndPulseR 1.4s infinite}
+.hnode .nl{font-size:13.5px;font-weight:600;color:#e8f8ff;white-space:nowrap;letter-spacing:.3px;text-shadow:0 1px 8px rgba(0,0,0,.9),0 0 14px rgba(56,214,245,.35)}
+.hnode .ns{font-size:11px;color:#8fb3cc;white-space:nowrap;margin-top:-4px;min-height:14px}
+.hnode .nb{position:absolute;top:-9px;left:12px;background:var(--red);color:#fff;font-size:10px;border-radius:8px;padding:0 5px;line-height:15px;font-weight:600}
+.hnode .nb.c{background:var(--cyan2)} .hnode .nb:empty{display:none}
+.hnode:hover .nd{transform:scale(1.3)} .hnode:hover .nl{color:var(--cyan)}
+@keyframes nodeIn{from{opacity:0;transform:translate(-50%,-50%) scale(.3)}}
+@keyframes ndPulse{0%{box-shadow:0 0 12px rgba(56,214,245,.8),0 0 0 0 rgba(56,214,245,.45)}70%,100%{box-shadow:0 0 12px rgba(56,214,245,.8),0 0 0 13px rgba(56,214,245,0)}}
+@keyframes ndPulseA{0%{box-shadow:0 0 12px rgba(255,190,85,.8),0 0 0 0 rgba(255,190,85,.45)}70%,100%{box-shadow:0 0 12px rgba(255,190,85,.8),0 0 0 13px rgba(255,190,85,0)}}
+@keyframes ndPulseR{0%{box-shadow:0 0 14px rgba(255,93,108,.9),0 0 0 0 rgba(255,93,108,.55)}70%,100%{box-shadow:0 0 14px rgba(255,93,108,.9),0 0 0 15px rgba(255,93,108,0)}}
+#hud.compact{height:auto;min-height:0;padding-bottom:120px}
+#hud.compact .hleft{position:static;width:auto;margin:0 20px}
+#hud.compact .hpill{position:static;transform:none;margin:14px auto 0}
+#hud.compact .hcore{position:relative;left:auto!important;top:auto!important;transform:none;margin:40px auto 10px;--cs:220px!important}
+#hud.compact #hNodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;padding:0 20px}
+#hud.compact .hnode{position:static;transform:none;animation:rise .5s both}
+#hud.compact #hudLines{display:none}
+
+/* ---------- Drawer ---------- */
+#scrim{position:fixed;inset:0;z-index:70;background:rgba(2,6,14,.5);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .3s}
+#scrim.on{opacity:1;pointer-events:auto}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);z-index:71;display:flex;flex-direction:column;background:rgba(5,13,25,.95);
+  border-left:1px solid var(--cyan2);box-shadow:-24px 0 70px rgba(0,0,0,.55);transform:translateX(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+#drawer.open{transform:none}
+.dhead{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+.dhead h3{margin:0;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);font-weight:600}
+.dbody{overflow:auto;padding:16px 18px 40px;flex:1}
+.dbody [data-view]{display:none} .dbody [data-view].on{display:block}
+.dbody .card{margin-bottom:14px}
+
+/* ---------- Voice dock ---------- */
+#dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:40px;
+  background:rgba(5,15,29,.8);border:1px solid rgba(56,214,245,.3);backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.45),0 0 26px rgba(56,214,245,.1);
+  animation:dockIn .8s .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes dockIn{from{opacity:0;transform:translate(-50%,24px)}}
+#dock button{border-radius:50%;width:42px;height:42px;padding:0;font-size:17px;display:grid;place-items:center}
+#dock #mic{background:var(--cyan2);border-color:var(--cyan2);width:48px;height:48px;font-size:19px}
+.dwave{display:flex;flex-direction:column;align-items:center;width:190px}
+#wave{width:190px;height:26px}
+#dockState{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);margin-top:1px;white-space:nowrap}
+
 /* toasts */
-#toasts{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:8px;z-index:60}
+#toasts{position:fixed;right:22px;bottom:90px;display:flex;flex-direction:column;gap:8px;z-index:60}
 .toast{background:rgba(10,20,32,.95);border:1px solid var(--cyan2);border-left:3px solid var(--cyan);padding:10px 16px;border-radius:10px;
        font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);animation:toastIn .4s cubic-bezier(.2,.8,.2,1)}
 .toast.ok{border-left-color:var(--green)} .toast.err{border-left-color:var(--red)}
@@ -327,78 +422,109 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
   <div class="reactor big" id="bootReactor"></div>
   <h2 id="bootTitle"></h2>
   <div id="bootlog"></div>
-  <div class="hint">дарж алгасах</div>
+  <div class="hint">click to skip</div>
 </div>
 
 <header>
   <div class="reactor" id="reactor"></div>
-  <div class="grow">
+  <div class="grow hhello">
     <div class="brand">TED</div>
-    <h1 id="hello">Холбогдож байна...</h1>
-    <div class="sub"><span class="dot"></span><span id="sub">Систем эхэлж байна</span><span id="wakeTag"></span></div>
+    <h1 id="hello">Connecting...</h1>
+    <div class="sub"><span class="dot"></span><span id="sub">Starting up</span><span id="wakeTag"></span></div>
   </div>
   <nav class="tabs" id="tabs">
-    <button data-tab="home" class="on">Нүүр</button><button data-tab="work">Ажил <span class="tb" id="tbWork"></span></button>
-    <button data-tab="files">Файл</button><button data-tab="system">Систем <span class="hdot" id="hdot"></span></button>
+    <button data-tab="home" class="on">Home</button><button data-tab="work">Work <span class="tb" id="tbWork"></span></button>
+    <button data-tab="files">Files</button><button data-tab="system">System <span class="hdot" id="hdot"></span></button>
   </nav>
   <div class="clock"><div class="t" id="clk">--:--</div><div class="d" id="date"></div></div>
-  <button id="wakeBtn" style="display:none" title="«Хэй Тэд» сонсохыг түр зогсоох / асаах (утсаар ярих үед)">🎧</button>
-  <button id="mic" title="Дуугаар тушаал өгөх">🎙</button>
-  <button id="play">🔊 Сонсох</button>
-  <button id="refresh"><span class="ic">↻</span> Шинэчлэх</button>
+  <button id="wakeBtn" style="display:none" title="Pause / resume “Hey Ted” (e.g. during a phone call)">🎧</button>
 </header>
 
+<section id="hud" data-tab="home">
+  <svg id="hudLines" aria-hidden="true"></svg>
+  <div class="hleft">
+    <div class="hclk" id="hClk">--:--</div>
+    <div class="hdate" id="hDate"></div>
+    <div class="hgreet" id="hGreet">Connecting…</div>
+    <div class="hbrief" id="brief"><span class="caret"></span></div>
+    <div class="hattn" id="hAttn"></div>
+    <div class="errs" id="errs"></div>
+  </div>
+  <button class="hpill" id="hPill" title="“Hey Ted” status — click to pause or resume"><i></i><span id="hPillTxt">Voice ready</span></button>
+  <div class="hcore" id="hCore">
+    <div class="halo"></div>
+    <div class="reactor" id="coreReactor"></div>
+    <div class="hname">TED</div>
+    <div class="hstate" id="hState">ONLINE</div>
+  </div>
+  <div id="hNodes"></div>
+</section>
+
 <main>
-  <section data-tab="home" class="card brief" style="--d:.05s"><h2>Өнөөдрийн мэдээлэл</h2><div id="brief"><span class="caret"></span></div></section>
-  <section data-tab="home" class="card cal" style="--d:.15s"><h2>Календарь</h2><div class="tl" id="cal"></div></section>
-  <section data-tab="home" class="card met" style="--d:.25s"><h2>Тоон үзүүлэлт</h2><div class="mgrid" id="met"></div></section>
-  <section data-tab="work" class="card sm" style="--d:.3s"><h2>⚙ School Manager <span id="smStatus"></span></h2>
-    <div class="cmd"><input id="cmdIn" placeholder="TED-д тушаал өгөх… жишээ нь: [багшийн нэр] багшийг өнөөдөр өвчтэй гэж тэмдэглэ" autocomplete="off">
+  <section data-tab="work" class="card sm" style="--d:.3s"><h2>⚙ Commands · School Manager <span id="smStatus"></span></h2>
+    <div class="cmd"><input id="cmdIn" placeholder="Give TED a command in English or Mongolian… e.g. Mark [teacher] as sick today" autocomplete="off">
       <button class="pri" id="cmdGo">➤</button></div>
     <div id="answer"></div><div id="proposal"></div><div id="running"></div>
     <div class="chips" id="chips"></div>
     <div class="mlog" id="mlog"></div>
   </section>
-  <section data-tab="files" class="card fl" style="--d:.33s"><h2>🗂 Файлууд</h2>
+  <section data-tab="files" class="card fl" style="--d:.33s"><h2>🗂 Files</h2>
     <div class="fstat" id="fstat"></div>
     <div class="fsub" id="unconBox" style="display:none;border:1px solid rgba(255,190,80,.35);border-radius:10px;padding:8px 10px;animation:slideIn .4s both">
-      <span id="unconTxt"></span><button id="unconBtn" style="padding:3px 10px;font-size:11.5px">↶ Бүгдийг буцаах</button></div>
-    <div class="fsub"><span>Таны зөвшөөрөл хүлээж буй</span><button id="approveAll" style="padding:3px 10px;font-size:11.5px">Бүгдийг зөөх</button></div>
+      <span id="unconTxt"></span><button id="unconBtn" style="padding:3px 10px;font-size:11.5px">↶ Undo all</button></div>
+    <div class="fsub"><span>Waiting for your approval</span><button id="approveAll" style="padding:3px 10px;font-size:11.5px">Move all</button></div>
     <div class="list" id="fsug"></div>
-    <div class="fsub"><span>Сүүлд эмхэлсэн</span></div>
+    <div class="fsub"><span>Recently organized</span></div>
     <div class="list" id="fmoved"></div>
   </section>
-  <section data-tab="files" class="card fo" style="--d:.34s"><h2>📁 Холбосон хавтсууд</h2>
+  <section data-tab="files" class="card fo" style="--d:.34s"><h2>📁 Connected folders</h2>
     <div class="fadd">
-      <button class="pri" id="fPick">＋ Хавтас сонгох</button>
-      <input id="fPath" placeholder="эсвэл замыг бичих: D:\Сургууль\2026 баримтууд" autocomplete="off">
-      <button id="fAdd">Холбох</button>
-      <label class="fopt"><input type="checkbox" id="fEmpty"> Цэгцэлсний дараа хоосорсон хавтсыг устгах</label>
+      <button class="pri" id="fPick">＋ Choose a folder</button>
+      <input id="fPath" placeholder="or type a path: D:\School\2026 documents" autocomplete="off">
+      <button id="fAdd">Connect</button>
+      <label class="fopt"><input type="checkbox" id="fEmpty"> Remove folders that become empty</label>
     </div>
     <div id="planBox"></div>
     <div id="flist"></div>
   </section>
-  <section data-tab="home" class="card col urgent" style="--d:.35s"><h2>🔴 Яаралтай <span class="n" id="nU">0</span></h2><div class="list" id="smAgenda"></div><div class="list" id="urgent"></div></section>
-  <section data-tab="home" class="card col pending" style="--d:.45s"><h2>🟡 Таны зөвшөөрөл хэрэгтэй <span class="n" id="nP">0</span></h2><div class="list" id="pending"></div></section>
-  <section data-tab="home" class="card col auto" style="--d:.55s"><h2>🟢 TED шийдсэн <span class="n" id="nA">0</span></h2><div class="list" id="auto"></div></section>
-  <section data-tab="work" class="card tk" style="--d:.12s"><h2>✅ Даалгавар, хугацаа <span class="n" id="nT">0</span></h2>
-    <div class="fadd"><input id="tTitle" placeholder="Шинэ даалгавар…"><input id="tDue" type="date" style="flex:0 0 150px;min-width:0"><button id="tAdd">Нэмэх</button></div>
-    <div id="tlist"></div><div class="fsub"><span>Сүүлд хийсэн</span></div><div id="tdone"></div></section>
-  <section data-tab="work" class="card dr" style="--d:.2s"><h2>📝 Өдрийн тайлан → School Manager</h2>
+  <section data-tab="work" class="card tk" style="--d:.12s"><h2>✅ Tasks & deadlines <span class="n" id="nT">0</span></h2>
+    <div class="fadd"><input id="tTitle" placeholder="New task…"><input id="tDue" type="date" style="flex:0 0 150px;min-width:0"><button id="tAdd">Add</button></div>
+    <div id="tlist"></div><div class="fsub"><span>Recently done</span></div><div id="tdone"></div></section>
+  <section data-tab="work" class="card dr" style="--d:.2s"><h2>📝 Day report → School Manager</h2>
     <div id="drBox"></div></section>
-  <section data-tab="files" class="card se" style="--d:.05s"><h2>🔎 Файлаас хайх, асуух</h2>
-    <div class="cmd"><input id="sQ" placeholder="жишээ нь: А-145 тушаалд юу гэж байсан бэ?  эсвэл  ирцийн тайлан" autocomplete="off">
-      <button id="sGo">Хайх</button><button class="pri" id="sAsk">✨ Асуух</button></div>
+  <section data-tab="files" class="card se" style="--d:.05s"><h2>🔎 Search & ask your files</h2>
+    <div class="cmd"><input id="sQ" placeholder="e.g. What did order A-145 say?  or  attendance report" autocomplete="off">
+      <button id="sGo">Search</button><button class="pri" id="sAsk">✨ Ask</button></div>
     <div id="sAns"></div><div id="sRes"></div><div class="why" id="sStat"></div></section>
-  <section data-tab="system" class="card hl" style="--d:.05s"><h2>🩺 Холболтын эрүүл мэнд</h2><div id="hlist"></div>
+  <section data-tab="system" class="card hl" style="--d:.05s"><h2>🩺 Connection health</h2><div id="hlist"></div>
     <div class="acts" style="margin-top:12px">
-      <button data-sys="setup">🔌 Холболт тохируулах</button><button data-sys="config">⚙ Тохиргоо засах</button>
-      <button data-sys="folder">📂 Өгөгдлийн хавтас</button><button data-sys="restart">↻ Дахин асаах</button>
+      <button data-sys="setup">🔌 Set up connections</button><button data-sys="config">⚙ Edit settings</button>
+      <button data-sys="folder">📂 Data folder</button><button data-sys="restart">↻ Restart</button>
       <button id="demoBtn"></button></div></section>
-  <section data-tab="system" class="card jr" style="--d:.12s"><h2>📜 Үйлдлийн журнал</h2><div id="jlist"></div></section>
-  <section data-tab="system" class="card lr" style="--d:.2s"><h2>🧠 TED-ийн сурсан зүйл</h2><div id="lbox"></div></section>
-  <div class="errs" data-tab="home" id="errs"></div>
+  <section data-tab="system" class="card jr" style="--d:.12s"><h2>📜 Activity log</h2><div id="jlist"></div></section>
+  <section data-tab="system" class="card lr" style="--d:.2s"><h2>🧠 What TED has learned</h2><div id="lbox"></div></section>
 </main>
+
+<div id="scrim"></div>
+<aside id="drawer" aria-hidden="true">
+  <div class="dhead"><h3 id="dTitle"></h3><button id="dClose" title="Close (Esc)">✕</button></div>
+  <div class="dbody">
+    <div data-view="mail">
+      <section class="card urgent" style="--d:.05s"><h2>🔴 Urgent <span class="n" id="nU">0</span></h2><div class="list" id="smAgenda"></div><div class="list" id="urgent"></div></section>
+      <section class="card pending" style="--d:.12s"><h2>🟡 Needs your approval <span class="n" id="nP">0</span></h2><div class="list" id="pending"></div></section>
+      <section class="card auto" style="--d:.2s"><h2>🟢 Handled by TED <span class="n" id="nA">0</span></h2><div class="list" id="auto"></div></section>
+    </div>
+    <div data-view="calendar"><section class="card" style="--d:.05s"><h2>Today's calendar</h2><div class="tl" id="cal"></div></section></div>
+    <div data-view="metrics"><section class="card" style="--d:.05s"><h2>Key numbers</h2><div class="mgrid" id="met"></div></section></div>
+  </div>
+</aside>
+
+<div id="dock">
+  <button id="mic" title="Talk to TED (English or Mongolian)">🎙</button>
+  <div class="dwave"><canvas id="wave" width="360" height="44"></canvas><div id="dockState">Say “Hey Ted”</div></div>
+  <button id="play" title="Play today's briefing">🔊</button>
+  <button id="refresh" title="Refresh — check mail now"><span class="ic">↻</span></button>
+</div>
 
 <div id="toasts"></div>
 <audio id="audio"></audio>
@@ -408,7 +534,7 @@ const $ = id => document.getElementById(id);
 const esc = s => (s ?? "").toString().replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const SRC = {gmail:"Gmail", outlook:"Outlook", telegram:"Telegram", gchat:"Google Chat"};
-const srcName = it => it.source === "imap" ? ((it.meta && it.meta.account) || "Мэйл") : (SRC[it.source] || it.source);
+const srcName = it => it.source === "imap" ? ((it.meta && it.meta.account) || "Mail") : (SRC[it.source] || it.source);
 let S = null, firstRender = true, lastBrief = null, serverSpeaking = false;
 
 /* ================= Reactor (SVG) ================= */
@@ -431,6 +557,7 @@ function reactorSVG(){
 }
 $("reactor").innerHTML = reactorSVG();
 $("bootReactor").innerHTML = reactorSVG();
+$("coreReactor").innerHTML = reactorSVG();
 
 /* audio-reactive loop */
 let actx, analyser, freq;
@@ -449,10 +576,10 @@ function frame(now){
     analyser.getByteFrequencyData(freq);
     for(let i=0;i<BARS;i++){ const k = i < BARS/2 ? i : BARS-1-i; vals[i] = freq[Math.min(freq.length-1, 2+k)]/255; }
     amp = vals.reduce((a,b)=>a+b,0)/BARS;
-  } else if(serverSpeaking){            // компьютер ярьж байна: симуляц
+  } else if(serverSpeaking){            // TED is speaking (server side): simulated
     for(let i=0;i<BARS;i++) vals[i] = .25 + .55*Math.abs(Math.sin(t*7 + i*.7) * Math.sin(t*3.1 + i*.23));
     amp = .3 + .25*Math.abs(Math.sin(t*6));
-  } else {                              // тайван амьсгал
+  } else {                              // calm breathing
     for(let i=0;i<BARS;i++) vals[i] = .06 + .05*Math.sin(t*1.4 + i*.5);
     amp = .04 + .04*Math.sin(t*1.2);
   }
@@ -466,7 +593,23 @@ function frame(now){
       l.setAttribute("x2", 100 + r1*Math.cos(a)); l.setAttribute("y2", 100 + r1*Math.sin(a));
     });
   });
+  drawWave(t);
   requestAnimationFrame(frame);
+}
+const WV = $("wave"), WX = WV.getContext("2d");
+function drawWave(t){
+  const w = WV.width, h = WV.height, n = 34, bw = w/n;
+  WX.clearRect(0, 0, w, h);
+  const live = serverSpeaking || VOICE.rec || document.body.classList.contains("wake-listen") || ($("audio") && !$("audio").paused);
+  WX.fillStyle = document.body.classList.contains("wake-think") ? "rgba(255,190,85,.9)" : "rgba(120,230,255,.9)";
+  for(let i = 0; i < n; i++){
+    const k = Math.abs(i - (n-1)/2)/(n/2), base = live ? (smooth[i % BARS]*.8 + ampS*.9) : (.05 + .04*Math.sin(t*2 + i*.45));
+    const v = Math.max(.06, Math.min(1, base*(1 - k*.55) + (live ? .08*Math.sin(t*9 + i) : 0)));
+    const bh = v*h;
+    WX.globalAlpha = .35 + .65*(1 - k);
+    WX.fillRect(i*bw + bw*.25, (h - bh)/2, bw*.5, bh);
+  }
+  WX.globalAlpha = 1;
 }
 requestAnimationFrame(frame);
 
@@ -490,11 +633,12 @@ requestAnimationFrame(frame);
 })();
 
 /* ================= Clock ================= */
-const DAYS = ["Ням","Даваа","Мягмар","Лхагва","Пүрэв","Баасан","Бямба"];
 function tick(){
   const d = new Date(), p = n => String(n).padStart(2,"0");
-  $("clk").innerHTML = `${p(d.getHours())}:${p(d.getMinutes())}<s>${p(d.getSeconds())}</s>`;
-  $("date").textContent = `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} · ${DAYS[d.getDay()]} гараг`;
+  const hm = `${p(d.getHours())}:${p(d.getMinutes())}<s>${p(d.getSeconds())}</s>`;
+  $("clk").innerHTML = hm; $("hClk").innerHTML = hm;
+  const ds = d.toLocaleDateString("en-GB", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+  $("date").textContent = ds; $("hDate").textContent = ds;
 }
 tick(); setInterval(tick, 1000);
 
@@ -508,7 +652,7 @@ async function boot(){
   $("bootTitle").innerHTML = [..."TED"].map((ch,i) => `<span style="animation-delay:${.15+i*.07}s">${ch===" "?"&nbsp;":ch}</span>`).join("");
   let sources = [];
   try{ sources = (await (await fetch("/api/state")).json()).sources || []; }catch(e){}
-  const lines = ["Цөм систем эхэлж байна", "Санах ой ачааллаж байна", ...sources.map(s => `${s} холболт`), "Бүх систем хэвийн"];
+  const lines = ["Core systems starting", "Loading memory", ...sources.map(s => `${s} link`), "All systems online"];
   const log = $("bootlog"), wait = ms => new Promise(r => setTimeout(r, ms));
   await wait(900);
   for(const l of lines){
@@ -556,32 +700,36 @@ function itemCard(it){
     <div class="meta"><span class="src">${esc(srcName(it))}</span><span>${esc(it.sender)}</span><span>${when(it.received)}</span></div>
     <div class="sum">${esc(it.summary || it.subject)}</div>
     <div class="why">${esc(it.reason)}</div>
-    <details><summary>Эх мессеж</summary><pre>${esc(it.subject)}\n\n${esc(it.body || it.snippet)}</pre></details>
+    <details><summary>Original message</summary><pre>${esc(it.subject)}\n\n${esc(it.body || it.snippet)}</pre></details>
     <textarea>${esc(it.draft)}</textarea>
     <div class="acts">
-      ${it.source==="gchat" ? `<button data-a="copy">📋 Хуулах</button>` : `<button class="pri" data-a="send">✉ Илгээх</button>`}
-      <button data-a="redraft">✎ Дахин бичүүлэх</button>
-      <button data-a="read" title="Мэйлийг уншсан болгоод жагсаалтаас хасна">✓ Уншсан</button>
-      <button data-a="dismiss" title="Зөвхөн TED-ийн жагсаалтаас хасна, мэйлд хүрэхгүй">Алгасах</button>
-      ${MAILSRC.includes(it.source) ? `<button data-a="trash" class="dng" title="Хогийн сав руу зөөнө (буцааж болно)">🗑 Устгах</button>` : ""}
-      <button data-a="block" class="dng" title="Энэ илгээгчийн цаашдын мэйлийг TED автоматаар хогийн сав руу зөөнө">⛔ Блоклох</button>
+      ${it.source==="gchat" ? `<button data-a="copy">📋 Copy</button>` : `<button class="pri" data-a="send">✉ Send</button>`}
+      <button data-a="redraft">✎ Rewrite</button>
+      <button data-a="read" title="Mark the mail as read and remove it from the list">✓ Read</button>
+      <button data-a="dismiss" title="Remove from TED's list only — the mail is not touched">Skip</button>
+      ${MAILSRC.includes(it.source) ? `<button data-a="trash" class="dng" title="Move to trash (can be undone)">🗑 Delete</button>` : ""}
+      <button data-a="block" class="dng" title="TED will move future mail from this sender to trash">⛔ Block</button>
     </div></div>`;
 }
 const MAILSRC = ["gmail", "outlook", "imap"];
+const STATUS_EN = {"төлөвлөсөн": "planned", "хийгдэж байгаа": "in progress", "биелсэн": "done", "хойшилсон": "postponed"};
+const CAT_EN = {"бүртгэл":"registration","хурал цуглаан":"meeting","уулзалт":"appointment","зөвлөн туслах":"advising","цахим систем":"e-systems",
+  "сургалт":"training","хөтөлбөр хэрэгжүүлэх":"curriculum delivery","өөрийн хөгжил":"self-development","тодорхойлолт":"reference letter",
+  "шилжилт хөдөлгөөн":"transfers","амжилт":"achievement","бусад":"other"};
 const SMDATE = d => d ? d.slice(5).replace("-", "/") : "";
 function smCard(p, kind){
   const range = p.endDate && p.endDate !== p.startDate ? `${SMDATE(p.startDate)}–${SMDATE(p.endDate)}` : SMDATE(p.startDate);
   return `<div class="item smi" data-plan="${esc(p.id)}">
-    <div class="meta"><span class="src">SCHOOL MANAGER</span><span>${kind === "today" ? "Өнөөдөр" : "Удахгүй"}</span><span>${esc(range)}</span><span>${esc(p.status)}</span></div>
+    <div class="meta"><span class="src">SCHOOL MANAGER</span><span>${kind === "today" ? "Today" : "Coming up"}</span><span>${esc(range)}</span><span>${esc(STATUS_EN[p.status] || p.status)}</span></div>
     <div class="sum">${esc(p.activity)}</div>
-    <div class="acts"><button class="pri" data-sm="done">✓ Биелсэн</button></div></div>`;
+    <div class="acts"><button class="pri" data-sm="done">✓ Done</button></div></div>`;
 }
 function smOverdueCard(list){
   return `<div class="item smi smo">
-    <div class="meta"><span class="src">SCHOOL MANAGER</span><span>Хугацаа хэтэрсэн</span></div>
-    <div class="sum">Хугацаа хэтэрсэн ${list.length} ажил</div>
-    <details><summary>Жагсаалт харах</summary>${list.map(p => `<div class="smrow" data-plan="${esc(p.id)}">
-      <span>${esc(SMDATE(p.endDate || p.startDate))}</span><span>${esc(p.activity)}</span><button data-sm="done" title="Биелсэн">✓</button></div>`).join("")}</details></div>`;
+    <div class="meta"><span class="src">SCHOOL MANAGER</span><span>Overdue</span></div>
+    <div class="sum">${list.length} overdue task${list.length > 1 ? "s" : ""}</div>
+    <details><summary>Show the list</summary>${list.map(p => `<div class="smrow" data-plan="${esc(p.id)}">
+      <span>${esc(SMDATE(p.endDate || p.startDate))}</span><span>${esc(p.activity)}</span><button data-sm="done" title="Done">✓</button></div>`).join("")}</details></div>`;
 }
 let smSig = "";
 function renderAgenda(){
@@ -596,17 +744,17 @@ function renderAgenda(){
   return ag.today.length + ag.upcoming.length + (ag.overdue.length ? 1 : 0);
 }
 function autoCard(it){
-  const act = {archive:"архивлах", mark_read:"уншсан болгох"}[it.action], done = it.status === "auto_done";
+  const act = {archive:"archive", mark_read:"mark as read"}[it.action], done = it.status === "auto_done";
   return `<div class="item">
     <div class="meta"><span class="src">${esc(srcName(it))}</span><span>${esc(it.sender)}</span></div>
     <div>${esc(it.summary || it.subject)}</div>
     <div class="acts" style="margin-top:6px">
-      ${done ? `<span class="why">✓ ${act||"шийдсэн"}</span>` : (act ? `<button data-a="apply">✓ ${act}</button>` : "")}
-      ${!done ? `<button data-a="promote">Хариу бичих</button>` : ""}
+      ${done ? `<span class="why">✓ ${act||"handled"}</span>` : (act ? `<button data-a="apply">✓ ${act}</button>` : "")}
+      ${!done ? `<button data-a="promote">Write a reply</button>` : ""}
     </div></div>`;
 }
 
-/* Хэрэглэгчийн засварыг устгахгүйн тулд зөвхөн шинэ/алга болсон картыг өөрчилнө */
+/* Only add/remove changed cards so the user's edits are kept */
 function reconcile(el, items, render, emptyText){
   const keys = new Set(items.map(i => i.id + "|" + i.status));
   [...el.children].forEach(ch => {
@@ -635,16 +783,16 @@ function leave(n, cls="leave"){
 
 function renderCalendar(ev){
   const el = $("cal");
-  if(!ev.length){ el.innerHTML = `<div class="empty">Өнөөдөр календарь хоосон.</div>`; return; }
+  if(!ev.length){ el.innerHTML = `<div class="empty">Your calendar is clear today.</div>`; return; }
   const d = new Date(), nowMin = d.getHours()*60 + d.getMinutes();
   const mins = ev.map(e => /^\d\d:\d\d$/.test(e.time) ? (+e.time.slice(0,2))*60 + (+e.time.slice(3)) : -1);
   let nextIdx = mins.findIndex(m => m > nowMin);
   el.innerHTML = ev.map((e, i) => {
     const m = mins[i], end = i+1 < mins.length && mins[i+1] > m ? mins[i+1] : m + 60;
     let cls = "", badge = "";
-    if(m >= 0 && nowMin >= m && nowMin < end){ cls = "now"; badge = `<span class="badge">Одоо</span>`; }
+    if(m >= 0 && nowMin >= m && nowMin < end){ cls = "now"; badge = `<span class="badge">Now</span>`; }
     else if(m >= 0 && nowMin >= end){ cls = "past"; }
-    else if(i === nextIdx){ cls = "next"; const left = m - nowMin; badge = `<span class="badge">${left < 60 ? left + " мин" : Math.floor(left/60) + " цаг " + (left%60) + " мин"}</span>`; }
+    else if(i === nextIdx){ cls = "next"; const left = m - nowMin; badge = `<span class="badge">${left < 60 ? "in " + left + " min" : "in " + Math.floor(left/60) + " h " + (left%60) + " min"}</span>`; }
     return `<div class="ev ${cls}" style="animation-delay:${firstRender ? .3 + i*.08 : 0}s"><div class="t">${esc(e.time)}</div>
       <div>${esc(e.title)}${badge}<div class="l">${esc(e.location)}${e.location ? " · " : ""}${esc(e.source)}</div></div></div>`;
   }).join("");
@@ -652,7 +800,7 @@ function renderCalendar(ev){
 
 function renderMetrics(ms){
   const el = $("met");
-  if(!ms.length){ el.innerHTML = `<div class="empty">Тоон үзүүлэлт тохируулаагүй (School manager-ийн өгөгдлийн сангаас).</div>`; return; }
+  if(!ms.length){ el.innerHTML = `<div class="empty">No numbers set up yet (they come from School Manager data).</div>`; return; }
   if(el.children.length !== ms.length || el.querySelector(".empty")){
     el.innerHTML = ms.map((m, i) => `<div class="m" style="animation-delay:${.35 + i*.1}s">
       ${m.total ? `<svg class="gauge" viewBox="0 0 60 60"><circle class="bgc" cx="30" cy="30" r="25"/><circle class="fg" cx="30" cy="30" r="25"
@@ -672,74 +820,78 @@ function renderMetrics(ms){
 }
 
 function render(){
-  $("hello").innerHTML = `${esc(S.greeting)}, ${esc(S.owner)}` + (S.demo ? `<span class="demo">ДЕМО</span>` : "");
-  $("sub").textContent = S.last_run ? `Сүүлд шалгасан ${when(S.last_run)} · Бүх систем хэвийн` : "Эхний шалгалт хийж байна...";
+  $("hello").innerHTML = `${esc(S.greeting)}, ${esc(S.owner)}` + (S.demo ? `<span class="demo">DEMO</span>` : "");
+  $("hGreet").innerHTML = `${esc(S.greeting)}, ${esc(S.owner)}` + (S.demo ? `<span class="demo">DEMO</span>` : "");
+  $("sub").textContent = S.last_run ? `Last checked ${when(S.last_run)} · All systems normal` : "Running the first check...";
   if(S.briefing && S.briefing !== lastBrief){ lastBrief = S.briefing; setTimeout(() => typeBrief(S.briefing), firstRender ? 600 : 0); }
   renderCalendar(S.calendar);
   renderMetrics(S.metrics);
   renderMacros(); renderFiles(); renderFolders(); renderTasks(); renderHealthDot();
   if(TAB === "work") renderDayReport();
   const nSm = renderAgenda();
-  reconcile($("urgent"), S.urgent, itemCard, nSm ? "" : "Яаралтай зүйл алга. 👌");
-  reconcile($("pending"), S.pending, itemCard, "Хүлээгдэж буй зүйл алга.");
-  reconcile($("auto"), S.auto, autoCard, "Одоохондоо хоосон.");
+  reconcile($("urgent"), S.urgent, itemCard, nSm ? "" : "Nothing urgent. 👌");
+  reconcile($("pending"), S.pending, itemCard, "Nothing waiting.");
+  reconcile($("auto"), S.auto, autoCard, "Empty for now.");
   setCount($("nU"), S.urgent.length + nSm); setCount($("nP"), S.pending.length); setCount($("nA"), S.auto.length);
   $("errs").innerHTML = (S.errors||[]).map(e => `⚠ ${esc(e)}`).join("<br>");
+  renderHud();
   firstRender = false;
 }
 
 /* ================= School manager ================= */
 let MACROS = [];
+const cmdTitle = n => ((S && S.macros || []).find(m => m.name === n) || {}).title || n;
+const WHO = {"Та": "You", "TED": "TED", "Дуут тушаал": "Voice", "Хуваарь": "Schedule", "Telegram": "Telegram"};
+const whoEn = w => WHO[w] || w;
 function renderMacros(){
-  const card = document.querySelector(".card.sm");
-  card.style.display = S.sm ? "" : "none";
-  if(!S.sm) return;
-  const sig = JSON.stringify(S.macros.map(m => m.name));
+  const sig = JSON.stringify(S.macros.map(m => m.name + m.title));
   if($("chips").dataset.sig !== sig){
     $("chips").dataset.sig = sig; MACROS = S.macros;
     let lastGrp = null;
     $("chips").innerHTML = MACROS.map((m, i) => {
       const head = m.group && m.group !== lastGrp ? `<div class="chipgrp">${esc(m.group)}</div>` : "";
       lastGrp = m.group;
-      return head + `<button class="chip" data-m="${i}" title="${esc(m.description)}">▶ ${esc(m.name)}${m.schedule ? `<small>⏱ ${esc(m.schedule)}</small>` : ""}</button>`;
-    }).join("") || `<div class="empty">Тушаал алга.</div>`;
+      return head + `<button class="chip" data-m="${i}" title="${esc(m.description)}">▶ ${esc(m.title || m.name)}${m.schedule ? `<small>⏱ ${esc(m.schedule)}</small>` : ""}</button>`;
+    }).join("") || `<div class="empty">No commands.</div>`;
   }
+  if(!S.sm){ $("smStatus").innerHTML = ""; $("mlog").innerHTML = ""; return; }
   const fromFile = !S.sm_running && S.sm_state && S.sm_state.source === "file";
-  $("smStatus").innerHTML = S.sm_running ? `<span class="pill on">Нээлттэй</span>`
-    : `<span class="pill off" title="${fromFile ? "Тоонууд өгөгдлийн файлаас (зөвхөн унших)" : ""}">Хаалттай${fromFile ? " · файлаас" : ""} <button id="smOpen">Нээх</button></span>`;
-  const so = $("smOpen"); if(so) so.onclick = async () => { so.disabled = true; so.textContent = "Асааж байна…";
-    try{ await api("/api/sm/start", {}); toast("School Manager нээгдлээ", "ok"); } catch(e){ toast("Алдаа: " + e.message, "err"); } load(); };
+  $("smStatus").innerHTML = S.sm_running ? `<span class="pill on">Open</span>`
+    : `<span class="pill off" title="${fromFile ? "Numbers are read from the data file (read-only)" : ""}">Closed${fromFile ? " · from file" : ""} <button id="smOpen">Open</button></span>`;
+  const so = $("smOpen"); if(so) so.onclick = async () => { so.disabled = true; so.textContent = "Starting…";
+    try{ await api("/api/sm/start", {}); toast("School Manager is open", "ok"); } catch(e){ toast("Error: " + e.message, "err"); } load(); };
   $("mlog").innerHTML = (S.macro_log||[]).slice(0,5).map(e =>
-    `<div><span class="${e.ok ? "okc" : "badc"}">${e.ok ? "✓" : "✗"}</span> ${esc(e.time)} · ${esc(e.macro)} <span style="opacity:.7">(${esc(e.who)})</span></div>`).join("");
+    `<div><span class="${e.ok ? "okc" : "badc"}">${e.ok ? "✓" : "✗"}</span> ${esc(e.time)} · ${esc(cmdTitle(e.macro))} <span style="opacity:.7">(${esc(whoEn(e.who))})</span></div>`).join("");
 }
 function showProposal(m, params = {}, say = ""){
   const fields = (m.params || []).map(p => {
     const v = esc(params[p.name] || "");
     const dl = p.suggest && (S.sm_lists||{})[p.suggest] ? `<datalist id="dl_${esc(p.name)}">${S.sm_lists[p.suggest].map(x => `<option value="${esc(x)}">`).join("")}</datalist>` : "";
-    return `<label>${esc(p.label || p.name)}${p.optional ? '<span class="opt">(заавал биш)</span>' : ""}</label>` + dl + (p.choices
-      ? `<select data-p="${esc(p.name)}"><option value="">— сонгох —</option>${p.choices.map(c => `<option ${c === params[p.name] ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>`
+    const cl = p.choice_labels || {};
+    return `<label>${esc(p.label || p.name)}${p.optional ? '<span class="opt">(optional)</span>' : ""}</label>` + dl + (p.choices
+      ? `<select data-p="${esc(p.name)}"><option value="">— choose —</option>${p.choices.map(c => `<option value="${esc(c)}" ${c === params[p.name] ? "selected" : ""}>${esc(cl[c] && cl[c] !== c ? `${cl[c]} · ${c}` : c)}</option>`).join("")}</select>`
       : `<input data-p="${esc(p.name)}" value="${v}" ${dl ? `list="dl_${esc(p.name)}"` : ""} autocomplete="off">`);
   }).join("");
-  $("proposal").innerHTML = `<div class="prop"><div class="say"><b>${esc(m.name)}</b>${say ? " — " + esc(say) : (m.description ? " — " + esc(m.description) : "")}</div>
-    ${fields}<div class="acts"><button class="pri" id="runGo">▶ Ажиллуулах</button><button id="runNo">Болих</button></div></div>`;
+  $("proposal").innerHTML = `<div class="prop"><div class="say"><b>${esc(m.title || m.name)}</b>${say ? " — " + esc(say) : (m.description ? " — " + esc(m.description) : "")}</div>
+    ${fields}<div class="acts"><button class="pri" id="runGo">▶ Run</button><button id="runNo">Cancel</button></div></div>`;
   $("runNo").onclick = () => $("proposal").innerHTML = "";
   $("runGo").onclick = () => {
     const params = {}; $("proposal").querySelectorAll("[data-p]").forEach(el => params[el.dataset.p] = el.value.trim());
     const miss = (m.params||[]).find(p => !p.optional && !params[p.name]);
-    if(miss){ toast(`"${miss.label || miss.name}" хоосон байна`, "err"); return; }
+    if(miss){ toast(`"${miss.label || miss.name}" is empty`, "err"); return; }
     $("proposal").innerHTML = ""; runMacro(m, params);
   };
 }
 async function runMacro(m, params){
   document.body.classList.add("busy");
-  $("running").innerHTML = `<div class="run"><b>▶ ${esc(m.name)}</b> → School Manager…<div class="runbar"><i></i></div></div>`;
+  $("running").innerHTML = `<div class="run"><b>▶ ${esc(m.title || m.name)}</b> → running…<div class="runbar"><i></i></div></div>`;
   try{
     const r = await api("/api/macros/run", {name: m.name, params});
-    $("running").innerHTML = `<div class="run ${r.ok ? "ok" : "bad"}"><b>${r.ok ? "✓" : "✗"} ${esc(m.name)}</b>
+    $("running").innerHTML = `<div class="run ${r.ok ? "ok" : "bad"}"><b>${r.ok ? "✓" : "✗"} ${esc(m.title || m.name)}</b>
       <div class="steps">${(r.log||[]).map((l, i) => `<div style="animation-delay:${i*.12}s">${esc(l)}</div>`).join("")}</div></div>`;
-    toast(r.ok ? `✓ ${m.name} амжилттай` : `✗ ${m.name}: ${(r.log||[])[0]||""}`, r.ok ? "ok" : "err");
+    toast(r.ok ? `✓ ${m.title || m.name} — done` : `✗ ${m.title || m.name}: ${(r.log||[])[0]||""}`, r.ok ? "ok" : "err");
     setTimeout(() => { const el = $("running").firstChild; if(el){ el.classList.add("item","leave"); setTimeout(() => $("running").innerHTML = "", 450); } }, 9000);
-  } catch(e){ toast("Алдаа: " + e.message, "err"); $("running").innerHTML = ""; }
+  } catch(e){ toast("Error: " + e.message, "err"); $("running").innerHTML = ""; }
   finally{ document.body.classList.remove("busy"); load(); }
 }
 async function sendCommand(){
@@ -749,7 +901,7 @@ async function sendCommand(){
     const r = await api("/api/command", {text});
     handlePlan(r, false);
     $("cmdIn").value = "";
-  } catch(e){ toast("Алдаа: " + e.message, "err"); }
+  } catch(e){ toast("Error: " + e.message, "err"); }
   finally{ $("cmdGo").disabled = false; document.body.classList.remove("busy"); }
 }
 $("cmdGo").onclick = sendCommand;
@@ -763,28 +915,28 @@ function fileSug(f){
   const opts = S.files.categories.map(c => `<option ${c === f.category ? "selected" : ""}>${esc(c)}</option>`).join("");
   return `<div class="file" data-f="${f.id}"><div class="ic">${FICON(f.name)}</div>
     <div class="nm"><div title="${esc(f.src)}">${esc(f.name)}</div><div>${esc(f.origin)} → <select>${opts}</select> · ${esc(f.reason)}</div>
-      <input class="rn" value="${esc(f.newname || f.name)}" title="Шинэ нэр (засаж болно)"></div>
+      <input class="rn" value="${esc(f.newname || f.name)}" title="New name (you can edit it)"></div>
     <button class="pri" data-fa="approve">✓</button><button data-fa="ignore">✕</button></div>`;
 }
 function fileMoved(f){
   return `<div class="file" data-f="${f.id}"><div class="ic">${FICON(f.name)}</div>
-    <div class="nm"><div title="${esc(f.dest)}">${esc(f.newname || f.name)}</div><div>${esc(f.origin)} → <span class="cat">${esc(f.category)}</span>${f.newname && f.newname !== f.name ? ` · <span class="newn" title="Хуучин нэр">✎ ${esc(f.name)}</span>` : ""}</div></div>
-    <button data-fa="undo" title="Буцаах">↶</button></div>`;
+    <div class="nm"><div title="${esc(f.dest)}">${esc(f.newname || f.name)}</div><div>${esc(f.origin)} → <span class="cat">${esc(f.category)}</span>${f.newname && f.newname !== f.name ? ` · <span class="newn" title="Old name">✎ ${esc(f.name)}</span>` : ""}</div></div>
+    <button data-fa="undo" title="Undo">↶</button></div>`;
 }
 function renderFiles(){
   const st = S.files.stats || {};
-  $("fstat").innerHTML = `<span><b>${st.moved||0}</b>өнөөдөр эмхэлсэн</span><span><b>${S.files.suggested.length}</b>хүлээгдэж буй</span>`;
+  $("fstat").innerHTML = `<span><b>${st.moved||0}</b>sorted today</span><span><b>${S.files.suggested.length}</b>waiting</span>`;
   $("approveAll").style.display = S.files.suggested.length ? "" : "none";
   const un = S.files.unconnected_moved || 0;
   $("unconBox").style.display = un ? "" : "none";
-  $("unconTxt").textContent = `Холбоогүй хавтаснаас (Downloads г.м.) зөөсөн ${un} файл`;
-  reconcile($("fsug"), S.files.suggested, fileSug, "Хүлээгдэж буй файл алга.");
-  reconcile($("fmoved"), S.files.moved, fileMoved, "Одоохондоо хоосон.");
+  $("unconTxt").textContent = `${un} files were moved from folders you did not connect (e.g. Downloads)`;
+  reconcile($("fsug"), S.files.suggested, fileSug, "No files waiting.");
+  reconcile($("fmoved"), S.files.moved, fileMoved, "Empty for now.");
 }
 $("unconBtn").onclick = async () => {
   try{
     const r = await api("/api/files/undo-unconnected", {});
-    toast(`↶ ${r.done} файл анхны газартаа буцлаа` + (r.failed.length ? ` · ${r.failed.length} алдаа` : ""), r.failed.length ? "err" : "ok");
+    toast(`↶ ${r.done} files moved back` + (r.failed.length ? ` · ${r.failed.length} errors` : ""), r.failed.length ? "err" : "ok");
     setTimeout(load, 500);
   }catch(err){ toast(err.message, "err"); }
 };
@@ -797,19 +949,19 @@ async function fileAct(row, act){
 document.body.addEventListener("click", async ev => {
   const b = ev.target.closest("button[data-fa]"); if(!b) return;
   const row = b.closest(".file"); b.disabled = true;
-  try{ await fileAct(row, b.dataset.fa); toast({approve:"🗂 Файл зөөгдлөө", ignore:"Алгаслаа", undo:"↶ Буцаагдлаа"}[b.dataset.fa], "ok"); setTimeout(load, 600); }
-  catch(e){ toast("Алдаа: " + e.message, "err"); b.disabled = false; }
+  try{ await fileAct(row, b.dataset.fa); toast({approve:"🗂 File moved", ignore:"Skipped", undo:"↶ Undone"}[b.dataset.fa], "ok"); setTimeout(load, 600); }
+  catch(e){ toast("Error: " + e.message, "err"); b.disabled = false; }
 });
 $("approveAll").onclick = async () => {
   const rows = [...$("fsug").querySelectorAll(".file[data-key]")];
   for(const [i, r] of rows.entries()){ try{ await fileAct(r, "approve"); }catch(e){} await new Promise(x => setTimeout(x, 120)); }
-  toast(`🗂 ${rows.length} файл зөөгдлөө`, "ok"); setTimeout(load, 600);
+  toast(`🗂 ${rows.length} files moved`, "ok"); setTimeout(load, 600);
 };
 
 /* ================= Folders ================= */
 let activeJob = null, jobTimer = null, planDrawn = null;
-const MODE = {off:"Шинэ файлыг хянахгүй", suggest:"Шинэ файлыг санал болгох", auto:"Шинэ файлыг автоматаар"};
-const TARGET = {inside:"Тухайн хавтас дотор цэгцлэх", root:"Documents\\Terre руу зөөх"};
+const MODE = {off:"Don't watch new files", suggest:"Suggest new files", auto:"Sort new files automatically"};
+const TARGET = {inside:"Sort inside this folder", root:"Move to Documents\\Terre"};
 function renderFolders(){
   const list = S.folders || [];
   const sig = JSON.stringify(list.map(f => [f.id, f.mode, f.target, f.exists, f.last_job && [f.last_job.id, f.last_job.status]]));
@@ -817,25 +969,25 @@ function renderFolders(){
   $("flist").innerHTML = list.length ? list.map((f, i) => {
     const j = f.last_job, js = j && j.summary || {};
     let last = "";
-    if(j && j.status === "applied") last = `Сүүлд ${esc(js.applied_at||"")} цэгцэлсэн · ${js.applied||0} файл <button data-j="${j.id}" data-ja="undo" style="padding:1px 8px;font-size:11px">↶ Бүгдийг буцаах</button>`;
-    else if(j && j.status === "undone") last = "Сүүлийн цэгцлэлтийг буцаасан";
-    else if(j && ["planning","applying","undoing"].includes(j.status)) last = "⏳ ажиллаж байна…";
-    else if(j && j.status === "ready") last = `Төлөвлөгөө бэлэн <button data-j="${j.id}" data-ja="open" style="padding:1px 8px;font-size:11px">Харах</button>`;
+    if(j && j.status === "applied") last = `Last sorted ${esc(js.applied_at||"")} · ${js.applied||0} files <button data-j="${j.id}" data-ja="undo" style="padding:1px 8px;font-size:11px">↶ Undo all</button>`;
+    else if(j && j.status === "undone") last = "The last sorting was undone";
+    else if(j && ["planning","applying","undoing"].includes(j.status)) last = "⏳ working…";
+    else if(j && j.status === "ready") last = `Plan ready <button data-j="${j.id}" data-ja="open" style="padding:1px 8px;font-size:11px">View</button>`;
     return `<div class="frow ${f.exists ? "" : "miss"}" style="animation-delay:${i*.06}s" data-fid="${f.id}">
       <div class="ic">📁</div>
-      <div><div><b>${esc(f.name)}</b>${f.exists ? "" : ' <span class="why">— олдсонгүй</span>'}</div>
+      <div><div><b>${esc(f.name)}</b>${f.exists ? "" : ' <span class="why">— not found</span>'}</div>
         <div class="p" title="${esc(f.path)}">${esc(f.path)}</div><div class="last">${last}</div></div>
       <div class="ctl">
         <select data-fs="target">${Object.entries(TARGET).map(([k,v]) => `<option value="${k}" ${f.target===k?"selected":""}>${v}</option>`).join("")}</select>
         <select data-fs="mode">${Object.entries(MODE).map(([k,v]) => `<option value="${k}" ${f.mode===k?"selected":""}>${v}</option>`).join("")}</select>
-        <button class="pri" data-fo="plan" ${f.exists ? "" : "disabled"}>✨ Цэгцлэх</button>
-        <button data-fo="remove" title="Холболтыг салгах (файлд хүрэхгүй)">✕</button>
+        <button class="pri" data-fo="plan" ${f.exists ? "" : "disabled"}>✨ Sort</button>
+        <button data-fo="remove" title="Disconnect (files are not touched)">✕</button>
       </div></div>`;
-  }).join("") : `<div class="empty">Хавтас холбоогүй байна. "＋ Хавтас сонгох" дарж эхэлнэ үү.</div>`;
+  }).join("") : `<div class="empty">No folders connected. Click "＋ Choose a folder" to start.</div>`;
 }
 async function addFolder(path){
   if(!path) return;
-  try{ await api("/api/folders", {path}); $("fPath").value = ""; toast("📁 Хавтас холбогдлоо", "ok"); load(); }
+  try{ await api("/api/folders", {path}); $("fPath").value = ""; toast("📁 Folder connected", "ok"); load(); }
   catch(e){ toast(e.message, "err"); }
 }
 $("fPick").onclick = async () => {
@@ -849,18 +1001,18 @@ $("fPath").addEventListener("keydown", e => { if(e.key === "Enter") addFolder($(
 $("flist").addEventListener("change", async e => {
   const sel = e.target.closest("select[data-fs]"); if(!sel) return;
   const fid = sel.closest(".frow").dataset.fid;
-  try{ await api(`/api/folders/${fid}/update`, {[sel.dataset.fs]: sel.value}); toast("Хадгалагдлаа"); }catch(err){ toast(err.message, "err"); }
+  try{ await api(`/api/folders/${fid}/update`, {[sel.dataset.fs]: sel.value}); toast("Saved"); }catch(err){ toast(err.message, "err"); }
 });
 document.body.addEventListener("click", async e => {
   const b = e.target.closest("button[data-fo],button[data-j]"); if(!b) return;
   if(b.dataset.j){ const jid = +b.dataset.j;
-    if(b.dataset.ja === "undo"){ if(!confirm("Энэ цэгцлэлтийг бүхэлд нь буцааж, файлуудыг анхны газарт нь буцаах уу?")) return;
+    if(b.dataset.ja === "undo"){ if(!confirm("Undo this whole sorting and move every file back to where it was?")) return;
       await api(`/api/jobs/${jid}/undo`, {}); }
     watchJob(jid); return; }
   const row = b.closest(".frow"), fid = row.dataset.fid;
   if(b.dataset.fo === "remove"){
-    if(!confirm("Холболтыг салгах уу? (Файлууд хэвээр үлдэнэ)")) return;
-    await api(`/api/folders/${fid}/remove`, {}); leave(row, "leave"); toast("Холболт салгагдлаа"); setTimeout(load, 500);
+    if(!confirm("Disconnect this folder? (Files stay where they are)")) return;
+    await api(`/api/folders/${fid}/remove`, {}); leave(row, "leave"); toast("Disconnected"); setTimeout(load, 500);
   } else if(b.dataset.fo === "plan"){
     b.disabled = true;
     try{ const r = await api(`/api/folders/${fid}/plan`, {remove_empty: $("fEmpty").checked}); watchJob(r.job); }
@@ -883,34 +1035,34 @@ function drawJob(j){
   const box = $("planBox"), s = j.summary || {}, live = j.live || {};
   if(["planning","applying","undoing"].includes(j.status)){
     const pct = live.total ? Math.round(100*live.done/live.total) : 0;
-    box.innerHTML = `<div class="planp"><h3>${{planning:"🔍 Хавтсыг судалж байна", applying:"🚚 Цэгцэлж байна", undoing:"↶ Буцааж байна"}[j.status]}</h3>
+    box.innerHTML = `<div class="planp"><h3>${{planning:"🔍 Studying the folder", applying:"🚚 Sorting", undoing:"↶ Undoing"}[j.status]}</h3>
       <div class="stage">${esc(live.stage || "…")} ${live.total ? `· ${live.done} / ${live.total}` : ""}</div>
       <div class="pbar ${live.total ? "" : "ind"}"><i style="width:${pct}%"></i></div></div>`;
     planDrawn = null; return;
   }
-  if(j.status === "failed"){ box.innerHTML = `<div class="planp"><h3>✗ Алдаа</h3><div class="warn">${esc(s.error||"")}</div><button onclick="$('planBox').innerHTML=''">Хаах</button></div>`; return; }
+  if(j.status === "failed"){ box.innerHTML = `<div class="planp"><h3>✗ Error</h3><div class="warn">${esc(s.error||"")}</div><button onclick="$('planBox').innerHTML=''">Close</button></div>`; return; }
   if(planDrawn === j.id + j.status) return;
   planDrawn = j.id + j.status;
   if(j.status === "ready"){
     const cats = Object.entries(s.by_category || {}).sort((a,b) => b[1]-a[1]), mx = Math.max(1, ...cats.map(c => c[1]));
     const items = j.items || [];
-    box.innerHTML = `<div class="planp"><h3>✨ Цэгцлэх төлөвлөгөө — ${esc(j.path)}</h3>
-      <div class="stage">Одоогоор юу ч хөдлөөгүй. Шалгаад "Хэрэгжүүлэх" дарна уу. Ангиллыг файл бүрээр сольж, ✕-ээр алгасаж болно.</div>
-      <div class="big4"><div><b class="cu" data-to="${s.scanned||0}">0</b><span>файл шалгасан</span></div>
-        <div><b class="cu" data-to="${s.moves||0}">0</b><span>ангилж зөөнө</span></div>
-        <div><b class="cu" data-to="${s.dups||0}">0</b><span>давхардсан (${s.dup_mb||0} MB) → _Давхардсан</span></div>
-        <div><b class="cu" data-to="${s.rmdirs||0}">0</b><span>хоосон хавтас устгана</span></div></div>
+    box.innerHTML = `<div class="planp"><h3>✨ Sorting plan — ${esc(j.path)}</h3>
+      <div class="stage">Nothing has moved yet. Check the plan and press "Apply". You can change the category for each file, or skip it with ✕.</div>
+      <div class="big4"><div><b class="cu" data-to="${s.scanned||0}">0</b><span>files checked</span></div>
+        <div><b class="cu" data-to="${s.moves||0}">0</b><span>will be sorted</span></div>
+        <div><b class="cu" data-to="${s.dups||0}">0</b><span>duplicates (${s.dup_mb||0} MB) → _Давхардсан</span></div>
+        <div><b class="cu" data-to="${s.rmdirs||0}">0</b><span>empty folders removed</span></div></div>
       ${cats.map(([c,n]) => `<div class="cbar"><span>${esc(c)}</span><div class="tr"><i data-w="${Math.round(100*n/mx)}"></i></div><span class="n">${n}</span></div>`).join("")}
-      ${(s.projects_skipped||[]).length ? `<div class="warn">⚠ Програмын код агуулсан ${s.projects_skipped.length} хавтсанд хүрэхгүй: ${esc(s.projects_skipped.slice(0,5).join(", "))}</div>` : ""}
-      ${s.truncated ? `<div class="warn">⚠ Хэт олон файл тул эхний 5000-г л хамруулав. Дараа нь дахин цэгцэлнэ үү.</div>` : ""}
-      ${s.renames ? `<div class="stage">✎ ${s.renames} файлын утгагүй нэрийг (scan0001, IMG_1234…) агуулгаар нь сольно.</div>` : ""}
-      <details><summary>Файл бүрээр харах (${items.length})</summary><div class="pitems">${items.map(it => `<div class="pit ${it.status==="skipped"?"sk":""}" data-pi="${it.id}">
+      ${(s.projects_skipped||[]).length ? `<div class="warn">⚠ ${s.projects_skipped.length} folders with program code are left alone: ${esc(s.projects_skipped.slice(0,5).join(", "))}</div>` : ""}
+      ${s.truncated ? `<div class="warn">⚠ Too many files — only the first 5000 were included. Sort again later.</div>` : ""}
+      ${s.renames ? `<div class="stage">✎ ${s.renames} meaningless file names (scan0001, IMG_1234…) will be renamed from their content.</div>` : ""}
+      <details><summary>Show each file (${items.length})</summary><div class="pitems">${items.map(it => `<div class="pit ${it.status==="skipped"?"sk":""}" data-pi="${it.id}">
         <span>${it.kind==="dup" ? "♊" : it.kind==="rmdir" ? "🗑" : FICON(it.src)}</span>
         <span class="s" title="${esc(it.src)}">${esc(it.src.replace(j.path, "…"))}</span>
-        ${it.kind==="move" ? `<input class="nn" value="${esc(it.dest.split(/[\\/]/).pop())}" title="Шинэ нэр (засаж болно)">` : "<span></span>"}
-        ${it.kind==="move" ? `<select>${S.files.categories.map(c => `<option ${c===it.category?"selected":""}>${esc(c)}</option>`).join("")}</select>` : `<span class="why">${esc(it.kind==="dup" ? "давхардсан" : "хоосон хавтас")}</span>`}
-        <button data-pa="skip" title="Алгасах">✕</button></div>`).join("")}</div></details>
-      <div class="acts" style="margin-top:12px"><button class="pri" id="jApply">✓ Хэрэгжүүлэх</button><button id="jCancel">Болих</button></div></div>`;
+        ${it.kind==="move" ? `<input class="nn" value="${esc(it.dest.split(/[\\/]/).pop())}" title="New name (you can edit it)">` : "<span></span>"}
+        ${it.kind==="move" ? `<select>${S.files.categories.map(c => `<option ${c===it.category?"selected":""}>${esc(c)}</option>`).join("")}</select>` : `<span class="why">${esc(it.kind==="dup" ? "duplicate" : "empty folder")}</span>`}
+        <button data-pa="skip" title="Skip">✕</button></div>`).join("")}</div></details>
+      <div class="acts" style="margin-top:12px"><button class="pri" id="jApply">✓ Apply</button><button id="jCancel">Cancel</button></div></div>`;
     requestAnimationFrame(() => {
       box.querySelectorAll(".cu").forEach(el => countUp(el, +el.dataset.to, 900));
       box.querySelectorAll(".tr i").forEach((el, i) => setTimeout(() => el.style.width = el.dataset.w + "%", 120 + i*90));
@@ -918,19 +1070,19 @@ function drawJob(j){
     $("jApply").onclick = async () => { await api(`/api/jobs/${j.id}/apply`, {}); pollJob(); };
     $("jCancel").onclick = async () => { await api(`/api/jobs/${j.id}/cancel`, {}); box.innerHTML = ""; activeJob = null; load(); };
   } else if(j.status === "applied"){
-    box.innerHTML = `<div class="planp"><div class="done-burst"></div><h3>✓ Цэгцэллээ!</h3>
-      <div class="stage">${s.applied||0} үйлдэл амжилттай${s.errors ? `, ${s.errors} алдаа (файл нээлттэй байсан байж магадгүй)` : ""}. Буцаах бол "↶ Бүгдийг буцаах".</div>
-      <div class="acts"><button data-j="${j.id}" data-ja="undo">↶ Бүгдийг буцаах</button><button onclick="$('planBox').innerHTML=''">Хаах</button></div></div>`;
-    toast("✓ Хавтас цэгцлэгдлээ", "ok"); load();
+    box.innerHTML = `<div class="planp"><div class="done-burst"></div><h3>✓ Sorted!</h3>
+      <div class="stage">${s.applied||0} actions done${s.errors ? `, ${s.errors} errors (a file may have been open)` : ""}. To reverse, press "↶ Undo all".</div>
+      <div class="acts"><button data-j="${j.id}" data-ja="undo">↶ Undo all</button><button onclick="$('planBox').innerHTML=''">Close</button></div></div>`;
+    toast("✓ Folder sorted", "ok"); load();
   } else if(j.status === "undone"){
-    box.innerHTML = `<div class="planp"><h3>↶ Буцаагдлаа</h3><div class="stage">Бүх файл анхны газартаа очлоо.</div>
-      <button onclick="$('planBox').innerHTML=''">Хаах</button></div>`;
-    toast("↶ Буцаагдлаа", "ok"); load();
+    box.innerHTML = `<div class="planp"><h3>↶ Undone</h3><div class="stage">Every file is back where it was.</div>
+      <button onclick="$('planBox').innerHTML=''">Close</button></div>`;
+    toast("↶ Undone", "ok"); load();
   } else { box.innerHTML = ""; }
 }
 $("planBox").addEventListener("change", async e => {
   const nn = e.target.closest(".pit .nn");
-  if(nn){ try{ await api(`/api/plan/${nn.closest(".pit").dataset.pi}/rename`, {newname: nn.value}); toast("✎ Нэр хадгалагдлаа"); }catch(err){ toast(err.message, "err"); } return; }
+  if(nn){ try{ await api(`/api/plan/${nn.closest(".pit").dataset.pi}/rename`, {newname: nn.value}); toast("✎ Name saved"); }catch(err){ toast(err.message, "err"); } return; }
   const sel = e.target.closest(".pit select"); if(!sel) return;
   try{ await api(`/api/plan/${sel.closest(".pit").dataset.pi}/category`, {category: sel.value}); }catch(err){ toast(err.message, "err"); }
 });
@@ -945,7 +1097,8 @@ function showTab(t){
   if(!["home","work","files","system"].includes(t)) t = "home";
   TAB = t;
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
-  document.querySelectorAll("main [data-tab]").forEach(el => {
+  document.body.classList.toggle("t-home", t === "home");
+  document.querySelectorAll("main [data-tab], #hud").forEach(el => {
     const show = el.dataset.tab === t;
     if(show && el.classList.contains("hidden")){ el.classList.remove("hidden"); el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; }
     else if(!show) el.classList.add("hidden");
@@ -953,6 +1106,7 @@ function showTab(t){
   if(location.hash !== "#" + t) history.replaceState(null, "", "#" + t);
   if(t === "system") loadSystem();
   if(t === "work") renderDayReport();
+  if(t === "home") requestAnimationFrame(layoutHud); else closeDrawer();
 }
 $("tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); });
 window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
@@ -960,22 +1114,22 @@ window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
 /* ================= Tasks ================= */
 function dueLabel(t){
   if(t.days_left === null || t.days_left === undefined) return "";
-  if(t.days_left < 0) return `${-t.days_left} хоног хэтэрсэн`;
-  if(t.days_left === 0) return "Өнөөдөр"; if(t.days_left === 1) return "Маргааш";
-  return `${t.days_left} хоногийн дараа`;
+  if(t.days_left < 0) return `${-t.days_left} day${t.days_left < -1 ? "s" : ""} overdue`;
+  if(t.days_left === 0) return "Today"; if(t.days_left === 1) return "Tomorrow";
+  return `in ${t.days_left} days`;
 }
 function taskCard(t){
   const cls = t.kind === "meeting" ? "meet" : t.kind === "followup" ? "fu" : (t.days_left < 0 ? "over" : t.days_left === 0 ? "today" : "");
   const m = t.track || {};
-  const extra = t.kind === "meeting" ? `<button class="pri" data-ta="calendar">📅 Календарьт нэмэх</button>` : "";
+  const extra = t.kind === "meeting" ? `<button class="pri" data-ta="calendar">📅 Add to calendar</button>` : "";
   return `<div class="task ${cls}" data-tid="${t.id}">
-    ${t.kind === "meeting" ? "<span>📅</span>" : `<input type="checkbox" data-ta="done" title="Хийсэн">`}
-    <div><div class="t1">${esc(t.title)}</div><div class="t2">${t.kind === "followup" ? "⏳ хариу хүлээж байна · " : ""}${esc(t.source_label || "")}${t.kind === "meeting" ? ` · ${esc(m.date||"")} ${esc(m.time||"")} ${esc(m.location||"")}` : ""}</div></div>
-    <div style="display:flex;gap:6px;align-items:center">${t.due ? `<span class="due">${dueLabel(t)}</span>` : ""}${extra}<button data-ta="dismiss" title="Хаах">✕</button></div></div>`;
+    ${t.kind === "meeting" ? "<span>📅</span>" : `<input type="checkbox" data-ta="done" title="Done">`}
+    <div><div class="t1">${esc(t.title)}</div><div class="t2">${t.kind === "followup" ? "⏳ waiting for a reply · " : ""}${esc(t.source_label || "")}${t.kind === "meeting" ? ` · ${esc(m.date||"")} ${esc(m.time||"")} ${esc(m.location||"")}` : ""}</div></div>
+    <div style="display:flex;gap:6px;align-items:center">${t.due ? `<span class="due">${dueLabel(t)}</span>` : ""}${extra}<button data-ta="dismiss" title="Close">✕</button></div></div>`;
 }
 function renderTasks(){
   const open = S.tasks.open;
-  reconcile($("tlist"), open, taskCard, "Нээлттэй даалгавар алга. 👌");
+  reconcile($("tlist"), open, taskCard, "No open tasks. 👌");
   $("tdone").innerHTML = S.tasks.done.slice(0,5).map(t => `<div class="lex">✓ ${esc(t.title)}</div>`).join("") || `<div class="empty">—</div>`;
   setCount($("nT"), open.length);
   const urgentWork = open.filter(t => t.days_left !== null && t.days_left !== undefined && t.days_left <= 0 && t.kind !== "meeting").length;
@@ -986,14 +1140,14 @@ $("tlist").addEventListener("click", async e => {
   const row = el.closest(".task"), tid = row.dataset.tid, a = el.dataset.ta;
   try{
     if(a === "calendar"){
-      el.disabled = true; await api(`/api/tasks/${tid}/calendar`, {}); leave(row, "sent"); toast("📅 Календарьт нэмэгдлээ", "ok");
-    } else { await api(`/api/tasks/${tid}/${a}`, {}); leave(row, a === "done" ? "sent" : "leave"); toast(a === "done" ? "✓ Хийсэн" : "Хаагдлаа", "ok"); }
+      el.disabled = true; await api(`/api/tasks/${tid}/calendar`, {}); leave(row, "sent"); toast("📅 Added to calendar", "ok");
+    } else { await api(`/api/tasks/${tid}/${a}`, {}); leave(row, a === "done" ? "sent" : "leave"); toast(a === "done" ? "✓ Done" : "Closed", "ok"); }
     setTimeout(load, 700);
   }catch(err){ toast(err.message, "err"); el.disabled = false; }
 });
 $("tAdd").onclick = async () => {
   const title = $("tTitle").value.trim(); if(!title) return;
-  await api("/api/tasks", {title, due: $("tDue").value}); $("tTitle").value = ""; $("tDue").value = ""; toast("✅ Нэмэгдлээ", "ok"); load();
+  await api("/api/tasks", {title, due: $("tDue").value}); $("tTitle").value = ""; $("tDue").value = ""; toast("✅ Added", "ok"); load();
 };
 $("tTitle").addEventListener("keydown", e => { if(e.key === "Enter") $("tAdd").click(); });
 
@@ -1006,31 +1160,31 @@ async function renderDayReport(force){
   if(sig === drSig && !force) return; drSig = sig;
   const box = $("drBox");
   if(!r.items){
-    box.innerHTML = `<div class="stage" style="font-size:13px;color:var(--mut);margin-bottom:10px">Өдөр бүр ${esc("17:00")}-д TED өнөөдрийн мэйл, хурал, хийсэн ажлаас ажлын тэмдэглэлийн ноорог бэлдэнэ. Та сонгосныг нь School Manager-т оруулна.</div>
-      <button class="pri" id="drBuild">✨ Одоо бэлдэх</button>`;
+    box.innerHTML = `<div class="stage" style="font-size:13px;color:var(--mut);margin-bottom:10px">Every day at ${esc("17:00")} TED drafts work-log notes from today's mail, meetings and actions. You choose which ones go into School Manager.</div>
+      <button class="pri" id="drBuild">✨ Prepare now</button>`;
     $("drBuild").onclick = buildReport; return;
   }
   const pend = r.items.filter(i => i.status === "pending").length;
-  box.innerHTML = `<div class="lst"><span><b>${r.stats.events}</b>хурал</span><span><b>${r.stats.sent}</b>илгээсэн хариу</span><span><b>${r.stats.activities}</b>үйлдэл</span><span style="margin-left:auto">${esc(r.date)} ${esc(r.created)}</span></div>
+  box.innerHTML = `<div class="lst"><span><b>${r.stats.events}</b>meetings</span><span><b>${r.stats.sent}</b>replies sent</span><span><b>${r.stats.activities}</b>actions</span><span style="margin-left:auto">${esc(r.date)} ${esc(r.created)}</span></div>
     ${r.items.map((it, i) => `<div class="dri ${it.status}" data-i="${it.id}" style="animation-delay:${i*.06}s">
       <input type="checkbox" ${it.status === "pending" ? "checked" : "disabled"}>
       <div><input class="ttl" value="${esc(it.title)}" ${it.status !== "pending" ? "disabled" : ""}>
-        <div class="meta2"><select ${it.status !== "pending" ? "disabled" : ""}>${NOTE_CATS.map(c => `<option ${c===it.category?"selected":""}>${c}</option>`).join("")}</select>
-          <input class="hrs" type="number" step="0.5" min="0" value="${it.hours}" ${it.status !== "pending" ? "disabled" : ""}> цаг
-          ${it.time ? `· ${esc(it.time)}` : ""} ${it.result ? `· ${esc(it.result)}` : ""} ${it.status === "added" ? "· ✓ School Manager-т орсон" : ""}</div></div></div>`).join("") || `<div class="empty">Өнөөдөр бүртгэх зүйл олдсонгүй.</div>`}
-    <div class="acts" style="margin-top:10px">${pend ? `<button class="pri" id="drAdd">✓ Сонгосныг School Manager-т оруулах</button>` : ""}<button id="drRe">↻ Дахин бэлдэх</button></div>`;
+        <div class="meta2"><select ${it.status !== "pending" ? "disabled" : ""}>${NOTE_CATS.map(c => `<option value="${c}" ${c===it.category?"selected":""}>${CAT_EN[c] ? CAT_EN[c] + " · " + c : c}</option>`).join("")}</select>
+          <input class="hrs" type="number" step="0.5" min="0" value="${it.hours}" ${it.status !== "pending" ? "disabled" : ""}> h
+          ${it.time ? `· ${esc(it.time)}` : ""} ${it.result ? `· ${esc(it.result)}` : ""} ${it.status === "added" ? "· ✓ added to School Manager" : ""}</div></div></div>`).join("") || `<div class="empty">Nothing to log for today.</div>`}
+    <div class="acts" style="margin-top:10px">${pend ? `<button class="pri" id="drAdd">✓ Add the selected to School Manager</button>` : ""}<button id="drRe">↻ Prepare again</button></div>`;
   if($("drAdd")) $("drAdd").onclick = async () => {
     const ids = [], edits = {};
     box.querySelectorAll(".dri").forEach(d => { const cb = d.querySelector("input[type=checkbox]"); if(cb.checked && !cb.disabled){ const id = +d.dataset.i; ids.push(id);
       edits[id] = {title: d.querySelector(".ttl").value, category: d.querySelector("select").value, hours: +d.querySelector(".hrs").value}; } });
-    if(!ids.length) return toast("Юу ч сонгоогүй байна", "err");
-    try{ document.body.classList.add("busy"); const res = await api("/api/dayreport/add", {ids, edits}); toast(`✓ ${res.added.length} тэмдэглэл School Manager-т орлоо`, "ok"); renderDayReport(true); }
+    if(!ids.length) return toast("Nothing is selected", "err");
+    try{ document.body.classList.add("busy"); const res = await api("/api/dayreport/add", {ids, edits}); toast(`✓ ${res.added.length} notes added to School Manager`, "ok"); renderDayReport(true); }
     catch(e){ toast(e.message, "err"); } finally{ document.body.classList.remove("busy"); }
   };
   $("drRe").onclick = buildReport;
 }
 async function buildReport(){
-  $("drBox").innerHTML = `<div class="planp"><h3>✨ Өнөөдрийн ажлыг нэгтгэж байна…</h3><div class="pbar ind"><i></i></div></div>`;
+  $("drBox").innerHTML = `<div class="planp"><h3>✨ Collecting today's work…</h3><div class="pbar ind"><i></i></div></div>`;
   document.body.classList.add("busy");
   try{ await api("/api/dayreport/build", {}); }catch(e){ toast(e.message, "err"); }
   document.body.classList.remove("busy"); renderDayReport(true);
@@ -1042,16 +1196,16 @@ function showResults(list){
   $("sRes").innerHTML = list.map((r, i) => `<div class="sres" style="animation-delay:${i*.04}s"><div>${FICON(r.name)}</div>
     <div><div><b>${esc(r.name)}</b> <span class="why">${esc(r.folder)} · ${esc(r.date)}</span></div>
     <div class="sn">${esc(r.snippet).replace(/\[/g,"<mark>").replace(/\]/g,"</mark>")}</div></div>
-    <div style="display:flex;gap:4px"><button data-open="${esc(r.path)}">Нээх</button><button data-reveal="${esc(r.path)}" title="Explorer-т харуулах">📂</button></div></div>`).join("")
-    || `<div class="empty">Олдсонгүй.</div>`;
+    <div style="display:flex;gap:4px"><button data-open="${esc(r.path)}">Open</button><button data-reveal="${esc(r.path)}" title="Show in Explorer">📂</button></div></div>`).join("")
+    || `<div class="empty">Nothing found.</div>`;
 }
 $("sRes").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return;
   if(b.dataset.open) openFile(b.dataset.open); if(b.dataset.reveal) openFile(b.dataset.reveal, true); });
 $("sGo").onclick = async () => { const q = $("sQ").value.trim(); if(!q) return; $("sAns").innerHTML = "";
   const r = await api("/api/search?q=" + encodeURIComponent(q)); showResults(r.results);
-  $("sStat").textContent = `${r.stats.indexed} файл индекслэгдсэн · токен зарцуулаагүй`; };
+  $("sStat").textContent = `${r.stats.indexed} files indexed · no tokens used`; };
 $("sAsk").onclick = async () => { const q = $("sQ").value.trim(); if(!q) return;
-  $("sAns").innerHTML = `<div class="answer">Уншиж байна…</div>`; document.body.classList.add("busy");
+  $("sAns").innerHTML = `<div class="answer">Reading…</div>`; document.body.classList.add("busy");
   try{ const r = await api("/api/ask", {text: q}); typeInto($("sAns").firstChild, r.answer); showResults(r.sources); }
   catch(e){ toast(e.message, "err"); } finally{ document.body.classList.remove("busy"); } };
 $("sQ").addEventListener("keydown", e => { if(e.key === "Enter") (e.ctrlKey ? $("sAsk") : $("sGo")).click(); });
@@ -1060,49 +1214,49 @@ function typeInto(el, t){ let i = 0; t = t || ""; (function step(){ el.textConte
 /* ================= System: health, journal, learn ================= */
 document.body.addEventListener("click", async ev => {
   const b = ev.target.closest("button[data-unblock]"); if(!b) return;
-  try{ await api("/api/blocked/remove", {sender: b.dataset.unblock}); toast("Блокоос гаргалаа", "ok"); loadSystem(); }
+  try{ await api("/api/blocked/remove", {sender: b.dataset.unblock}); toast("Unblocked", "ok"); loadSystem(); }
   catch(e){ toast(e.message, "err"); }
 });
 async function loadSystem(){
   try{
     const [h, j, l] = await Promise.all([api("/api/health"), api("/api/journal?limit=120"), api("/api/learn")]);
     $("hlist").innerHTML = h.items.map((r, i) => `<div class="hrow ${r.status}" style="animation-delay:${i*.04}s"><div class="d"></div><div><b>${esc(r.name)}</b>${r.last_ok ? `<div class="hm">✓ ${esc(r.last_ok)}</div>` : ""}</div>
-      <div><div class="hm">${esc(r.msg || (r.status === "ok" ? "Хэвийн" : ""))}</div>${r.hint ? `<div class="hint">→ ${esc(r.hint)}</div>` : ""}</div></div>`).join("")
-      + (h.desktop.hotkeys.length ? `<div class="why" style="margin-top:8px">Товчлол: ${h.desktop.hotkeys.map(esc).join(", ")}</div>` : "")
-      + (h.desktop.hotkey_errors.length ? `<div class="warn">Товчлол бүртгэгдсэнгүй: ${h.desktop.hotkey_errors.map(esc).join(", ")}</div>` : "")
-      + `<div class="why" style="margin-top:6px">Өгөгдөл: ${esc(h.home)}</div>`;
+      <div><div class="hm">${esc(r.msg || (r.status === "ok" ? "OK" : ""))}</div>${r.hint ? `<div class="hint">→ ${esc(r.hint)}</div>` : ""}</div></div>`).join("")
+      + (h.desktop.hotkeys.length ? `<div class="why" style="margin-top:8px">Shortcuts: ${h.desktop.hotkeys.map(esc).join(", ")}</div>` : "")
+      + (h.desktop.hotkey_errors.length ? `<div class="warn">Shortcuts not registered: ${h.desktop.hotkey_errors.map(esc).join(", ")}</div>` : "")
+      + `<div class="why" style="margin-top:6px">Data: ${esc(h.home)}</div>`;
     try{
       const bl = (await api("/api/blocked")).blocked || [];
-      if(bl.length) $("hlist").insertAdjacentHTML("beforeend", `<div class="fsub" style="margin-top:10px"><span>⛔ Блоклосон илгээгчид (${bl.length})</span></div>`
-        + bl.map(x => `<div class="smrow" style="grid-template-columns:1fr auto"><span style="color:inherit">${esc(x)}</span><button data-unblock="${esc(x)}">Блокоос гаргах</button></div>`).join(""));
+      if(bl.length) $("hlist").insertAdjacentHTML("beforeend", `<div class="fsub" style="margin-top:10px"><span>⛔ Blocked senders (${bl.length})</span></div>`
+        + bl.map(x => `<div class="smrow" style="grid-template-columns:1fr auto"><span style="color:inherit">${esc(x)}</span><button data-unblock="${esc(x)}">Unblock</button></div>`).join(""));
     }catch(e){}
     let day = "";
     $("jlist").innerHTML = j.items.map((r, i) => { const d = r.ts.slice(0,10), hdr = d !== day ? `<div class="jday">${d}</div>` : ""; day = d;
       return hdr + `<div class="jrow ${r.status === "undone" ? "undone" : ""}" style="animation-delay:${Math.min(i,20)*.02}s"><span>${esc(r.icon)}</span><span class="tm">${r.ts.slice(11,16)}</span>
         <span title="${esc(r.detail || "")}">${esc(r.title)} <span class="who">· ${esc(r.who)}</span></span>
-        <span>${r.can_undo ? `<button data-undo="${r.id}">↶ Буцаах</button>` : ""}</span></div>`; }).join("") || `<div class="empty">Одоохондоо хоосон.</div>`;
+        <span>${r.can_undo ? `<button data-undo="${r.id}">↶ Undo</button>` : ""}</span></div>`; }).join("") || `<div class="empty">Empty for now.</div>`;
     const c = l.counts || {};
-    $("lbox").innerHTML = `<div class="lst"><span><b>${c.triage||0}</b>мэйлийн ангиллын засвар</span><span><b>${c.file||0}</b>файлын ангиллын засвар</span><span><b>${c.draft||0}</b>засаж илгээсэн ноорог</span></div>
-      <div class="lgrid"><div><div class="fsub"><span>Таны бичих хэв маяг (ноорогт ашиглана, засаж болно)</span></div>
-        <textarea id="styleTa" placeholder="5 ноорог засаж илгээсний дараа TED өөрөө бөглөнө. Эсвэл одоо өөрөө бичиж болно: - Мэндчилгээг «Сайн байна уу, ___ багшаа» гэж эхэлнэ ...">${esc(l.style_profile || "")}</textarea>
-        <div class="acts"><button class="pri" id="styleSave">Хадгалах</button><button id="styleRe">✨ Жишээнээс дахин гаргах</button></div></div>
-        <div><div class="fsub"><span>Сүүлийн засварууд</span><button id="learnReset" style="padding:2px 9px;font-size:11px">Бүгдийг мартуулах</button></div>
-        ${(l.recent||[]).map(e => `<div class="lex">${{triage:"✉",file:"🗂",draft:"✎"}[e.kind]} ${esc(e.input)} → <b>${esc(e.output.slice(0,60))}</b></div>`).join("") || `<div class="empty">Та ангилал эсвэл ноорог засах бүрт энд нэмэгдэнэ.</div>`}</div></div>`;
-    $("styleSave").onclick = async () => { await api("/api/learn/style", {text: $("styleTa").value}); toast("🧠 Хадгалагдлаа", "ok"); };
-    $("styleRe").onclick = async () => { try{ const r = await api("/api/learn/rebuild", {}); $("styleTa").value = r.style_profile || ""; toast("🧠 Шинэчлэгдлээ", "ok"); }catch(e){ toast(e.message, "err"); } };
-    $("learnReset").onclick = async () => { if(!confirm("TED-ийн сурсан бүх засвар, хэв маягийг устгах уу?")) return; await api("/api/learn/reset", {}); loadSystem(); };
+    $("lbox").innerHTML = `<div class="lst"><span><b>${c.triage||0}</b>mail category fixes</span><span><b>${c.file||0}</b>file category fixes</span><span><b>${c.draft||0}</b>edited drafts sent</span></div>
+      <div class="lgrid"><div><div class="fsub"><span>Your writing style (used for drafts, you can edit it)</span></div>
+        <textarea id="styleTa" placeholder="TED fills this in after you edit and send 5 drafts. Or write it yourself now, e.g. - Start with «Сайн байна уу, ___ багшаа» ...">${esc(l.style_profile || "")}</textarea>
+        <div class="acts"><button class="pri" id="styleSave">Save</button><button id="styleRe">✨ Rebuild from examples</button></div></div>
+        <div><div class="fsub"><span>Recent corrections</span><button id="learnReset" style="padding:2px 9px;font-size:11px">Forget everything</button></div>
+        ${(l.recent||[]).map(e => `<div class="lex">${{triage:"✉",file:"🗂",draft:"✎"}[e.kind]} ${esc(e.input)} → <b>${esc(e.output.slice(0,60))}</b></div>`).join("") || `<div class="empty">Each time you fix a category or a draft, it appears here.</div>`}</div></div>`;
+    $("styleSave").onclick = async () => { await api("/api/learn/style", {text: $("styleTa").value}); toast("🧠 Saved", "ok"); };
+    $("styleRe").onclick = async () => { try{ const r = await api("/api/learn/rebuild", {}); $("styleTa").value = r.style_profile || ""; toast("🧠 Updated", "ok"); }catch(e){ toast(e.message, "err"); } };
+    $("learnReset").onclick = async () => { if(!confirm("Delete everything TED has learned (corrections and writing style)?")) return; await api("/api/learn/reset", {}); loadSystem(); };
   }catch(e){}
-  $("demoBtn").textContent = S && S.demo ? "▶ Демо горимоос гарах" : "Демо горимд шилжих";
+  $("demoBtn").textContent = S && S.demo ? "▶ Leave demo mode" : "Switch to demo mode";
 }
 $("jlist").addEventListener("click", async e => { const b = e.target.closest("[data-undo]"); if(!b) return;
-  if(!confirm("Энэ үйлдлийг буцаах уу?")) return; b.disabled = true;
-  try{ await api(`/api/journal/${b.dataset.undo}/undo`, {}); toast("↶ Буцаагдлаа", "ok"); loadSystem(); load(); }catch(err){ toast(err.message, "err"); b.disabled = false; } });
+  if(!confirm("Undo this action?")) return; b.disabled = true;
+  try{ await api(`/api/journal/${b.dataset.undo}/undo`, {}); toast("↶ Undone", "ok"); loadSystem(); load(); }catch(err){ toast(err.message, "err"); b.disabled = false; } });
 document.body.addEventListener("click", async e => { const b = e.target.closest("[data-sys]"); if(!b) return;
-  if(b.dataset.sys === "restart" && !confirm("TED-ийг дахин асаах уу?")) return;
-  try{ await api(`/api/system/${b.dataset.sys}`, {}); if(b.dataset.sys === "restart"){ toast("Дахин асааж байна…"); setTimeout(() => location.reload(), 6000); } }catch(err){ toast(err.message, "err"); } });
+  if(b.dataset.sys === "restart" && !confirm("Restart TED?")) return;
+  try{ await api(`/api/system/${b.dataset.sys}`, {}); if(b.dataset.sys === "restart"){ toast("Restarting…"); setTimeout(() => location.reload(), 6000); } }catch(err){ toast(err.message, "err"); } });
 $("demoBtn").onclick = async () => { const on = !S.demo;
-  if(!confirm(on ? "Демо горимд шилжих үү?" : "Демо горимоос гарч жинхэнэ холболтуудаар ажиллах уу? (config.yaml-д холболтуудаа тохируулсан байх ёстой)")) return;
-  await api("/api/settings/demo", {on}); await api("/api/system/restart", {}); toast("Дахин асааж байна…"); setTimeout(() => location.reload(), 7000); };
+  if(!confirm(on ? "Switch to demo mode?" : "Leave demo mode and use your real connections? (They must be set up in config.yaml)")) return;
+  await api("/api/settings/demo", {on}); await api("/api/system/restart", {}); toast("Restarting…"); setTimeout(() => location.reload(), 7000); };
 function renderHealthDot(){ const h = S.health || {}; $("hdot").className = "hdot " + (h.overall === "error" ? "error" : h.overall === "warn" ? "warn" : ""); }
 
 /* ================= Voice (push-to-talk) ================= */
@@ -1134,20 +1288,20 @@ function encodeWav(chunks, rate, target = 16000){
 }
 async function voiceToggle(){
   if(VOICE.rec){ VOICE.rec.stop(); return; }
-  if(S && !S.has_gemini){ toast("Дуугаар командлахад Gemini API түлхүүр хэрэгтэй", "err"); return; }
+  if(S && !S.voice_ok){ toast("Voice needs a Gemini API key, or offline English (pip install vosk)", "err"); return; }
   try{
     $("mic").classList.add("rec"); serverSpeaking = false;
     VOICE.rec = await startRec(async wav => {
       VOICE.rec = null; $("mic").classList.remove("rec"); document.body.classList.add("busy");
       try{
         const r = await fetch("/api/voice", {method: "POST", headers: {"Content-Type": "audio/wav"}, body: wav});
-        const d = await r.json(); if(!r.ok) throw new Error(d.detail || "алдаа");
+        const d = await r.json(); if(!r.ok) throw new Error(d.detail || "error");
         if(d.text) $("cmdIn").value = d.text;
         if(TAB !== "work") showTab("work");
         handlePlan(d.plan, true);
       }catch(e){ toast(e.message, "err"); } finally{ document.body.classList.remove("busy"); }
     });
-  }catch(e){ $("mic").classList.remove("rec"); VOICE.rec = null; toast("Микрофон нээгдсэнгүй: " + e.message, "err"); }
+  }catch(e){ $("mic").classList.remove("rec"); VOICE.rec = null; toast("Could not open the microphone: " + e.message, "err"); }
 }
 $("mic").onclick = voiceToggle;
 function speakText(t){ if(!t) return; setupAnalyser(); const a = $("audio"); a.src = "/api/tts?text=" + encodeURIComponent(t.slice(0,500)); a.play().catch(()=>{}); }
@@ -1160,9 +1314,146 @@ function handlePlan(r, speak){
 }
 $("answer").addEventListener("click", e => { const a = e.target.closest("[data-open]"); if(a){ e.preventDefault(); openFile(a.dataset.open); } });
 
+/* ================= HUD (Home): TED in the centre, linked nodes around ================= */
+function goCard(tab, sel){
+  showTab(tab);
+  setTimeout(() => { const el = document.querySelector(sel); if(el) el.scrollIntoView({behavior: RM ? "auto" : "smooth", block: "start"}); }, 80);
+}
+function openCmd(name){
+  goCard("work", ".card.sm");
+  const m = (S && S.macros || []).find(x => x.name === name);
+  if(m){ MACROS = S.macros; showProposal(m); return; }
+  toast(name.startsWith("Drive") ? "Google Drive is not turned on yet — see README 3.11 (google_drive: enabled: true)"
+                                 : "Connect Google Calendar first (System → Set up connections)", "err");
+}
+const NODES = [
+  {k: "mail",     label: "Mail",           go: () => openDrawer("mail")},
+  {k: "calendar", label: "Calendar",       go: () => openDrawer("calendar")},
+  {k: "meet",     label: "Meetings",       go: () => openCmd("Уулзалт товлох (Google Meet)")},
+  {k: "sm",       label: "School Manager", go: () => goCard("work", ".card.sm")},
+  {k: "tasks",    label: "Tasks",          go: () => goCard("work", ".card.tk")},
+  {k: "report",   label: "Day report",     go: () => goCard("work", ".card.dr")},
+  {k: "metrics",  label: "Numbers",        go: () => openDrawer("metrics")},
+  {k: "health",   label: "System",         go: () => goCard("system", ".card.hl")},
+  {k: "memory",   label: "Memory",         go: () => goCard("system", ".card.lr")},
+  {k: "search",   label: "Search",         go: () => { goCard("files", ".card.se"); setTimeout(() => $("sQ").focus(), 400); }},
+  {k: "files",    label: "Files",          go: () => goCard("files", ".card.fl")},
+  {k: "drive",    label: "Drive",          go: () => openCmd("Drive-оос файл хайх")},
+];
+$("hNodes").innerHTML = NODES.map((n, i) => `<button class="hnode" data-node="${n.k}" style="animation-delay:${.35 + i*.06}s">
+  <span class="nd"><span class="nb"></span></span><span class="nl">${n.label}</span><span class="ns"></span></button>`).join("");
+$("hNodes").addEventListener("click", e => { const b = e.target.closest("[data-node]"); if(b) NODES.find(n => n.k === b.dataset.node).go(); });
+
+function nodeInfo(k){
+  if(!S) return {};
+  const ag = (S.sm_state && S.sm_state.agenda) || {today: [], upcoming: [], overdue: []};
+  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
+  switch(k){
+    case "mail": { const u = S.urgent.length, p = S.pending.length;
+      return {cls: u ? "red" : p ? "amber" : "", nb: u + p || "", sub: u || p ? `${u} urgent · ${p} waiting` : "All clear"}; }
+    case "calendar": { const ev = S.calendar || [], nx = ev.find(e => /^\d\d:\d\d$/.test(e.time) && (+e.time.slice(0,2))*60 + (+e.time.slice(3)) > nowMin);
+      return {nb: ev.length || "", c: true, sub: nx ? `Next at ${nx.time}` : ev.length ? `${ev.length} today` : "Clear today"}; }
+    case "sm": { if(!S.sm) return {sub: "Not connected"};
+      const od = ag.overdue.length, td = ag.today.length;
+      return {cls: od ? "amber" : "", nb: td || "", c: true, sub: (S.sm_running ? "Open" : "Closed") + (od ? ` · ${od} overdue` : td ? ` · ${td} today` : "")}; }
+    case "tasks": { const o = S.tasks.open, late = o.filter(t => t.days_left !== null && t.days_left !== undefined && t.days_left < 0).length;
+      return {cls: late ? "red" : "", nb: o.length || "", c: !late, sub: late ? `${late} overdue` : o.length ? `${o.length} open` : "Nothing open"}; }
+    case "files": { const n = S.files.suggested.length; return {cls: n ? "amber" : "", nb: n || "", sub: n ? "Waiting for you" : `${(S.files.stats||{}).moved||0} sorted today`}; }
+    case "health": { const h = (S.health||{}).overall; return {cls: h === "error" ? "red" : h === "warn" ? "amber" : "", sub: h === "error" ? "Needs attention" : h === "warn" ? "Check" : "All good"}; }
+    case "metrics": return {sub: S.metrics.length ? `${S.metrics.length} numbers` : "Not set"};
+    case "report": return {sub: "Draft at 17:00"};
+    case "meet": return {sub: "Google Meet"};
+    case "drive": return {sub: "Upload · find · share"};
+    case "search": return {sub: "Ask your files"};
+    case "memory": return {sub: "Your writing style"};
+  }
+  return {};
+}
+let hudGeo = null;
+function renderHud(){
+  document.querySelectorAll(".hnode").forEach(b => {
+    const k = b.dataset.node, inf = nodeInfo(k);
+    b.classList.toggle("red", inf.cls === "red"); b.classList.toggle("amber", inf.cls === "amber");
+    const nb = b.querySelector(".nb"); nb.textContent = inf.nb ?? ""; nb.classList.toggle("c", !!inf.c);
+    b.querySelector(".ns").textContent = inf.sub || "";
+    const ln = document.getElementById("lk-" + k);
+    if(ln) ln.setAttribute("class", "hl-link " + (inf.cls || ""));
+  });
+  const ag = (S.sm_state && S.sm_state.agenda) || {overdue: []}, chips = [];
+  if(S.urgent.length) chips.push(`<button class="achip red" data-open="mail"><b>${S.urgent.length}</b> urgent</button>`);
+  if(S.pending.length) chips.push(`<button class="achip amber" data-open="mail"><b>${S.pending.length}</b> waiting for you</button>`);
+  if(ag.overdue && ag.overdue.length) chips.push(`<button class="achip amber" data-open="mail"><b>${ag.overdue.length}</b> overdue</button>`);
+  const ev = S.calendar || [];
+  if(ev.length) chips.push(`<button class="achip" data-open="calendar"><b>${ev.length}</b> event${ev.length > 1 ? "s" : ""} today</button>`);
+  const sig = chips.join("");
+  if($("hAttn").dataset.sig !== sig){ $("hAttn").dataset.sig = sig; $("hAttn").innerHTML = sig; }
+  if(!hudGeo) layoutHud();
+}
+$("hAttn").addEventListener("click", e => { const b = e.target.closest("[data-open]"); if(b) openDrawer(b.dataset.open); });
+
+function layoutHud(){
+  const hud = $("hud"); if(hud.classList.contains("hidden")) return;
+  const W = hud.clientWidth, H = hud.clientHeight, compact = W < 1000 || H < 560;
+  hud.classList.toggle("compact", compact); document.body.classList.toggle("hud-compact", compact);
+  const svg = $("hudLines");
+  if(compact){ svg.innerHTML = ""; hudGeo = {compact: true}; return; }
+  // Доор дуут самбар (dock) байгаа тул төвийг бага зэрэг дээш, зангилааны эллипсийг түүнд хүргэхгүй
+  const cx = W/2, cy = H/2 - 22;
+  const cs = Math.round(Math.max(200, Math.min(340, Math.min(W, H)*.34)));
+  const rx = Math.max(cs*.5 + 170, Math.min(560, W/2 - 400)), ry = Math.max(cs*.5 + 55, Math.min(310, H/2 - 140));
+  const core = $("hCore"); core.style.left = cx + "px"; core.style.top = (cy + 18) + "px"; core.style.setProperty("--cs", cs + "px");
+  const n = NODES.length, R = cs*.47;
+  let paths = `<ellipse class="hl-ring" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/><circle class="hl-ring" cx="${cx}" cy="${cy}" r="${cs*.72}"/>`;
+  NODES.forEach((nd, i) => {
+    const a = (-90 + 360/n*(i + .5)) * Math.PI/180, ca = Math.cos(a), sa = Math.sin(a);
+    const x = cx + rx*ca, y = cy + ry*sa, sx = cx + R*ca, sy = cy + R*sa;
+    const mx = cx + (R + (Math.hypot(x-cx, y-cy) - R)*.55)*Math.cos(a + .18*(ca >= 0 ? 1 : -1)), my = cy + (R + (Math.hypot(x-cx, y-cy) - R)*.55)*Math.sin(a + .18*(ca >= 0 ? 1 : -1));
+    const dir = ca >= 0 ? 1 : -1, L = 60 + (i*37 % 70), tx = x + dir*L, ty = y + (sa > 0 ? 14 : -14);
+    paths += `<path id="lk-${nd.k}" class="hl-link" d="M${sx.toFixed(1)},${sy.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}"/>`
+      + `<path class="hl-flow" style="animation-delay:-${(i*.37).toFixed(2)}s" d="M${sx.toFixed(1)},${sy.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}"/>`
+      + `<path class="hl-tail" d="M${(x + dir*14).toFixed(1)},${y.toFixed(1)} L${(x + dir*34).toFixed(1)},${ty.toFixed(1)} L${tx.toFixed(1)},${ty.toFixed(1)}"/>`
+      + `<circle class="hl-end" cx="${tx.toFixed(1)}" cy="${ty.toFixed(1)}" r="2.2"/>`
+      + (RM ? "" : `<circle class="hl-spark" r="2"><animateMotion dur="${(3.2 + (i%4)*.6).toFixed(1)}s" begin="-${(i*.8).toFixed(1)}s" repeatCount="indefinite"><mpath href="#lk-${nd.k}"/></animateMotion></circle>`);
+    const b = document.querySelector(`.hnode[data-node="${nd.k}"]`); b.style.left = x + "px"; b.style.top = (y + 18) + "px";
+  });
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = paths;
+  hudGeo = {W, H};
+  if(S) renderHud();
+}
+let hudT; addEventListener("resize", () => { clearTimeout(hudT); hudT = setTimeout(layoutHud, 120); });
+
+/* Drawer */
+const DTITLE = {mail: "Messages", calendar: "Today's calendar", metrics: "Key numbers"};
+function openDrawer(v){
+  $("dTitle").textContent = DTITLE[v] || "";
+  document.querySelectorAll(".dbody [data-view]").forEach(el => el.classList.toggle("on", el.dataset.view === v));
+  $("drawer").classList.add("open"); $("drawer").setAttribute("aria-hidden", "false"); $("scrim").classList.add("on");
+}
+function closeDrawer(){ $("drawer").classList.remove("open"); $("drawer").setAttribute("aria-hidden", "true"); $("scrim").classList.remove("on"); }
+$("dClose").onclick = closeDrawer; $("scrim").onclick = closeDrawer;
+addEventListener("keydown", e => { if(e.key === "Escape") closeDrawer(); });
+
+/* Voice status: pill (top), dock (bottom), core label */
+function updateVoiceUi(){
+  const w = lastWake, rec = !!VOICE.rec, speaking = serverSpeaking || !$("audio").paused;
+  document.body.classList.toggle("speaking", speaking);
+  let st = "Online", dock = (S && S.voice_ok) ? "Press 🎙 to talk" : "Voice needs setup";
+  if(w && w !== "off" && w !== "error") dock = "Say “Hey Ted”";
+  if(w === "paused") dock = "Listening paused";
+  if(w === "listening" || rec){ st = "Listening"; dock = "Listening…"; }
+  if(w === "thinking"){ st = "Thinking"; dock = "Thinking…"; }
+  if(speaking){ st = "Speaking"; dock = "Speaking…"; }
+  $("hState").textContent = st; $("dockState").textContent = dock;
+  const pill = $("hPill");
+  pill.className = "hpill " + ({listening: "listen", thinking: "think", paused: "paused", off: "off", error: "off", "": "off", loading: "off"}[w] ?? "");
+  $("hPillTxt").textContent = {listening: "Listening…", thinking: "Thinking…", paused: "Paused — click to resume", loading: "Starting voice…",
+    error: "Voice error — see System", off: "“Hey Ted” is off", "": "“Hey Ted” is off"}[w] ?? "Say “Hey Ted”";
+}
+$("hPill").onclick = () => { if(lastWake && !["off", "error", "loading"].includes(lastWake)) $("wakeBtn").click(); else goCard("system", ".card.hl"); };
+
 async function load(){
   try{ S = await api("/api/state"); render(); }
-  catch(e){ $("sub").textContent = "Сервертэй холбогдсонгүй"; }
+  catch(e){ $("sub").textContent = "Cannot reach the server"; $("hGreet").textContent = "Cannot reach TED's server"; }
 }
 
 /* ================= Actions ================= */
@@ -1172,35 +1463,35 @@ document.body.addEventListener("click", async ev => {
   try{
     b.disabled = true;
     if(a === "send"){
-      if(!confirm("Энэ хариуг илгээх үү?\n\n" + ta.value.slice(0,300))) return;
+      if(!confirm("Send this reply?\n\n" + ta.value.slice(0,300))) return;
       await api(`/api/items/${id}/send`, {body: ta.value});
-      leave(card, "sent"); toast("✓ Хариу илгээгдлээ", "ok");
+      leave(card, "sent"); toast("✓ Reply sent", "ok");
     } else if(a === "redraft"){
-      const ins = prompt("Яаж засах вэ? (жишээ нь: илүү товч, англиар, мягмар гарагт уулзъя гэж нэм)"); if(!ins) return;
+      const ins = prompt("How should I change it? (e.g. shorter, more formal, add: let's meet on Tuesday)"); if(!ins) return;
       ta.classList.add("thinking");
-      try{ const r = await api(`/api/items/${id}/redraft`, {instruction: ins}); ta.value = r.draft; toast("✎ Ноорог шинэчлэгдлээ"); }
+      try{ const r = await api(`/api/items/${id}/redraft`, {instruction: ins}); ta.value = r.draft; toast("✎ Draft updated"); }
       finally{ ta.classList.remove("thinking"); }
       return;
     } else if(a === "copy"){
-      await navigator.clipboard.writeText(ta.value); toast("📋 Хуулагдлаа"); return;
+      await navigator.clipboard.writeText(ta.value); toast("📋 Copied"); return;
     } else {
       const who = card.querySelector(".meta span:nth-child(2)")?.textContent || "";
-      if(a === "trash" && !confirm("Энэ мэйлийг хогийн сав руу зөөх үү? (Журналаас буцааж болно)")) return;
-      if(a === "block" && !confirm(`«${who}»-ийг блоклох уу?\n\nЭнэ мэйл хогийн сав руу очиж, цаашид энэ илгээгчийн бүх мэйлийг TED автоматаар хогийн сав руу зөөнө. Систем табаас блокоос гаргаж болно.`)) return;
+      if(a === "trash" && !confirm("Move this mail to trash? (You can undo it in the activity log)")) return;
+      if(a === "block" && !confirm(`Block «${who}»?\n\nThis mail goes to trash, and TED will move all future mail from this sender to trash. You can unblock in the System tab.`)) return;
       await api(`/api/items/${id}/${a}`, {});   // apply | dismiss | promote | read | trash | block
       leave(card);
-      toast({apply:"✓ Шийдэгдлээ", dismiss:"Алгаслаа", promote:"Зөвшөөрлийн жагсаалт руу шилжлээ",
-             read:"✓ Уншсан болголоо", trash:"🗑 Хогийн сав руу зөөлөө", block:`⛔ ${who} блоклогдлоо`}[a]);
+      toast({apply:"✓ Handled", dismiss:"Skipped", promote:"Moved to the approval list",
+             read:"✓ Marked as read", trash:"🗑 Moved to trash", block:`⛔ ${who} blocked`}[a]);
     }
     setTimeout(load, 500);
-  } catch(e){ toast("Алдаа: " + e.message, "err"); }
+  } catch(e){ toast("Error: " + e.message, "err"); }
   finally{ b.disabled = false; }
 });
 
 $("wakeBtn").onclick = async () => {
   try{
     const r = await api("/api/wake/pause", {on: lastWake !== "paused"});
-    toast(r.status === "paused" ? "🔇 «Хэй Тэд» түр зогслоо" : "🎧 «Хэй Тэд» дахин асаалттай", "ok");
+    toast(r.status === "paused" ? "🔇 “Hey Ted” paused" : "🎧 “Hey Ted” is listening again", "ok");
   }catch(e){ toast(e.message, "err"); }
 };
 document.body.addEventListener("click", async ev => {
@@ -1209,22 +1500,22 @@ document.body.addEventListener("click", async ev => {
   try{
     b.disabled = true;
     await api(`/api/sm/plan/${encodeURIComponent(id)}/status`, {status: "биелсэн"});
-    toast("✓ School Manager-т биелсэн гэж тэмдэглэлээ", "ok");
+    toast("✓ Marked as done in School Manager", "ok");
     if(holder.classList.contains("item")) leave(holder); else holder.remove();
     smSig = ""; setTimeout(load, 800);
-  }catch(e){ toast("Алдаа: " + e.message, "err"); b.disabled = false; }
+  }catch(e){ toast("Error: " + e.message, "err"); b.disabled = false; }
 });
 
 $("refresh").onclick = async () => {
   document.body.classList.add("loading"); $("refresh").disabled = true;
-  try{ await api("/api/refresh", {}); await load(); toast("↻ Шинэчлэгдлээ"); }
-  catch(e){ toast("Алдаа: " + e.message, "err"); }
+  try{ await api("/api/refresh", {}); await load(); toast("↻ Updated — mail checked"); }
+  catch(e){ toast("Error: " + e.message, "err"); }
   finally{ document.body.classList.remove("loading"); $("refresh").disabled = false; }
 };
 $("play").onclick = () => {
   setupAnalyser(); if(actx && actx.state === "suspended") actx.resume();
   const a = $("audio"); a.src = "/api/audio?t=" + Date.now();
-  a.play().catch(() => toast("Дуу хараахан бэлэн болоогүй байна.", "err"));
+  a.play().catch(() => toast("The briefing audio is not ready yet.", "err"));
 };
 
 let lastVoicePlan = 0, lastWake = "";
@@ -1232,15 +1523,16 @@ setInterval(async () => {
   try{
     const sp = await (await fetch("/api/speaking")).json();
     serverSpeaking = sp.on;
+    updateVoiceUi();
     if(sp.wake !== lastWake){
       lastWake = sp.wake;
       const wb = $("wakeBtn");
       wb.style.display = (sp.wake && sp.wake !== "off" && sp.wake !== "error") ? "" : "none";
       wb.textContent = sp.wake === "paused" ? "🔇" : "🎧";
-      wb.title = sp.wake === "paused" ? "«Хэй Тэд» зогссон — дарж асаана" : "«Хэй Тэд» сонсож байна — дарж түр зогсооно";
+      wb.title = sp.wake === "paused" ? "“Hey Ted” is paused — click to resume" : "“Hey Ted” is on — click to pause";
       document.body.classList.toggle("wake-listen", sp.wake === "listening");
       document.body.classList.toggle("wake-think", sp.wake === "thinking");
-      $("wakeTag").textContent = {listening: "🎙 Сонсож байна…", thinking: "✨ Ойлгож байна…"}[sp.wake] || "";
+      $("wakeTag").textContent = {listening: "🎙 Listening…", thinking: "✨ Thinking…"}[sp.wake] || "";
     }
     if(sp.voice_plan_ts && sp.voice_plan_ts !== lastVoicePlan){
       const first = !lastVoicePlan; lastVoicePlan = sp.voice_plan_ts;

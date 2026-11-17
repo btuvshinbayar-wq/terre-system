@@ -129,13 +129,18 @@ def _body(path, q, size=1500):
 def ask(question):
     hits = search(question, 6)
     if not hits:
-        return {"answer": "Холбогдох файл олдсонгүй. Өөр үгээр асууж үзнэ үү.", "sources": []}
+        from .config import EN
+        return {"answer": "No matching files found. Try other words (file contents are often in Mongolian)." if EN()
+                else "Холбогдох файл олдсонгүй. Өөр үгээр асууж үзнэ үү.", "sources": []}
     if not gemini_key():
-        return {"answer": f"{len(hits)} файл олдлоо (Gemini түлхүүргүй үед хариу зохиохгүй):", "sources": hits}
+        from .config import EN
+        return {"answer": f"I found {len(hits)} files:" if EN() else f"{len(hits)} файл олдлоо (Gemini түлхүүргүй үед хариу зохиохгүй):", "sources": hits}
     from . import brain
+    from .config import EN
     ctx = "\n\n".join(f"[{i + 1}] {h['name']} ({h['folder']}, {h['date']}):\n{_body(h['path'], question)}" for i, h in enumerate(hits))
-    prompt = f"""Доорх файлуудын хэсгээс асуултад МОНГОЛООР товч, үнэн зөв хариул. Зөвхөн өгсөн текстэд үндэслэ.
-Хариултын төгсгөлд эх сурвалжийг [1], [2] гэж заа. Олдохгүй бол "файлуудаас олдсонгүй" гэж шударгаар хэл.
+    lang = "АНГЛИАР (энгийн, B2 түвшний англи; монгол эх текстийг утгаар нь орчуул)" if EN() else "МОНГОЛООР"
+    prompt = f"""Доорх файлуудын хэсгээс асуултад {lang} товч, үнэн зөв хариул. Зөвхөн өгсөн текстэд үндэслэ.
+Хариултын төгсгөлд эх сурвалжийг [1], [2] гэж заа. Олдохгүй бол олдсонгүй гэж шударгаар хэл.
 
 {ctx}
 

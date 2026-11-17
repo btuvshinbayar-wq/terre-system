@@ -12,9 +12,14 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Resp
 from pydantic import BaseModel
 
 from . import brain, engine, files, health, journal, learn, organizer, store, tasks, voice
-from .config import CFG, DATA, DEMO, HOME, ROOT, address, gemini_key, greeting, save_config_value, source_enabled
+from .config import CFG, DATA, DEMO, EN, HOME, ROOT, address, gemini_key, greeting, lang, save_config_value, source_enabled
 
 log = logging.getLogger("terre")
+
+
+def _L(mn, en):
+    return en if EN() else mn
+
 LOOP = None
 
 
@@ -86,7 +91,8 @@ async def _background_loop():
         try:
             urgent = await engine.run_cycle()
             if urgent:
-                msg = f"{address()}, яаралтай {len(urgent)} шинэ мессеж ирлээ. {urgent[0]['summary']}"
+                msg = (f"{address()}, {len(urgent)} new urgent message{'s' if len(urgent) > 1 else ''}. {urgent[0]['summary']}" if EN()
+                       else f"{address()}, яаралтай {len(urgent)} шинэ мессеж ирлээ. {urgent[0]['summary']}")
                 await voice.speak(msg, path=voice.ALERT_MP3)
         except Exception:
             log.exception("Далд шалгалт амжилтгүй")
@@ -178,6 +184,7 @@ def state():
     return {
         "owner": address(),
         "greeting": greeting(),
+        "lang": lang(),
         "demo": DEMO,
         "auto_actions": bool(CFG.get("auto_actions")),
         "sources": _sources(),
@@ -198,7 +205,13 @@ def state():
         "tasks": {"open": tasks.open_tasks(), "done": tasks.done_recent(8)},
         "health": health.report(),
         "has_gemini": bool(gemini_key()),
+        "voice_ok": bool(gemini_key()) or _offline_voice(),
     }
+
+
+def _offline_voice():
+    from . import stt
+    return stt.enabled() and stt.available()
 
 
 def _sources():
@@ -211,7 +224,7 @@ def _sources():
     if DEMO or engine.sm_enabled():
         out.append("School Manager")
     if files.cfg().get("enabled", True):
-        out.append("Файл эмхлэгч")
+        out.append(_L("Файл эмхлэгч", "File organizer"))
     if gemini_key():
         out.append("Gemini AI")
     return out
@@ -230,8 +243,8 @@ def _sm_lists():
 
 def _commands_for_ui():
     sched = {j["command"]: j["at"] for j in (CFG.get("school_manager", {}).get("schedule") or [])}
-    return [{"name": c["name"], "description": c.get("description", ""), "params": c.get("params", []),
-             "group": c.get("group", ""), "schedule": sched.get(c["name"])} for c in engine.commands()]
+    from . import i18n
+    return [{**i18n.command_for_ui(c), "schedule": sched.get(c["name"])} for c in engine.commands()]
 
 
 @app.get("/api/speaking")
@@ -387,26 +400,41 @@ async def command(b: CommandBody):
 async def voice_command(request: Request):
     """Самбар/quick цонхны микрофоноос ирсэн WAV → текст → тушаал."""
     audio = await request.body()
-    if not gemini_key():
-        raise HTTPException(400, "Дуугаар командлахад Gemini API түлхүүр хэрэгтэй (config.yaml → gemini.api_key)")
-    text = await asyncio.to_thread(brain.transcribe, audio, request.headers.get("content-type", "audio/wav"))
+    from . import stt
+    if not gemini_key() and not (stt.enabled() and stt.available()):
+        raise HTTPException(400, _L("Дуугаар командлахад Gemini API түлхүүр хэрэгтэй (config.yaml → gemini.api_key)",
+                                    "Voice commands need a Gemini API key or offline English (pip install vosk)"))
+    text = await _transcribe(audio, request.headers.get("content-type", "audio/wav"))
     if not text:
-        return {"text": "", "plan": {"type": "answer", "say": "Сонсогдсонгүй. Дахин оролдоно уу."}}
+        return {"text": "", "plan": {"type": "answer", "say": _L("Сонсогдсонгүй. Дахин оролдоно уу.", "Sorry, I didn't catch that. Please try again.")}}
     journal.add("voice", f"Дуут тушаал: «{text}»", who="Та")
     return {"text": text, "plan": await _awrap(_plan(text))}
+
+
+async def _transcribe(audio, mime="audio/wav"):
+    """Англиар хэлсэн бол компьютер дээрээ (Vosk, API-гүй), бусад үед Gemini-ээр текст болгоно."""
+    from . import stt
+    if "wav" in (mime or "") and stt.enabled():
+        text, conf = await asyncio.to_thread(stt.transcribe, audio)
+        if text:
+            log.info("Offline англи таних (%.2f): %s", conf, text)
+            return text
+    if not gemini_key():
+        return ""
+    return await asyncio.to_thread(brain.transcribe, audio, mime)
 
 
 async def _wake_command(wav):
     """«Хэй Тэд» гэж дуудсаны дараах тушаал: текст болгох → ойлгох → (бүрэн бол) биелүүлэх → дуугаар хариулах."""
     from . import wake
-    text = await asyncio.to_thread(brain.transcribe, wav, "audio/wav")
+    text = await _transcribe(wav, "audio/wav")
     if not text:
         return            # тушаал биш (өөр хүнтэй ярьж буй яриа г.м.) — юу ч бичихгүй, хэлэхгүй
     wake.STATE["heard"] = ""
     try:
         plan = await _plan(text)
     except Exception as e:
-        await voice.speak("Ойлгож чадсангүй.", path=DATA / "say.mp3")
+        await voice.speak(_L("Ойлгож чадсангүй.", "Sorry, I didn't understand."), path=DATA / "say.mp3")
         log.warning("Дуут тушаал: %s", e)
         return
     say = plan.get("say") or ""
@@ -420,17 +448,19 @@ async def _wake_command(wav):
             lines = [l.lstrip("✓→ ").strip() for l in entry.get("log", []) if l]
             lines = [l for l in lines if ":\\" not in l and "http" not in l and not l.startswith("School Manager дээр")]
             if entry.get("ok"):
-                say = entry.get("say") or ("Хийлээ. " + ". ".join(lines[:2]))
+                say = entry.get("say") or (_L("Хийлээ. " + ". ".join(lines[:2]), "Done."))
             else:
-                say = "Чадсангүй. " + " ".join(lines[:1])
+                say = _L("Чадсангүй. " + " ".join(lines[:1]), "Sorry, that did not work. Please check the dashboard.")
         else:
             engine.STATE["voice_plan"] = {"text": text, "plan": {**plan, "params": params}, "ts": time.time()}
             if missing:
-                say = f"{plan.get('macro')} — {', '.join(missing)} хэлээгүй байна. Самбар дээр бөглөөд ажиллуулна уу."
+                say = _L(f"{plan.get('macro')} — {', '.join(missing)} хэлээгүй байна. Самбар дээр бөглөөд ажиллуулна уу.",
+                         "Some details are missing. Please fill them in on the dashboard and run it.")
             elif cmd and cmd.get("confirm"):
-                say = f"{plan.get('macro')} бэлэн. Бусдад мэдэгдэл очих тул самбар дээр шалгаад ажиллуулна уу."
+                say = _L(f"{plan.get('macro')} бэлэн. Бусдад мэдэгдэл очих тул самбар дээр шалгаад ажиллуулна уу.",
+                         "It's ready. Other people will be notified, so please check it on the dashboard and run it.")
             else:
-                say = f"{plan.get('macro')} бэлэн. Самбар дээр ажиллуулна уу."
+                say = _L(f"{plan.get('macro')} бэлэн. Самбар дээр ажиллуулна уу.", "It's ready. Please run it on the dashboard.")
             try:
                 from . import desktop
                 desktop.open_window("/")

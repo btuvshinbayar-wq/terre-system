@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from .config import CFG, gemini_key, greeting
+from .config import CFG, EN, gemini_key, greeting
 
 log = logging.getLogger("terre.brain")
 _client = None
@@ -14,7 +14,7 @@ _client = None
 
 class Triage(BaseModel):
     category: Literal["auto", "approve", "urgent"]
-    summary: str          # 1 өгүүлбэр, монголоор
+    summary: str          # 1 өгүүлбэр (config: language — англи эсвэл монгол)
     action: Literal["archive", "mark_read", "none"]
     reason: str           # яагаад ингэж ангилсан
     draft: str            # хариу ноорог (хэрэггүй бол хоосон)
@@ -24,6 +24,16 @@ class Triage(BaseModel):
     meeting_time: str = ""    # HH:MM
     meeting_title: str = ""
     meeting_location: str = ""
+
+
+def L(mn, en):
+    """Хэрэглэгчид харагдах/сонсогдох текстийг тохируулсан хэлээр (config: language)."""
+    return en if EN() else mn
+
+
+def _lang_rule():
+    return ("summary, reason, task: write in ENGLISH (the owner is practising English), short and clear."
+            if EN() else "summary, reason, task: монголоор.")
 
 
 def _gemini():
@@ -79,11 +89,12 @@ TRIAGE_PROMPT = """Чи бол {owner}-ийн хувийн туслах TED. Д�
   аюулгүй байдлын сэрэмжлүүлэг, хүүхдийн аюулгүй байдал. Хэрэгтэй бол ноорог бич.
 
 Дүрэм:
-- summary: монголоор 1 өгүүлбэр, хэн юу хүсч байгааг тодорхой.
+- summary: 1 өгүүлбэр, хэн юу хүсч байгааг тодорхой.
+- {lang_rule}
 - draft: мессеж ирсэн хэлээр нь (монгол/англи), эзний өмнөөс, товч, эелдэг.
   Мэдэхгүй баримт (огноо, тоо, амлалт) зохиож болохгүй — оронд нь [ХААЛТАНД] үлдээ.
 - "auto" бол draft хоосон.
-- task: эзэнд ногдох тодорхой ажил байвал богино тушаал хэлбэрээр ("Ирцийн тайлан ирүүлэх"), үгүй бол "".
+- task: эзэнд ногдох тодорхой ажил байвал богино тушаал хэлбэрээр ("Submit the attendance report" / "Ирцийн тайлан ирүүлэх"), үгүй бол "".
 - deadline: хугацаа заасан бол YYYY-MM-DD (өнөөдөр {today}, "баасан гаригт", "маргааш"-ийг огноо болго), үгүй бол "".
 - meeting_*: хурал, уулзалт, сургалтад урьсан бол огноо, цаг, нэр, байршил; үгүй бол бүгд "".
 {examples}
@@ -102,6 +113,7 @@ def triage(item):
     prompt = TRIAGE_PROMPT.format(
         today=__import__("datetime").date.today().isoformat() + " (" + ["Даваа", "Мягмар", "Лхагва", "Пүрэв", "Баасан", "Бямба", "Ням"][__import__("datetime").date.today().weekday()] + ")",
         examples=learn.triage_examples(),
+        lang_rule=_lang_rule(),
         owner=CFG.get("owner_name", ""),
         context=CFG.get("owner_context", ""),
         source=item["source"],
@@ -116,14 +128,15 @@ def triage(item):
         # Хямд загвар ангилна, хариу ноорогийг илүү чадвартай загвар бичнэ
         if t["category"] != "auto" and _fast() != _model():
             try:
-                t["draft"] = redraft({**item, "draft": t["draft"]}, "Энэ мессежид сайн, бүрэн хариу ноорог бич")
+                t["draft"] = redraft({**item, "draft": t["draft"]},
+                                     "Энэ мессежид сайн, бүрэн хариу ноорог бич (мессеж ирсэн хэлээр нь)")
             except Exception:
                 pass
         return t
     except Exception as e:
         log.warning("Gemini triage алдаа: %s", e)
         t = _heuristic(item)
-        t["reason"] = f"(Gemini алдаа, энгийн дүрмээр) {t['reason']}"
+        t["reason"] = L(f"(Gemini алдаа, энгийн дүрмээр) {t['reason']}", f"(Gemini error, simple rules) {t['reason']}")
         return t
 
 
@@ -133,6 +146,7 @@ def redraft(item, instruction):
     from . import learn
     prompt = f"""Чи {CFG.get('owner_name')}-ийн туслах. Доорх мессежид өгсөн хариу ноорогийг зааврын дагуу дахин бич.
 Зөвхөн шинэ хариуны текстийг буцаа. Мэдэхгүй баримтыг зохиохгүй.
+Хариуны хэл: заавар өөрөөр заагаагүй бол АНХНЫ МЕССЕЖИЙН хэлээр (заавар англиар бичигдсэн байж болно).
 
 Эзний тухай: {CFG.get('owner_context','')}
 {learn.style_block()}
@@ -160,7 +174,27 @@ def compose_briefing(calendar, counts, urgent, pending, metrics, errors):
         "metrics": metrics,
         "connection_errors": errors,
     }
-    prompt = f"""Чи бол TED (монголоор «Тэд» гэж дуудна) — тайван, ухаалаг, бага зэрэг хошин хувийн AI туслах.
+    if EN():
+        prompt = f"""You are TED, a calm, intelligent, slightly witty personal AI assistant (think J.A.R.V.I.S.).
+Write the daily briefing that will be READ ALOUD to your owner. The owner is practising English, so use clear,
+natural English at about B2 level: short sentences, common words, no idioms that are hard to follow.
+
+Requirements:
+- English only, 60-120 words, no markdown, lists or emoji (it is spoken).
+- Order: the greeting (use "greeting" exactly as given, e.g. "Good morning, Sir.") -> today's schedule (with times)
+  -> School Manager plans for today -> urgent items -> items waiting for the owner's approval
+  -> how many items TED handled itself -> key numbers.
+- Some data is in Mongolian (names of plans, mail summaries): translate the meaning into English.
+  Keep people's names and place names as they are (transliterated to Latin letters).
+- NO filler such as "TED is ready", "Have a great day", wishes or motivational endings. End with the last fact.
+- Overdue tasks: never name them, only give the number ("You have N overdue tasks").
+- If there are connection errors, mention them in one sentence.
+- Do not invent anything that is not in the data.
+
+Data:
+{json.dumps(data, ensure_ascii=False, indent=1)}"""
+    else:
+        prompt = f"""Чи бол TED (монголоор «Тэд» гэж дуудна) — тайван, ухаалаг, бага зэрэг хошин хувийн AI туслах.
 Доорх өгөгдлөөр эзэндээ ДУУГААР уншигдах өдрийн мэдээлэл зохио.
 
 Шаардлага:
@@ -194,19 +228,21 @@ def _heuristic(item):
     draft = (f"Сайн байна уу,\n\nМессежийг тань хүлээн авлаа. [ХАРИУ] \n\nХүндэтгэсэн,\n{owner}")
     if item["source"] in ("telegram", "gchat") and "групп" in item.get("subject", ""):
         return dict(category="auto", action="mark_read", draft="",
-                    summary=f"{item.get('sender')}: {(item.get('snippet') or item.get('body', '')).splitlines()[-1][:80] if (item.get('snippet') or item.get('body')) else ''}", reason="Групп чатын ерөнхий яриа")
+                    summary=f"{item.get('sender')}: {(item.get('snippet') or item.get('body', '')).splitlines()[-1][:80] if (item.get('snippet') or item.get('body')) else ''}", reason=L("Групп чатын ерөнхий яриа", "General group chat"))
     if any(w in text for w in URGENT_WORDS):
         return dict(category="urgent", action="none", draft=draft,
-                    summary=f"{item.get('sender')}: {item.get('subject')}", reason="Хугацаатай/яаралтай үг агуулсан")
+                    summary=f"{item.get('sender')}: {item.get('subject')}", reason=L("Хугацаатай/яаралтай үг агуулсан", "Contains deadline/urgent words"))
     if any(w in text for w in AUTO_WORDS):
         act = "archive" if item["source"] in ("gmail", "outlook") else "mark_read"
         return dict(category="auto", action=act, draft="",
-                    summary=f"{item.get('sender')}: {item.get('subject')}", reason="Мэдээллийн/автомат мессеж")
+                    summary=f"{item.get('sender')}: {item.get('subject')}", reason=L("Мэдээллийн/автомат мессеж", "Newsletter or automatic message"))
     return dict(category="approve", action="none", draft=draft,
-                summary=f"{item.get('sender')}: {item.get('subject')}", reason="Хариу шаардаж магадгүй")
+                summary=f"{item.get('sender')}: {item.get('subject')}", reason=L("Хариу шаардаж магадгүй", "May need a reply"))
 
 
 def _template_briefing(owner, calendar, counts, urgent, pending, metrics):
+    if EN():
+        return _template_briefing_en(owner, calendar, counts, urgent, pending)
     parts = [f"{greeting()}, {owner}."]
     if calendar:
         ev = ", ".join(f"{e['time']}-д {e['title']}" for e in calendar[:5])
@@ -233,6 +269,39 @@ def _template_briefing(owner, calendar, counts, urgent, pending, metrics):
             parts.append(f"Энэ долоо хоногт: {sm['upcoming_plans_7d'][0]}.")
     elif sm:
         parts.append("School Manager хаалттай байна.")
+    return " ".join(parts)
+
+
+def _n(k, word):
+    return f"{k} {word}" + ("" if k == 1 else "s")
+
+
+def _template_briefing_en(owner, calendar, counts, urgent, pending):
+    """Gemini-гүй англи мэдээ. Монгол өгөгдлийн нэрсийг англи хоолойгоор уншуулахгүйн тулд тоогоор хэлнэ."""
+    parts = [f"{greeting()}, {owner}."]
+    if calendar:
+        times = ", ".join(e["time"] for e in calendar[:5] if e.get("time"))
+        parts.append(f"You have {_n(len(calendar), 'event')} today" + (f", at {times}." if times else "."))
+    else:
+        parts.append("Your calendar is clear today.")
+    if urgent:
+        parts.append(f"There {'is' if len(urgent) == 1 else 'are'} {_n(len(urgent), 'urgent item')}.")
+    if pending:
+        parts.append(f"{_n(len(pending), 'reply draft')} {'is' if len(pending) == 1 else 'are'} waiting for your approval.")
+    done = counts.get("auto", 0) + counts.get("auto_done", 0)
+    if done:
+        parts.append(f"I sorted {_n(done, 'unimportant message')} for you.")
+    sm = counts.get("school_manager")
+    if isinstance(sm, dict):
+        ab = sm.get("absent_teachers") or []
+        if ab:
+            parts.append(f"{_n(len(ab), 'teacher')} {'is' if len(ab) == 1 else 'are'} absent today.")
+        if sm.get("today_plans"):
+            parts.append(f"School Manager has {_n(len(sm['today_plans']), 'plan')} for today.")
+        if sm.get("overdue_plans_count"):
+            parts.append(f"You have {_n(sm['overdue_plans_count'], 'overdue task')}.")
+    elif sm:
+        parts.append("School Manager is closed.")
     return " ".join(parts)
 
 
@@ -289,6 +358,9 @@ def plan_command(text, commands, metrics, context):
                for c in commands]
     if not gemini_key():
         low = text.lower()
+        if any(low.startswith(w) for w in ("where is", "where's", "where are", "what did", "find the", "find my", "show me the")) \
+                and "drive" not in low:
+            return {"type": "files", "query": text}
         rules = [("ирц", "Багшийн ирц тэмдэглэх"), ("өвчтэй", "Багшийн ирц тэмдэглэх"), ("чөлөө", "Багшийн ирц тэмдэглэх"),
                  ("тасалсан", "Багшийн ирц тэмдэглэх"), ("хоцорсон", "Багшийн ирц тэмдэглэх"), ("тэмдэглэл", "Ажлын тэмдэглэл нэмэх"),
                  ("биелсэн", "Төлөвлөгөөний төлөв солих"), ("цагийн тооцоо", "Цагийн тооцоо (Excel)"),
@@ -296,22 +368,42 @@ def plan_command(text, commands, metrics, context):
                  ("сул тал", "Давтагдсан сул тал (Word)"), ("хөтөлбөр", "Төлөвлөгөөний файл шинжлэх"),
                  ("амралт", "Амралтын өдөр нэмэх"), ("тайлан", "Нэгдсэн ажлын тайлан"),
                  ("нөөц", "Бүрэн нөөцлөл хийх"), ("төлөвлөгөө нэм", "Төлөвлөгөө нэмэх"),
-                 ("мэйл", "Мэйл шалгах"), ("уулзалт", "Уулзалт товлох (Google Meet)"), ("drive", "Drive-оос файл хайх")]
+                 ("мэйл", "Мэйл шалгах"), ("уулзалт", "Уулзалт товлох (Google Meet)"), ("drive", "Drive-оос файл хайх"),
+                 # Англи тушаал (Gemini-гүй үед ч таньна)
+                 ("attendance", "Багшийн ирц тэмдэглэх"), ("sick", "Багшийн ирц тэмдэглэх"), ("absent", "Багшийн ирц тэмдэглэх"),
+                 ("late", "Багшийн ирц тэмдэглэх"), ("check mail", "Мэйл шалгах"), ("check my mail", "Мэйл шалгах"),
+                 ("email", "Мэйл шалгах"), ("mail", "Мэйл шалгах"), ("meeting", "Уулзалт товлох (Google Meet)"),
+                 ("timesheet", "Цагийн тооцоо (Excel)"), ("backup", "Бүрэн нөөцлөл хийх"), ("add a note", "Ажлын тэмдэглэл нэмэх"),
+                 ("note", "Ажлын тэмдэглэл нэмэх"), ("work report", "Нэгдсэн ажлын тайлан")]
         for w, name in rules:
             if w in low and any(c["name"] == name for c in commands):
                 params = {}
                 for st in ["Өвчтэй", "Чөлөөтэй", "Тасалсан", "Хоцорсон", "Ирсэн"]:
                     if st.lower()[:4] in low:
                         params["status"] = st
+                for w2, st in [("sick", "Өвчтэй"), ("leave", "Чөлөөтэй"), ("absent", "Тасалсан"), ("late", "Хоцорсон"), ("present", "Ирсэн")]:
+                    if w2 in low:
+                        params["status"] = st
                 for t in context.get("teachers", []):
                     if any(len(part) > 2 and part.lower() in low for part in t.split()[-1:]):
                         params["teacher"] = t
-                return {"type": "macro", "macro": name, "params": params, "say": f"«{name}» — дутуу талбарыг бөглөөд ажиллуулна уу."}
-        if any(w in low for w in ("файл", "хаана", "тушаал", "баримт", "юу гэж", "албан бичиг")):
+                cmd = next(c for c in commands if c["name"] == name)
+                missing = [p for p in cmd.get("params", []) if not p.get("optional") and p["name"] not in params]
+                say = (L(f"«{name}» — дутуу талбарыг бөглөөд ажиллуулна уу.", "Please fill in the missing fields and run it.") if missing
+                       else L(f"«{name}» бэлэн. ▶ Ажиллуулах дарна уу.", "Ready. Press Run."))
+                return {"type": "macro", "macro": name, "params": params, "say": say}
+        if any(w in low for w in ("файл", "хаана", "тушаал", "баримт", "юу гэж", "албан бичиг", "file", "where is", "document", "find")):
             return {"type": "files", "query": text}
-        return {"type": "answer", "say": "Gemini түлхүүргүй үед би энгийн түлхүүр үгээр л таньдаг. Доорх товчнуудаас сонгоно уу."}
+        return {"type": "answer", "say": L("Gemini түлхүүргүй үед би энгийн түлхүүр үгээр л таньдаг. Доорх товчнуудаас сонгоно уу.",
+                                           "Without a Gemini key I only understand simple keywords. Please choose a command below.")}
+    say_rule = ("Хариултын \"say\" текстийг ЗААВАЛ АНГЛИАР бич — энгийн, тодорхой, B2 түвшний англи (эзэн англи хэлээ сайжруулж байгаа). "
+                "Монгол өгөгдлийн нэрсийг (төлөвлөгөө, ажил) утгаар нь орчуулж, хүний нэрийг латинаар бич. \"query\" болон params-ийг орчуулахгүй."
+                if EN() else "\"say\"-г монголоор бич.")
     prompt = f"""Чи бол TED — сургалтын менежерийн туслах. Тэр чамаар дамжуулан School Manager програмаа удирдаж,
 мэйл шалгаж, Google Calendar-т (Meet) уулзалт товлож, Google Drive-тай ажилладаг. Тушаалыг уншаад ЗӨВХӨН JSON буцаа.
+Тушаал англи эсвэл монгол хэлээр ирж болно (эзэн англи хэлээ сайжруулж байгаа). Англи тушаалыг ч мөн адил ойлгож,
+доорх МОНГОЛ нэртэй тушаалуудтай тааруул. Параметрийн утгыг (багшийн нэр, choices) жагсаалтад байгаа яг хэлбэрээр нь бич.
+{say_rule}
 
 Өнөөдөр: {context.get("today")}
 Боломжит тушаалууд: {json.dumps(catalog, ensure_ascii=False)}
@@ -344,12 +436,12 @@ School Manager-ийн одоогийн тоонууд: {json.dumps(metrics, ensu
 Тушаал: {text}"""
     r = json.loads(_gen(_model(), prompt, response_mime_type="application/json", temperature=0.1).text)
     if r.get("type") == "macro" and r.get("macro") not in [c["name"] for c in commands]:
-        return {"type": "answer", "say": "Тохирох тушаал олдсонгүй."}
+        return {"type": "answer", "say": L("Тохирох тушаал олдсонгүй.", "I couldn't find a matching command.")}
     return r
 
 
 def transcribe(audio_bytes, mime="audio/wav"):
-    """Монгол яриаг текст болгоно (Gemini аудио). Түлхүүргүй бол хоосон."""
+    """Яриаг (англи/монгол) текст болгоно (Gemini аудио). Түлхүүргүй бол хоосон."""
     if not gemini_key() or not audio_bytes:
         return ""
     from google.genai import types
@@ -357,7 +449,7 @@ def transcribe(audio_bytes, mime="audio/wav"):
     prompt = ("Энэ бичлэгт хүн TED («Тэд») гэдэг компьютерийн туслахдаа тушаал өгч эсвэл асуулт асууж байх ёстой. "
               "Хэрэв энэ нь туслахад хандсан тушаал/асуулт БИШ бол (утсаар эсвэл өөр хүнтэй ярьж буй яриа, хагас өгүүлбэр, "
               "чимээ, ТВ/радио) ЗӨВХӨН «-» гэж буцаа, юу ч бүү буулга. Тушаал бол ҮГЧЛЭН бичгээр буулга "
-              "(ихэвчлэн монгол хэл, заримдаа англи). Зөвхөн буулгасан текстийг буцаа.")
+              "(англи эсвэл монгол хэлээр, ярьсан хэлээр нь — бүү орчуул). Зөвхөн буулгасан текстийг буцаа.")
     try:
         resp = _gemini().models.generate_content(model=_fast(), contents=[prompt, part], config=_cfg(_fast(), temperature=0))
         t = (resp.text or "").strip().strip('"«»').strip()
