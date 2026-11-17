@@ -100,10 +100,21 @@ def sm_enabled():
 
 
 def commands():
-    if not (DEMO or sm_enabled()):
-        return []
-    from .connectors import school_manager as sm
-    return sm.commands()
+    from . import actions
+    out = list(actions.commands())
+    if DEMO or sm_enabled():
+        from .connectors import school_manager as sm
+        out += sm.commands()
+    return out
+
+
+async def _check_mail():
+    await run_cycle()
+    u, p = store.by_status(["urgent"], 50), store.by_status(["pending"], 50)
+    say = f"Мэйл шалгалаа. Яаралтай {len(u)}, таны хариу хүлээж буй {len(p)} мессеж байна."
+    if u:
+        say += f" Хамгийн яаралтай нь: {u[0].get('summary', '')}"
+    return {"log": [say], "say": say}
 
 
 async def save_attachments(item, errors):
@@ -386,7 +397,20 @@ def promote(item_id, draft):
 async def run_command(name, params, who="Та"):
     entry = {"time": now().strftime("%H:%M"), "macro": name, "params": params, "who": who}
     try:
-        if DEMO:
+        from . import actions
+        if name in actions.NAMES:
+            if name == "Мэйл шалгах":
+                r = await _check_mail()
+            elif DEMO:
+                r = {"log": [f"✓ {name} (демо: жинхэнэ үйлдэл хийгээгүй)"]}
+            else:
+                r = await asyncio.to_thread(actions.run, name, params, files.root())
+            entry["log"], entry["say"] = r["log"], r.get("say", "")
+            if r.get("file"):
+                files.register_generated(r["file"], "Google Drive")
+            if name != "Мэйл шалгах":
+                journal.add("system", name, " ".join(r["log"])[:300], undo=r.get("undo"), who=who)
+        elif DEMO:
             await asyncio.sleep(1.2)
             shown = ", ".join(f"{k}: {v}" for k, v in params.items() if v) or "параметргүй"
             entry["log"] = [f"→ School Manager: {name} ({shown})", "✓ Амжилттай (демо: жинхэнэ өгөгдөлд хүрээгүй)"]

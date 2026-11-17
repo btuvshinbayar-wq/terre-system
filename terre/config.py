@@ -42,6 +42,11 @@ DEMO = bool(CFG.get("demo_mode"))
 FROZEN = (ROOT / "installed.flag").exists()
 
 
+def address():
+    """TED таныг ингэж дуудна (config: address). Гарын үсэгт owner_name хэвээр."""
+    return str(CFG.get("address") or CFG.get("owner_name") or "").strip()
+
+
 def save_config_value(path_keys, value):
     """Самбараас тохиргоо өөрчлөх (жишээ нь demo_mode). Тайлбаруудыг хадгалахын тулд мөрөөр нь засна."""
     text = CONFIG_FILE.read_text(encoding="utf-8") if CONFIG_FILE.exists() else ""

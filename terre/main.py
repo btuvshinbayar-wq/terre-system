@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Resp
 from pydantic import BaseModel
 
 from . import brain, engine, files, health, journal, learn, organizer, store, tasks, voice
-from .config import CFG, DATA, DEMO, HOME, ROOT, gemini_key, greeting, save_config_value, source_enabled
+from .config import CFG, DATA, DEMO, HOME, ROOT, address, gemini_key, greeting, save_config_value, source_enabled
 
 log = logging.getLogger("terre")
 LOOP = None
@@ -78,7 +78,7 @@ async def _background_loop():
         try:
             urgent = await engine.run_cycle()
             if urgent:
-                msg = f"{CFG.get('owner_name', '')}, яаралтай {len(urgent)} шинэ мессеж ирлээ. {urgent[0]['summary']}"
+                msg = f"{address()}, яаралтай {len(urgent)} шинэ мессеж ирлээ. {urgent[0]['summary']}"
                 await voice.speak(msg, path=voice.ALERT_MP3)
         except Exception:
             log.exception("Далд шалгалт амжилтгүй")
@@ -168,7 +168,7 @@ def quick():
 @app.get("/api/state")
 def state():
     return {
-        "owner": CFG.get("owner_name", ""),
+        "owner": address(),
         "greeting": greeting(),
         "demo": DEMO,
         "auto_actions": bool(CFG.get("auto_actions")),
@@ -402,15 +402,22 @@ async def _wake_command(wav):
         params = {k: v for k, v in (plan.get("params") or {}).items() if str(v).strip()}
         missing = [p["label"] for p in (cmd or {}).get("params", []) if not p.get("optional") and p["name"] not in params]
         auto = (CFG.get("voice") or {}).get("wake", {}).get("auto_run", True)
-        if cmd and not missing and auto:
+        if cmd and not missing and auto and not cmd.get("confirm"):
             entry = await engine.run_command(cmd["name"], params, who="Дуут тушаал")
             lines = [l.lstrip("✓→ ").strip() for l in entry.get("log", []) if l]
-            lines = [l for l in lines if ":\\" not in l and not l.startswith("School Manager дээр")]
-            say = ("Хийлээ. " + ". ".join(lines[:2])) if entry.get("ok") else ("Чадсангүй. " + " ".join(lines[:1]))
+            lines = [l for l in lines if ":\\" not in l and "http" not in l and not l.startswith("School Manager дээр")]
+            if entry.get("ok"):
+                say = entry.get("say") or ("Хийлээ. " + ". ".join(lines[:2]))
+            else:
+                say = "Чадсангүй. " + " ".join(lines[:1])
         else:
             engine.STATE["voice_plan"] = {"text": text, "plan": {**plan, "params": params}, "ts": time.time()}
-            say = (f"{plan.get('macro')} — {', '.join(missing)} хэлээгүй байна. Самбар дээр бөглөөд ажиллуулна уу."
-                   if missing else f"{plan.get('macro')} бэлэн. Самбар дээр ажиллуулна уу.")
+            if missing:
+                say = f"{plan.get('macro')} — {', '.join(missing)} хэлээгүй байна. Самбар дээр бөглөөд ажиллуулна уу."
+            elif cmd and cmd.get("confirm"):
+                say = f"{plan.get('macro')} бэлэн. Бусдад мэдэгдэл очих тул самбар дээр шалгаад ажиллуулна уу."
+            else:
+                say = f"{plan.get('macro')} бэлэн. Самбар дээр ажиллуулна уу."
             try:
                 from . import desktop
                 desktop.open_window("/")

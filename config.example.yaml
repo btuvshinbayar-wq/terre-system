@@ -2,7 +2,8 @@
 #  TED тохиргоо. Энэ файлыг config.yaml нэрээр хуулж засна.
 # ============================================================
 
-owner_name: "Tuvshuu"          # TED таныг ингэж дуудна
+owner_name: "Tuvshuu"          # мэйлийн гарын үсэгт
+address: "Эрхэм ээ"           # TED таныг ингэж дуудна (мэндчилгээ, дуу). Гарын үсэгт owner_name
 timezone: "Asia/Ulaanbaatar"
 
 # Таны тухай товч мэдээлэл: хариу мэйлийн ноорогт ашиглагдана
@@ -46,6 +47,8 @@ sources:
   gmail:
     enabled: false
   google_calendar:
+    enabled: false
+  google_drive:                # Drive-д файл байршуулах, татах, хуваалцах (README 3.11)
     enabled: false
   google_chat:                 # зөвхөн Google Workspace (байгууллагын) данс дээр ажиллана
     enabled: false

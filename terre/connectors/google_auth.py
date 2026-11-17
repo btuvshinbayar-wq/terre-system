@@ -14,6 +14,8 @@ def scopes():
         s.append("https://www.googleapis.com/auth/gmail.modify")  # унших, шошголох, илгээх
     if source_enabled("google_calendar"):
         s.append("https://www.googleapis.com/auth/calendar.events")   # унших + үйл явдал нэмэх
+    if source_enabled("google_drive"):
+        s.append("https://www.googleapis.com/auth/drive")             # Drive: байршуулах, татах, хуваалцах
     if source_enabled("google_chat"):
         s += ["https://www.googleapis.com/auth/chat.spaces.readonly",
               "https://www.googleapis.com/auth/chat.messages.readonly"]

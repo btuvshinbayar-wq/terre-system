@@ -78,6 +78,9 @@ async def undo(aid):
         await asyncio.to_thread(sm.call, u["action"], u["params"])
     elif t == "task":
         tasks.delete(u["id"]) if u.get("delete") else tasks.set_status(u["id"], u.get("prev", "open"))
+    elif t == "drive":
+        from . import actions
+        await asyncio.to_thread(actions.drive_undo, u)
     elif t == "calendar":
         from . import calendar_write
         await asyncio.to_thread(calendar_write.delete_event, u)
