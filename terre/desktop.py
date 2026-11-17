@@ -63,14 +63,46 @@ def open_window(path="/", size=(1400, 920), small=False):
     edge = _edge() if (IS_WIN and cfg()["app_window"]) else None
     if edge:
         w, h = (540, 640) if small else size
-        args = [edge, f"--app={target}", f"--window-size={w},{h}", f"--user-data-dir={DATA / 'window'}",
+        # Үндсэн самбар дэлгэц дүүрэн (maximize) нээгдэнэ; жижиг тушаалын цонх хэмжээгээрээ
+        geom = [f"--window-size={w},{h}"] if small else ["--start-maximized"]
+        args = [edge, f"--app={target}", *geom, f"--user-data-dir={DATA / 'window'}",
                 "--no-first-run", "--disable-features=Translate", "--autoplay-policy=no-user-gesture-required"]
         try:
             subprocess.Popen(args, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            if not small:
+                threading.Thread(target=_maximize_later, daemon=True).start()
             return
         except Exception as e:
             log.warning("Edge цонх нээгдсэнгүй: %s", e)
     webbrowser.open(target)
+
+
+def _maximize_later(title="TED", timeout=12):
+    """Edge өмнөх цонхны хэмжээгээ санаж --start-maximized-ийг үл тоох тохиолдол бий — тэгвэл гарч ирмэгц нь
+    Windows-оор дэлгэц дүүргэнэ (гарчиг яг "TED" — жижиг цонхных "TED · Quick")."""
+    import time
+    if not IS_WIN:
+        return
+    u32 = ctypes.windll.user32
+    proto = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+    end = time.time() + timeout
+    while time.time() < end:
+        found = []
+
+        def cb(hwnd, _):
+            if u32.IsWindowVisible(hwnd):
+                buf = ctypes.create_unicode_buffer(256)
+                u32.GetWindowTextW(hwnd, buf, 256)
+                if buf.value == title:
+                    found.append(hwnd)
+            return True
+        u32.EnumWindows(proto(cb), 0)
+        if found:
+            for hwnd in found:
+                if not u32.IsZoomed(hwnd):
+                    u32.ShowWindow(hwnd, 3)        # SW_MAXIMIZE
+            return
+        time.sleep(0.4)
 
 
 def open_quick(voice=False):
