@@ -326,7 +326,39 @@ body.t-home header{border-bottom-color:transparent;background:none;backdrop-filt
 .hl-spark{fill:#effdff;filter:drop-shadow(0 0 5px #38d6f5)}
 .hl-ring{fill:none;stroke:rgba(56,214,245,.12);stroke-width:1;stroke-dasharray:2 6}
 @keyframes flow{to{stroke-dashoffset:-36}}
-.hleft{position:absolute;left:28px;top:0;width:300px;z-index:3;animation:slideIn .7s both}
+.hleft{position:absolute;left:28px;top:0;width:280px;z-index:3;animation:slideIn .7s both}
+#space{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+body.t-home #bg{opacity:.25}
+#hudLines{z-index:1}
+/* Баруун талын самбар: шийдээгүй / шийдсэн */
+.hright{position:absolute;right:24px;top:0;bottom:96px;width:var(--pw,320px);z-index:3;display:flex;flex-direction:column;gap:12px;
+  animation:slideInR .7s .2s both}
+@keyframes slideInR{from{opacity:0;transform:translateX(24px)}}
+.bd{background:rgba(4,14,30,.62);border:1px solid rgba(56,214,245,.22);border-radius:14px;backdrop-filter:blur(8px);
+  display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden}
+.bd::before{content:"";position:absolute;width:10px;height:10px;top:7px;left:7px;border-top:1px solid var(--cyan);border-left:1px solid var(--cyan);opacity:.6}
+.bd::after{content:"";position:absolute;top:0;left:-40%;width:40%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:sweep 7s linear infinite}
+.bd.open{flex:1.35} .bd.done{flex:1}
+.bd h4{margin:0;padding:12px 14px 8px 20px;font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:var(--cyan);font-weight:600;
+  display:flex;align-items:center;gap:8px}
+.bd h4 .n{margin-left:auto}
+.bd.open h4 .n.hot{background:rgba(255,93,108,.2);color:#ff9aa4}
+.bd.done h4 .n{background:rgba(71,209,140,.15);color:var(--green)}
+.bdl{overflow:auto;padding:0 10px 10px;min-height:0}
+.bdr{display:grid;grid-template-columns:10px 1fr;gap:9px;align-items:start;padding:8px 8px;border-radius:9px;cursor:pointer;
+  border:1px solid transparent;animation:slideInR .45s both;transition:background .2s,border-color .2s}
+.bdr:hover{background:rgba(56,214,245,.07);border-color:rgba(56,214,245,.2)}
+.bdr i{width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.bdr.red i{background:var(--red);box-shadow:0 0 8px var(--red);animation:breathe 1.4s infinite} .bdr.amber i{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.bdr.ok i{background:var(--green);box-shadow:0 0 6px var(--green)}
+.bdr .bt{font-size:12.8px;line-height:1.4;color:#e2f2fc;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bdr.ok .bt{color:#a9bfd2}
+.bdr .bm{font-size:10.8px;color:#7f9bb3;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bdr .bm b{color:var(--cyan);font-weight:500;letter-spacing:.5px}
+.bdempty{font-size:12px;color:var(--mut);padding:6px 10px 12px}
+#hud.compact .hright{position:static;width:auto;margin:24px 20px 0;bottom:auto}
+#hud.compact .hleft,#hud.compact .hright,#hud.compact #hNodes,#hud.compact .hpill{position:relative;z-index:2}
+#hud.compact .bdl{max-height:300px}
 .hclk{font:200 56px/1 "Segoe UI",sans-serif;letter-spacing:2px;color:#ecfcff;font-variant-numeric:tabular-nums;text-shadow:0 0 22px rgba(56,214,245,.55)}
 .hclk s{font-size:20px;text-decoration:none;color:var(--cyan);margin-left:3px}
 .hdate{font-size:11.5px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-top:8px}
@@ -370,7 +402,8 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
 @keyframes ndPulse{0%{box-shadow:0 0 12px rgba(56,214,245,.8),0 0 0 0 rgba(56,214,245,.45)}70%,100%{box-shadow:0 0 12px rgba(56,214,245,.8),0 0 0 13px rgba(56,214,245,0)}}
 @keyframes ndPulseA{0%{box-shadow:0 0 12px rgba(255,190,85,.8),0 0 0 0 rgba(255,190,85,.45)}70%,100%{box-shadow:0 0 12px rgba(255,190,85,.8),0 0 0 13px rgba(255,190,85,0)}}
 @keyframes ndPulseR{0%{box-shadow:0 0 14px rgba(255,93,108,.9),0 0 0 0 rgba(255,93,108,.55)}70%,100%{box-shadow:0 0 14px rgba(255,93,108,.9),0 0 0 15px rgba(255,93,108,0)}}
-#hud.compact{height:auto;min-height:0;padding-bottom:120px}
+#hud.compact{height:auto;min-height:0;padding-bottom:120px;display:flex;flex-direction:column}
+#hud.compact .hleft{order:1} #hud.compact .hpill{order:2} #hud.compact .hcore{order:3} #hud.compact #hNodes{order:4} #hud.compact .hright{order:5}
 #hud.compact .hleft{position:static;width:auto;margin:0 20px}
 #hud.compact .hpill{position:static;transform:none;margin:14px auto 0}
 #hud.compact .hcore{position:relative;left:auto!important;top:auto!important;transform:none;margin:40px auto 10px;--cs:220px!important}
@@ -441,7 +474,12 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
 </header>
 
 <section id="hud" data-tab="home">
+  <canvas id="space" aria-hidden="true"></canvas>
   <svg id="hudLines" aria-hidden="true"></svg>
+  <aside class="hright" id="hRight">
+    <div class="bd open"><h4>⚠ Open issues <span class="n" id="bOpenN">0</span></h4><div class="bdl" id="bOpen"></div></div>
+    <div class="bd done"><h4>✓ Resolved <span class="n" id="bDoneN">0</span></h4><div class="bdl" id="bDone"></div></div>
+  </aside>
   <div class="hleft">
     <div class="hclk" id="hClk">--:--</div>
     <div class="hdate" id="hDate"></div>
@@ -1314,6 +1352,74 @@ function handlePlan(r, speak){
 }
 $("answer").addEventListener("click", e => { const a = e.target.closest("[data-open]"); if(a){ e.preventDefault(); openFile(a.dataset.open); } });
 
+/* ================= Space behind TED: stars, nebula, slowly turning galaxy ================= */
+const SPACE = (() => {
+  const c = $("space"), x = c.getContext("2d"); let W = 0, H = 0, stars = [], arms = [], neb = null, shoot = null, dpr = 1;
+  const rnd = (a, b) => a + Math.random()*(b - a);
+  let offY = 0;
+  function geo(){ const g = hudGeo && hudGeo.cx ? hudGeo : {cx: W/2, cy: H/2, cs: 300}; return {cx: g.cx, cy: g.cy + offY, cs: g.cs}; }
+  function resize(){
+    const r = c.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1);
+    offY = $("hud").getBoundingClientRect().top + scrollY;
+    W = r.width; H = r.height; if(!W || !H) return;
+    c.width = W*dpr; c.height = H*dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.min(900, Math.floor(W*H/2400));
+    stars = Array.from({length: n}, () => ({x: Math.random()*W, y: Math.random()*H, r: Math.random() < .93 ? rnd(.3, 1.1) : rnd(1.2, 2),
+      p: Math.random()*6.28, s: rnd(.6, 2.2), hue: Math.random() < .15 ? 200 + rnd(0, 60) : 205, z: rnd(.2, 1)}));
+    const g = geo(), R = Math.max(W, H)*.42;
+    arms = Array.from({length: 700}, (_, i) => { const arm = i % 2, t = Math.pow(Math.random(), .7), ang = arm*Math.PI + t*4.2 + rnd(-.35, .35);
+      return {rad: g.cs*.42 + t*R, ang, r: rnd(.4, 1.6)*(1 - t*.5), a: rnd(.25, .8)*(1 - t*.7), hue: Math.random() < .35 ? 275 : 195}; });
+    // Мананцар: нэг удаа зурж, дараа нь эргүүлж давхарлана
+    neb = document.createElement("canvas"); const S2 = Math.ceil(Math.max(W, H)*1.3); neb.width = neb.height = S2;
+    const nx = neb.getContext("2d");
+    [[.38,.40,.42,"rgba(120,60,200,.20)"], [.62,.58,.38,"rgba(20,120,220,.22)"], [.50,.70,.30,"rgba(0,190,210,.12)"],
+     [.30,.66,.26,"rgba(200,70,170,.10)"], [.70,.32,.30,"rgba(60,90,230,.16)"], [.5,.5,.22,"rgba(130,220,255,.12)"]].forEach(([px, py, pr, col]) => {
+      const gr = nx.createRadialGradient(px*S2, py*S2, 0, px*S2, py*S2, pr*S2); gr.addColorStop(0, col); gr.addColorStop(1, "rgba(0,0,0,0)");
+      nx.fillStyle = gr; nx.fillRect(0, 0, S2, S2); });
+    // зөөлөн тоосон үүл (хатуу ирмэггүй)
+    for(let i = 0; i < 70; i++){ const px = Math.random()*S2, py = Math.random()*S2, pr = rnd(60, 220), hue = Math.random() < .4 ? 270 : 200;
+      const gr = nx.createRadialGradient(px, py, 0, px, py, pr); gr.addColorStop(0, `hsla(${hue},80%,60%,${rnd(.02, .05)})`); gr.addColorStop(1, "hsla(0,0%,0%,0)");
+      nx.fillStyle = gr; nx.fillRect(px - pr, py - pr, pr*2, pr*2); }
+  }
+  let last = 0;
+  function draw(now){
+    if(!RM) requestAnimationFrame(draw);
+    if(TAB !== "home" || document.hidden || !W || now - last < 33) return;      // ~30 fps, зөвхөн Нүүр дээр
+    last = now; const t = now/1000, g = geo();
+    x.clearRect(0, 0, W, H);
+    // мананцар (маш удаан эргэнэ)
+    if(neb){ x.save(); x.globalCompositeOperation = "lighter"; x.translate(g.cx, g.cy); x.rotate(t*.006); x.globalAlpha = .85 + .15*Math.sin(t*.25);
+      x.drawImage(neb, -neb.width/2, -neb.height/2); x.restore(); }
+    // од (анивчина, TED-ийг тойрон маш удаан эргэнэ)
+    const rot = t*.004, cr = Math.cos(rot), sr = Math.sin(rot);
+    for(const s of stars){
+      const dx = s.x - g.cx, dy = s.y - g.cy, px = g.cx + dx*cr - dy*sr*s.z, py = g.cy + dx*sr*s.z + dy*cr;
+      const a = .35 + .65*Math.abs(Math.sin(t*s.s + s.p));
+      x.fillStyle = `hsla(${s.hue},90%,${s.r > 1.2 ? 92 : 85}%,${a*(s.r > 1.2 ? 1 : .8)})`;
+      if(s.r > 1.2){ x.shadowColor = "rgba(160,230,255,.9)"; x.shadowBlur = 6; }
+      x.beginPath(); x.arc(px, py, s.r, 0, 6.28); x.fill(); x.shadowBlur = 0;
+    }
+    // галактикийн мушгиа гар — TED-ийн ард эргэнэ
+    x.save(); x.globalCompositeOperation = "lighter";
+    for(const p of arms){
+      const ang = p.ang + t*(.05*(300/(p.rad + 150))), px = g.cx + Math.cos(ang)*p.rad, py = g.cy + Math.sin(ang)*p.rad*.42;
+      x.fillStyle = `hsla(${p.hue},90%,78%,${p.a*.8})`; x.fillRect(px, py, p.r*1.3, p.r*1.3);
+    }
+    const cg = x.createRadialGradient(g.cx, g.cy, 0, g.cx, g.cy, g.cs*1.6);
+    cg.addColorStop(0, "rgba(140,230,255,.16)"); cg.addColorStop(.5, "rgba(80,120,255,.06)"); cg.addColorStop(1, "rgba(0,0,0,0)");
+    x.fillStyle = cg; x.fillRect(0, 0, W, H); x.restore();
+    // унах од (хааяа)
+    if(!shoot && Math.random() < .004) shoot = {x: rnd(W*.1, W*.9), y: rnd(0, H*.4), vx: rnd(-9, -5)*(Math.random() < .5 ? -1 : 1), vy: rnd(3, 5), life: 1};
+    if(shoot){ const s = shoot, gr = x.createLinearGradient(s.x, s.y, s.x - s.vx*12, s.y - s.vy*12);
+      gr.addColorStop(0, `rgba(230,250,255,${s.life})`); gr.addColorStop(1, "rgba(230,250,255,0)");
+      x.strokeStyle = gr; x.lineWidth = 1.4; x.beginPath(); x.moveTo(s.x, s.y); x.lineTo(s.x - s.vx*12, s.y - s.vy*12); x.stroke();
+      s.x += s.vx; s.y += s.vy; s.life -= .02; if(s.life <= 0 || s.y > H) shoot = null; }
+  }
+  if(!RM) requestAnimationFrame(draw);
+  else setTimeout(() => { resize(); last = -1e9; draw(performance.now()); }, 500);
+  return {resize};
+})();
+
 /* ================= HUD (Home): TED in the centre, linked nodes around ================= */
 function goCard(tab, sel){
   showTab(tab);
@@ -1387,20 +1493,53 @@ function renderHud(){
   if(ev.length) chips.push(`<button class="achip" data-open="calendar"><b>${ev.length}</b> event${ev.length > 1 ? "s" : ""} today</button>`);
   const sig = chips.join("");
   if($("hAttn").dataset.sig !== sig){ $("hAttn").dataset.sig = sig; $("hAttn").innerHTML = sig; }
+  renderBoard();
   if(!hudGeo) layoutHud();
 }
+
+/* ---- Right board: open (unresolved) and resolved items ---- */
+function bRow(cls, title, meta, act){
+  return `<div class="bdr ${cls}" data-bact="${act}"><i></i><div><div class="bt">${esc(title)}</div><div class="bm">${meta}</div></div></div>`;
+}
+function renderBoard(){
+  const ag = (S.sm_state && S.sm_state.agenda) || {today: [], upcoming: [], overdue: []};
+  const open = [], done = [];
+  S.urgent.forEach(it => open.push(bRow("red", it.summary || it.subject, `<b>${esc(srcName(it))}</b> · ${esc(it.sender)} · ${when(it.received)}`, "mail")));
+  if(ag.overdue.length) open.push(bRow("amber", `${ag.overdue.length} overdue School Manager task${ag.overdue.length > 1 ? "s" : ""}`, `<b>SCHOOL MANAGER</b> · overdue`, "mail"));
+  ag.today.forEach(p => open.push(bRow("amber", p.activity, `<b>SCHOOL MANAGER</b> · today · ${esc(STATUS_EN[p.status] || p.status || "")}`, "mail")));
+  S.pending.forEach(it => open.push(bRow("amber", it.summary || it.subject, `<b>${esc(srcName(it))}</b> · ${esc(it.sender)} · waiting for you`, "mail")));
+  (S.tasks.open || []).filter(t => t.days_left !== null && t.days_left !== undefined && t.days_left <= 0 && t.kind !== "meeting")
+    .forEach(t => open.push(bRow(t.days_left < 0 ? "red" : "amber", t.title, `<b>TASK</b> · ${esc(dueLabel(t))}`, "tasks")));
+  ag.upcoming.forEach(p => open.push(bRow("", p.activity, `<b>SCHOOL MANAGER</b> · coming up ${esc(SMDATE(p.startDate))}`, "mail")));
+  const act = {archive: "archived", mark_read: "marked as read"};
+  S.auto.forEach(it => done.push(bRow("ok", it.summary || it.subject,
+    `<b>${esc(srcName(it))}</b> · ${it.status === "auto_done" ? "TED " + (act[it.action] || "handled") : "sorted by TED"}`, "mail")));
+  (S.done || []).forEach(it => done.push(bRow("ok", it.summary || it.subject,
+    `<b>${esc(srcName(it))}</b> · ${it.status === "sent" ? "reply sent" : "skipped"}`, "mail")));
+  (S.tasks.done || []).slice(0, 5).forEach(t => done.push(bRow("ok", t.title, `<b>TASK</b> · done`, "tasks")));
+  const o = open.join("") || `<div class="bdempty">Nothing open. 👌</div>`, d = done.join("") || `<div class="bdempty">Nothing yet today.</div>`;
+  if($("bOpen").dataset.sig !== o){ $("bOpen").dataset.sig = o; $("bOpen").innerHTML = o; [...$("bOpen").children].forEach((c, i) => c.style.animationDelay = Math.min(i, 12)*.04 + "s"); }
+  if($("bDone").dataset.sig !== d){ $("bDone").dataset.sig = d; $("bDone").innerHTML = d; [...$("bDone").children].forEach((c, i) => c.style.animationDelay = Math.min(i, 12)*.04 + "s"); }
+  const nOpen = S.urgent.length + S.pending.length + ag.today.length + (ag.overdue.length ? 1 : 0);
+  $("bOpenN").textContent = nOpen; $("bOpenN").classList.toggle("hot", S.urgent.length > 0);
+  $("bDoneN").textContent = S.auto.length + (S.done || []).length;
+}
+$("hRight").addEventListener("click", e => { const r = e.target.closest("[data-bact]"); if(!r) return;
+  r.dataset.bact === "tasks" ? goCard("work", ".card.tk") : openDrawer("mail"); });
 $("hAttn").addEventListener("click", e => { const b = e.target.closest("[data-open]"); if(b) openDrawer(b.dataset.open); });
 
 function layoutHud(){
   const hud = $("hud"); if(hud.classList.contains("hidden")) return;
-  const W = hud.clientWidth, H = hud.clientHeight, compact = W < 1000 || H < 560;
+  const W = hud.clientWidth, H = hud.clientHeight, compact = W < 1200 || H < 560;
   hud.classList.toggle("compact", compact); document.body.classList.toggle("hud-compact", compact);
   const svg = $("hudLines");
-  if(compact){ svg.innerHTML = ""; hudGeo = {compact: true}; return; }
+  if(compact){ svg.innerHTML = ""; hudGeo = {compact: true, W, H, cx: W/2, cy: 330, cs: 220}; SPACE.resize(); return; }
   // Доор дуут самбар (dock) байгаа тул төвийг бага зэрэг дээш, зангилааны эллипсийг түүнд хүргэхгүй
+  // Зүүн (мэдээ) ба баруун (асуудлын самбар) баганын хооронд зангилаануудыг багтаана
+  const pw = Math.round(Math.max(280, Math.min(360, W*.19))); hud.style.setProperty("--pw", pw + "px");
   const cx = W/2, cy = H/2 - 22;
   const cs = Math.round(Math.max(200, Math.min(340, Math.min(W, H)*.34)));
-  const rx = Math.max(cs*.5 + 170, Math.min(560, W/2 - 400)), ry = Math.max(cs*.5 + 55, Math.min(310, H/2 - 140));
+  const rx = Math.max(cs*.5 + 170, Math.min(560, W/2 - pw - 100)), ry = Math.max(cs*.5 + 55, Math.min(310, H/2 - 140));
   const core = $("hCore"); core.style.left = cx + "px"; core.style.top = (cy + 18) + "px"; core.style.setProperty("--cs", cs + "px");
   const n = NODES.length, R = cs*.47;
   let paths = `<ellipse class="hl-ring" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/><circle class="hl-ring" cx="${cx}" cy="${cy}" r="${cs*.72}"/>`;
@@ -1417,7 +1556,8 @@ function layoutHud(){
     const b = document.querySelector(`.hnode[data-node="${nd.k}"]`); b.style.left = x + "px"; b.style.top = (y + 18) + "px";
   });
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = paths;
-  hudGeo = {W, H};
+  hudGeo = {W, H, cx, cy, cs};
+  SPACE.resize();
   if(S) renderHud();
 }
 let hudT; addEventListener("resize", () => { clearTimeout(hudT); hudT = setTimeout(layoutHud, 120); });
