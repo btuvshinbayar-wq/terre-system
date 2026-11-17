@@ -342,6 +342,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
     <button data-tab="files">Файл</button><button data-tab="system">Систем <span class="hdot" id="hdot"></span></button>
   </nav>
   <div class="clock"><div class="t" id="clk">--:--</div><div class="d" id="date"></div></div>
+  <button id="wakeBtn" style="display:none" title="«Хэй Тэд» сонсохыг түр зогсоох / асаах (утсаар ярих үед)">🎧</button>
   <button id="mic" title="Дуугаар тушаал өгөх">🎙</button>
   <button id="play">🔊 Сонсох</button>
   <button id="refresh"><span class="ic">↻</span> Шинэчлэх</button>
@@ -1196,6 +1197,12 @@ document.body.addEventListener("click", async ev => {
   finally{ b.disabled = false; }
 });
 
+$("wakeBtn").onclick = async () => {
+  try{
+    const r = await api("/api/wake/pause", {on: lastWake !== "paused"});
+    toast(r.status === "paused" ? "🔇 «Хэй Тэд» түр зогслоо" : "🎧 «Хэй Тэд» дахин асаалттай", "ok");
+  }catch(e){ toast(e.message, "err"); }
+};
 document.body.addEventListener("click", async ev => {
   const b = ev.target.closest("button[data-sm]"); if(!b) return;
   const holder = b.closest("[data-plan]"), id = holder && holder.dataset.plan; if(!id) return;
@@ -1227,6 +1234,10 @@ setInterval(async () => {
     serverSpeaking = sp.on;
     if(sp.wake !== lastWake){
       lastWake = sp.wake;
+      const wb = $("wakeBtn");
+      wb.style.display = (sp.wake && sp.wake !== "off" && sp.wake !== "error") ? "" : "none";
+      wb.textContent = sp.wake === "paused" ? "🔇" : "🎧";
+      wb.title = sp.wake === "paused" ? "«Хэй Тэд» зогссон — дарж асаана" : "«Хэй Тэд» сонсож байна — дарж түр зогсооно";
       document.body.classList.toggle("wake-listen", sp.wake === "listening");
       document.body.classList.toggle("wake-think", sp.wake === "thinking");
       $("wakeTag").textContent = {listening: "🎙 Сонсож байна…", thinking: "✨ Ойлгож байна…"}[sp.wake] || "";

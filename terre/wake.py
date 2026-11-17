@@ -70,6 +70,33 @@ def _model_path():
     return p
 
 
+def _is_wake(res, words, min_conf):
+    """«Хэй Тэд»-ийг ТУСДАА, тод хэлсэн эсэх.
+    - Нэг амьсгалын (utterance) дотор өөр яриа ([unk]) байвал — хэн нэгэнтэй ярьж байгаа гэж үзээд үл тооно.
+    - Хоёр үг тус бүрийн итгэлцүүр min_conf-оос дээш байх ёстой."""
+    toks = res.get("result") or []
+    text = (res.get("text") or "").strip()
+    if not toks or not text:
+        return False
+    if any(t.get("word") == "[unk]" for t in toks):
+        return False
+    if text not in words:
+        return False
+    return all(float(t.get("conf", 0)) >= min_conf for t in toks)
+
+
+_paused = {"on": False}
+
+
+def paused():
+    return _paused["on"]
+
+
+def set_paused(on):
+    _paused["on"] = bool(on)
+    _set("paused" if on else "idle", "Түр зогсоосон" if on else "«Хэй Тэд» гэж дуудаарай")
+
+
 def _rms(chunk):
     a = array.array("h", chunk)
     if not a:
@@ -134,6 +161,9 @@ def _loop(loop, handler):
         return
     words = [w.lower() for w in (cfg().get("words") or DEFAULT_WORDS)]
     rec = vosk.KaldiRecognizer(model, RATE, json.dumps(words + ["[unk]"]))
+    rec.SetWords(True)
+    min_conf = float(cfg().get("min_confidence", 0.93))
+    last_cmd = 0.0
     q = queue.Queue(maxsize=400)
 
     def cb(data, frames, t, status):
@@ -155,12 +185,14 @@ def _loop(loop, handler):
                 if voice.SPEAKING.get("on"):        # TED өөрөө ярьж байхад сонсохгүй
                     rec.Reset()
                     continue
-                if rec.AcceptWaveform(data):
-                    text = json.loads(rec.Result()).get("text", "")
-                else:
-                    text = json.loads(rec.PartialResult()).get("partial", "")
-                padded = f" {text} "
-                if not any(f" {w} " in padded for w in words):
+                if paused():
+                    rec.Reset()
+                    continue
+                # Зөвхөн бүтэн (эцсийн) үр дүнгээр шийднэ — хагас үр дүн яриан дунд худал дуудагдах гол шалтгаан байв
+                if not rec.AcceptWaveform(data):
+                    continue
+                res = json.loads(rec.Result())
+                if not _is_wake(res, words, min_conf) or time.time() - last_cmd < 4:
                     continue
                 rec.Reset()
                 _set("listening", "Сонсож байна…")
@@ -174,6 +206,7 @@ def _loop(loop, handler):
                         log.warning("Дуут тушаал алдаа: %s", e)
                 else:
                     _beep(700, 90)
+                last_cmd = time.time()
                 while not q.empty():                 # хариу ярьж байх хооронд хуримтлагдсаныг хаяна
                     q.get_nowait()
                 _set("idle", "«Хэй Тэд» гэж дуудаарай")

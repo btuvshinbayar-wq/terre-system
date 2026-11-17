@@ -50,6 +50,14 @@ async def _startup_sequence():
     st = CFG.get("startup", {})
     if st.get("open_browser", True):
         desktop.open_window("/")
+    try:   # 2026-11-17: дуудах үг худал асаж бичигдсэн яриаг журналаас нэг удаа арилгана (TED-ийн өөрийн бичлэг)
+        if learn.kv_get("purged_voice_v1", "") != "1":
+            with journal._lock:
+                journal._db.execute("DELETE FROM activity WHERE kind='voice'")
+                journal._db.commit()
+            learn.kv_set("purged_voice_v1", "1")
+    except Exception as e:
+        log.warning("Дуут бичлэг цэвэрлэх: %s", e)
     if not DEMO:
         try:
             from . import demo
@@ -233,6 +241,13 @@ def speaking():
     return {"on": voice.SPEAKING["on"], "wake": wake.STATE["status"], "voice_plan_ts": vp["ts"] if vp else 0}
 
 
+@app.post("/api/wake/pause")
+def wake_pause(b: dict):
+    from . import wake
+    wake.set_paused(bool(b.get("on")))
+    return {"ok": True, "status": wake.STATE["status"]}
+
+
 @app.get("/api/voice-plan")
 def voice_plan():
     return engine.STATE.get("voice_plan") or {}
@@ -386,10 +401,8 @@ async def _wake_command(wav):
     from . import wake
     text = await asyncio.to_thread(brain.transcribe, wav, "audio/wav")
     if not text:
-        await voice.speak("Сонсогдсонгүй, дахин хэлнэ үү.", path=DATA / "say.mp3")
-        return
-    wake.STATE["heard"] = text
-    journal.add("voice", f"Дуут тушаал: «{text}»", who="Та")
+        return            # тушаал биш (өөр хүнтэй ярьж буй яриа г.м.) — юу ч бичихгүй, хэлэхгүй
+    wake.STATE["heard"] = ""
     try:
         plan = await _plan(text)
     except Exception as e:

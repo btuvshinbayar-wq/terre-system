@@ -86,7 +86,7 @@ def report():
         from . import wake
         if wake.enabled():
             st = wake.STATE["status"]
-            rows.append({"name": "Дуудах үг («Хэй Тэд»)", "status": {"idle": "ok", "listening": "ok", "thinking": "ok", "error": "error"}.get(st, "pending"),
+            rows.append({"name": "Дуудах үг («Хэй Тэд»)", "status": {"idle": "ok", "listening": "ok", "thinking": "ok", "paused": "warn", "error": "error"}.get(st, "pending"),
                          "msg": wake.STATE["msg"] or st,
                          "hint": "Админ PowerShell: & \"C:\\Program Files\\Terre System\\python\\python.exe\" -m pip install vosk sounddevice"
                                  if "суугаагүй" in (wake.STATE["msg"] or "") else ""})

@@ -354,11 +354,14 @@ def transcribe(audio_bytes, mime="audio/wav"):
         return ""
     from google.genai import types
     part = types.Part.from_bytes(data=audio_bytes, mime_type=mime.split(";")[0])
-    prompt = ("Энэ бичлэгт хүн TED («Тэд») гэдэг туслахдаа тушаал өгч эсвэл асуулт асууж байна. Яриаг ҮГЧЛЭН бичгээр буулга "
-              "(ихэвчлэн монгол хэл, заримдаа англи). Зөвхөн буулгасан текстийг буцаа. Яриа сонсогдохгүй бол хоосон буцаа.")
+    prompt = ("Энэ бичлэгт хүн TED («Тэд») гэдэг компьютерийн туслахдаа тушаал өгч эсвэл асуулт асууж байх ёстой. "
+              "Хэрэв энэ нь туслахад хандсан тушаал/асуулт БИШ бол (утсаар эсвэл өөр хүнтэй ярьж буй яриа, хагас өгүүлбэр, "
+              "чимээ, ТВ/радио) ЗӨВХӨН «-» гэж буцаа, юу ч бүү буулга. Тушаал бол ҮГЧЛЭН бичгээр буулга "
+              "(ихэвчлэн монгол хэл, заримдаа англи). Зөвхөн буулгасан текстийг буцаа.")
     try:
         resp = _gemini().models.generate_content(model=_fast(), contents=[prompt, part], config=_cfg(_fast(), temperature=0))
-        return (resp.text or "").strip().strip('"«»')
+        t = (resp.text or "").strip().strip('"«»').strip()
+        return "" if t in ("-", "—", "–") else t
     except Exception as e:
         log.warning("Дуу таних алдаа: %s", e)
         return ""
