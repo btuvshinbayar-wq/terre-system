@@ -18,6 +18,10 @@ from ..config import CFG, TZ
 KEYRING_SERVICE = "TerreSystem-mail"
 
 PRESETS = {
+    # Хоёр дахь Gmail данс: App password хэрэгтэй (2-Step Verification асаалттай). Gmail илгээсэн мэйлээ өөрөө
+    # хадгалдаг тул sent_folder хоосон (давхардуулахгүй); архив = "Бүх мэйл"
+    "gmail":   {"imap_host": "imap.gmail.com", "smtp_host": "smtp.gmail.com", "smtp_port": 465,
+                "archive_folder": "[Gmail]/All Mail", "sent_folder": ""},
     "yahoo":   {"imap_host": "imap.mail.yahoo.com", "smtp_host": "smtp.mail.yahoo.com", "smtp_port": 465},
     "icloud":  {"imap_host": "imap.mail.me.com", "smtp_host": "smtp.mail.me.com", "smtp_port": 587},
     "mailru":  {"imap_host": "imap.mail.ru", "smtp_host": "smtp.mail.ru", "smtp_port": 465},

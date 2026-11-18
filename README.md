@@ -287,6 +287,22 @@ Drive асаах (нэг удаа):
   Тушаалыг ойлгох (аль тушаал, ямар багш) хэсэг Gemini-тэй үед илүү ухаалаг; түлхүүргүй үед энгийн түлхүүр үгээр (check mail,
   mark … as sick, meeting, timesheet, backup …) таньна.
 
+### 3.13 Хоёр дахь (өөр) Google данс нэмэх
+
+Үндсэн Google данс (Gmail + Calendar + Drive) нэг байна. Нэмэлт Gmail дансыг «бусад мэйл»-ээр (IMAP) холбоно:
+1. Нэмэх дансаараа https://myaccount.google.com/security → **2-Step Verification** асаана.
+2. https://myaccount.google.com/apppasswords → нэр «TED» → гарсан 16 тэмдэгтийг хуулна.
+3. `config.yaml` → `sources: other_mail:` хэсэгт:
+   ```yaml
+       - name: "Gmail 2"
+         enabled: true
+         provider: gmail
+         email: "таны.хоёр.дахь@gmail.com"
+   ```
+4. Эхлэх цэс → «Terre — холболт тохируулах» → тухайн данс дээр App password-ийг буулгана (Windows Credential Manager-т хадгална).
+5. TED-ийг дахин асаана. Мэйл нь самбарт «Gmail 2» гэсэн эх сурвалжтай гарна; хариуг тухайн дансаас илгээнэ.
+Анхаар: энэ замаар зөвхөн **мэйл** холбогдоно (хоёр дахь дансны календарь/Drive биш).
+
 ## 4. Шинэ боломжууд (самбарын табууд)
 
 **Нүүр** — TED төвд (реактор), эргэн тойронд холболтын зангилаанууд: Mail, Calendar, Meetings, School Manager, Tasks,

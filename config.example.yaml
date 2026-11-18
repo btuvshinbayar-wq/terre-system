@@ -64,7 +64,8 @@ sources:
     client_id: ""              # Azure App registration-ийн Application (client) ID
   # Бусад мэйл хаягууд (IMAP/SMTP) — хэдийг ч нэмж болно. Нууц үгийг setup_connections.bat асууж,
   # Windows Credential Manager-т хадгална (энд бичихгүй).
-  # provider: yahoo | icloud | mailru | yandex | zoho | aol | gmx | (хоосон = өөрөө сервер бичих)
+  # provider: gmail | yahoo | icloud | mailru | yandex | zoho | aol | gmx | (хоосон = өөрөө сервер бичих)
+  # Хоёр дахь Gmail данс: provider: gmail + App password (README 3.13)
   other_mail:
     - name: "Сургуулийн мэйл"
       enabled: false
@@ -76,6 +77,10 @@ sources:
       # username: ""                    # хоосон = email
       # archive_folder: "Archive"       # архивлах хавтас (сервер бүрт өөр: "INBOX.Archive" гэх мэт)
       # sent_folder: "Sent"             # илгээсэн мэйлийн хуулбар ("INBOX.Sent", "Sent Items"...)
+    - name: "Gmail 2"
+      enabled: false
+      provider: gmail
+      email: "second.account@gmail.com"
     - name: "Yahoo"
       enabled: false
       provider: yahoo
