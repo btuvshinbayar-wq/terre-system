@@ -28,11 +28,15 @@ async def speak(text, path=BRIEFING_MP3, play=True):
         return
     try:
         await synth(text, path)
+        from . import health
+        health.ok("Дуу")
         if play:
             from playsound3 import playsound
             SPEAKING.update(on=True, text=text)
             await asyncio.to_thread(playsound, str(path))
     except Exception as e:
         log.warning("Дуу гаргаж чадсангүй: %s", e)
+        from . import health
+        health.err("Дуу", e)
     finally:
         SPEAKING["on"] = False

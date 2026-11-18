@@ -150,13 +150,30 @@ def _fetch_account(acc, limit=25, days=3):
             pass
 
 
+def _explain(acc, e):
+    """Түгээмэл алдааг ойлгомжтой болгох."""
+    m = str(e)
+    low = m.lower()
+    if "keyring" in low or "нууц үг" in low or "password" in low and "not" in low:
+        return f"{m} → Эхлэх цэс → «Terre — холболт тохируулах»-аар App password оруулна уу"
+    if "authenticationfailed" in low or "invalid credentials" in low or "application-specific password" in low:
+        hint = (" Gmail бол энгийн нууц үг биш App password (16 тэмдэгт) хэрэгтэй; байгууллагын данс бол IT админ хаасан байж магадгүй."
+                if "gmail" in (acc.get("imap_host") or "") else "")
+        return "Нэвтэрч чадсангүй (нууц үг буруу)." + hint
+    return m
+
+
 def fetch_unread():
+    from .. import health
     items, errors = [], []
     for acc in accounts():
         try:
-            items += _fetch_account(acc)
+            got = _fetch_account(acc)
+            items += got
+            health.ok(acc["name"], f"{len(got)} уншаагүй мэйл")
         except Exception as e:
             errors.append(f"{acc['name']}: {e}")
+            health.err(acc["name"], _explain(acc, e))
     if errors and not items:
         raise RuntimeError("; ".join(errors))
     return items

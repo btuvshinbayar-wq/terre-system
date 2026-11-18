@@ -151,6 +151,11 @@ def _hotkey_thread(bindings):
             STATUS["hotkeys"].append(combo)
         else:
             STATUS["hotkey_errors"].append(f"{combo} (өөр програм ашиглаж байж магадгүй)")
+    from . import health
+    if STATUS["hotkey_errors"]:
+        health.warn("Товчлол", "Бүртгэгдээгүй: " + ", ".join(STATUS["hotkey_errors"]))
+    else:
+        health.ok("Товчлол", ", ".join(STATUS["hotkeys"]))
     msg = wintypes.MSG()
     while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) != 0:
         if msg.message == 0x0312:       # WM_HOTKEY

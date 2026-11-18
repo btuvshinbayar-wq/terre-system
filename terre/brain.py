@@ -65,14 +65,23 @@ def _cfg(model=None, **kw):
 
 
 def _gen(model, prompt, **kw):
+    from . import health
     try:
-        return _gemini().models.generate_content(model=model, contents=prompt, config=_cfg(model, **kw))
+        r = _gemini().models.generate_content(model=model, contents=prompt, config=_cfg(model, **kw))
+        health.ok("Gemini AI", model)
+        return r
     except Exception as e:
         msg = str(e).lower()
         if "thinking" in msg or "invalid_argument" in msg:   # тохиргоог дэмжихгүй загвар — энгийн тохиргоогоор дахин
             from google.genai import types
-            return _gemini().models.generate_content(model=model, contents=prompt,
-                                                     config=types.GenerateContentConfig(**kw))
+            try:
+                r = _gemini().models.generate_content(model=model, contents=prompt, config=types.GenerateContentConfig(**kw))
+                health.ok("Gemini AI", model)
+                return r
+            except Exception as e2:
+                health.err("Gemini AI", e2)
+                raise
+        health.err("Gemini AI", e)
         raise
 
 
