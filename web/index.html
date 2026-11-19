@@ -513,8 +513,8 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
   </section>
   <section data-tab="files" class="card fo" style="--d:.34s"><h2>📁 Connected folders</h2>
     <div class="fadd">
-      <button class="pri" id="fPick">＋ Choose a folder</button>
-      <input id="fPath" placeholder="or type a path: D:\School\2026 documents" autocomplete="off">
+      <button class="pri" id="fPick" title="You can select several folders at once (Ctrl + click)">＋ Choose folders</button>
+      <input id="fPath" placeholder="or type paths: D:\School\2026 ; D:\Reports" autocomplete="off">
       <button id="fAdd">Connect</button>
       <label class="fopt"><input type="checkbox" id="fEmpty"> Remove folders that become empty</label>
     </div>
@@ -778,13 +778,17 @@ function renderAgenda(){
   return ag.today.length + ag.upcoming.length + (ag.overdue.length ? 1 : 0);
 }
 function autoCard(it){
-  const act = {archive:"archive", mark_read:"mark as read"}[it.action], done = it.status === "auto_done";
+  // Чухал биш мэйлийг TED уншсан болгодог (архивлахгүй). Устгах, блоклох, хариу бичих нь таны товчоор
+  const done = it.status === "auto_done", mail = MAILSRC.includes(it.source);
   return `<div class="item">
     <div class="meta"><span class="src">${esc(srcName(it))}</span><span>${esc(it.sender)}</span></div>
     <div>${esc(it.summary || it.subject)}</div>
     <div class="acts" style="margin-top:6px">
-      ${done ? `<span class="why">✓ ${act||"handled"}</span>` : (act ? `<button data-a="apply">✓ ${act}</button>` : "")}
-      ${!done ? `<button data-a="promote">Write a reply</button>` : ""}
+      ${done ? `<span class="why">✓ TED marked it as read</span>` : `<button data-a="read" title="Mark as read and remove from the list">✓ Read</button>`}
+      ${mail ? `<button data-a="trash" title="Move to trash (can be undone)">🗑 Delete</button>
+      <button data-a="block" title="TED will move future mail from this sender to trash">⛔ Block</button>` : ""}
+      <button data-a="promote">Write a reply</button>
+      ${done ? `<button data-a="dismiss" title="Remove from TED's list only">Skip</button>` : ""}
     </div></div>`;
 }
 
@@ -1017,7 +1021,7 @@ function renderFolders(){
         <button class="pri" data-fo="plan" ${f.exists ? "" : "disabled"}>✨ Sort</button>
         <button data-fo="remove" title="Disconnect (files are not touched)">✕</button>
       </div></div>`;
-  }).join("") : `<div class="empty">No folders connected. Click "＋ Choose a folder" to start.</div>`;
+  }).join("") : `<div class="empty">No folders connected. Click "＋ Choose folders" — you can select several at once.</div>`;
 }
 async function addFolder(path){
   if(!path) return;
@@ -1025,13 +1029,29 @@ async function addFolder(path){
   catch(e){ toast(e.message, "err"); }
 }
 $("fPick").onclick = async () => {
-  $("fPick").disabled = true;
-  try{ const r = await api("/api/folders/pick", {}); if(r.path) await addFolder(r.path); }
+  // Windows-ийн цонхонд Ctrl / Shift дарж хэд хэдэн хавтсыг зэрэг сонгож болно
+  const b = $("fPick"), label = b.textContent;
+  b.disabled = true; b.textContent = "⏳ Choose in the Windows window…";
+  try{
+    const r = await api("/api/folders/pick", {});
+    const paths = r.paths || (r.path ? [r.path] : []);
+    let ok = 0;
+    for(const p of paths){
+      try{ await api("/api/folders", {path: p}); ok++; }
+      catch(e){ toast(`${p}: ${e.message}`, "err"); }
+    }
+    if(ok){ toast(`📁 ${ok} folder${ok > 1 ? "s" : ""} connected`, "ok"); load(); }
+  }
   catch(e){ toast(e.message, "err"); $("fPath").focus(); }
-  finally{ $("fPick").disabled = false; }
+  finally{ b.disabled = false; b.textContent = label; }
 };
-$("fAdd").onclick = () => addFolder($("fPath").value.trim());
-$("fPath").addEventListener("keydown", e => { if(e.key === "Enter") addFolder($("fPath").value.trim()); });
+// Гараар бичихэд ; эсвэл шинэ мөрөөр хэд хэдэн замыг зэрэг холбоно
+async function addTyped(){
+  const ps = $("fPath").value.split(/[;\n]/).map(x => x.trim().replace(/^"|"$/g, "")).filter(Boolean);
+  for(const p of ps) await addFolder(p);
+}
+$("fAdd").onclick = addTyped;
+$("fPath").addEventListener("keydown", e => { if(e.key === "Enter") addTyped(); });
 $("flist").addEventListener("change", async e => {
   const sel = e.target.closest("select[data-fs]"); if(!sel) return;
   const fid = sel.closest(".frow").dataset.fid;

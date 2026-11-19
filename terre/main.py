@@ -556,9 +556,12 @@ class FolderBody(BaseModel):
 async def folder_pick():
     from . import desktop
     try:
-        return {"path": await asyncio.to_thread(desktop.pick_folder)}
+        paths = await asyncio.to_thread(desktop.pick_folders)
+        return {"paths": paths, "path": paths[0] if paths else ""}
     except Exception as e:
-        raise HTTPException(400, f"Хавтас сонгох цонх нээгдсэнгүй ({e}). Замыг гараар бичнэ үү.")
+        log.warning("Хавтас сонгох цонх: %s", e)
+        raise HTTPException(400, _L(f"Хавтас сонгох цонх нээгдсэнгүй ({e}). Замыг гараар бичнэ үү.",
+                                    f"The folder window did not open ({e}). Please type the path instead."))
 
 
 @app.post("/api/folders")

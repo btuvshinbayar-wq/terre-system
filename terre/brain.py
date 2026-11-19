@@ -92,7 +92,7 @@ TRIAGE_PROMPT = """Чи бол {owner}-ийн хувийн туслах TED. Д�
 
 Ангилал:
 - "auto": хариу шаардлагагүй (сурталчилгаа, мэдээллийн захидал, автомат мэдэгдэл, баталгаажуулалт,
-  групп чатын ерөнхий яриа). action-д "archive" (мэйл) эсвэл "mark_read" (чат) эсвэл "none".
+  групп чатын ерөнхий яриа). action-д "mark_read" (мэйл, чат — уншсан болгоно) эсвэл "none". Мэйлийг АРХИВЛАХГҮЙ.
 - "approve": эзэн хариу өгөх эсвэл шийдвэр гаргах ёстой. Хариу ноорог бич.
 - "urgent": өнөөдөр/маргааш хугацаатай, удирдлага эсвэл албан байгууллагын шаардлага,
   аюулгүй байдлын сэрэмжлүүлэг, хүүхдийн аюулгүй байдал. Хэрэгтэй бол ноорог бич.
@@ -242,8 +242,7 @@ def _heuristic(item):
         return dict(category="urgent", action="none", draft=draft,
                     summary=f"{item.get('sender')}: {item.get('subject')}", reason=L("Хугацаатай/яаралтай үг агуулсан", "Contains deadline/urgent words"))
     if any(w in text for w in AUTO_WORDS):
-        act = "archive" if item["source"] in ("gmail", "outlook") else "mark_read"
-        return dict(category="auto", action=act, draft="",
+        return dict(category="auto", action="mark_read", draft="",
                     summary=f"{item.get('sender')}: {item.get('subject')}", reason=L("Мэдээллийн/автомат мессеж", "Newsletter or automatic message"))
     return dict(category="approve", action="none", draft=draft,
                 summary=f"{item.get('sender')}: {item.get('subject')}", reason=L("Хариу шаардаж магадгүй", "May need a reply"))

@@ -149,6 +149,8 @@ async def run_cycle():
         fresh = fresh[:MAX_TRIAGE_PER_CYCLE]
         for it in fresh:
             t = await asyncio.to_thread(brain.triage, it)
+            if t.get("action") == "archive":      # эзний дүрэм: чухал биш мэйлийг архивлахгүй, зөвхөн уншсан болгоно
+                t["action"] = "mark_read"
             status = {"auto": "auto", "approve": "pending", "urgent": "urgent"}[t["category"]]
             if status == "auto" and CFG.get("auto_actions") and t["action"] != "none" and not DEMO:
                 try:
@@ -238,6 +240,9 @@ async def send(item_id, body, who="Та"):
 async def apply(item_id, who="Та"):
     item = store.get(item_id)
     prev = item["status"]
+    if item.get("action") == "archive":      # хуучин ангилал: архивлахгүй, уншсан болгоно
+        item["action"] = "mark_read"
+        store.update(item_id, action="mark_read")
     if not DEMO and item["action"] and item["action"] != "none":
         res = await _call(_connector(item["source"]).apply_action, item, item["action"])
         if isinstance(res, dict) and res.get("archived_id"):
