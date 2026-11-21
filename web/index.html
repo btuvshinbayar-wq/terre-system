@@ -145,6 +145,7 @@ button.dng:hover{border-color:rgba(255,93,108,.6);color:#ff8a95}
   transform:translateX(-100%);animation:flash 1.2s .3s ease-out}
 @keyframes flash{to{transform:translateX(100%)}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+.item.flash{box-shadow:0 0 0 2px var(--cyan),0 0 30px rgba(56,214,245,.4)}
 .item.leave{animation:collapse .45s ease forwards;pointer-events:none}
 @keyframes collapse{to{opacity:0;transform:scale(.95);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:0;border-width:0}}
 .item.sent{animation:fly .7s cubic-bezier(.6,0,.4,1) forwards;pointer-events:none;border-left-color:var(--green)}
@@ -331,7 +332,7 @@ body.t-home header{border-bottom-color:transparent;background:none;backdrop-filt
 body.t-home #bg{opacity:.25}
 #hudLines{z-index:1}
 /* Баруун талын самбар: шийдээгүй / шийдсэн */
-.hright{position:absolute;right:24px;top:0;bottom:96px;width:var(--pw,320px);z-index:3;display:flex;flex-direction:column;gap:18px;
+.hright{position:absolute;right:24px;top:0;bottom:var(--rb,190px);width:var(--pw,320px);z-index:3;display:flex;flex-direction:column;gap:18px;
   animation:slideInR .7s .2s both}
 @keyframes slideInR{from{opacity:0;transform:translateX(24px)}}
 .bd{display:flex;flex-direction:column;min-height:0}
@@ -398,14 +399,55 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
 @keyframes ndPulse{0%{box-shadow:0 0 12px rgba(56,214,245,.8),0 0 0 0 rgba(56,214,245,.45)}70%,100%{box-shadow:0 0 12px rgba(56,214,245,.8),0 0 0 13px rgba(56,214,245,0)}}
 @keyframes ndPulseA{0%{box-shadow:0 0 12px rgba(255,190,85,.8),0 0 0 0 rgba(255,190,85,.45)}70%,100%{box-shadow:0 0 12px rgba(255,190,85,.8),0 0 0 13px rgba(255,190,85,0)}}
 @keyframes ndPulseR{0%{box-shadow:0 0 14px rgba(255,93,108,.9),0 0 0 0 rgba(255,93,108,.55)}70%,100%{box-shadow:0 0 14px rgba(255,93,108,.9),0 0 0 15px rgba(255,93,108,0)}}
+#hud.tight .hnode .ns{display:none}
 #hud.compact{height:auto;min-height:0;padding-bottom:120px;display:flex;flex-direction:column}
-#hud.compact .hleft{order:1} #hud.compact .hpill{order:2} #hud.compact .hcore{order:3} #hud.compact #hNodes{order:4} #hud.compact .hright{order:5}
+#hud.compact .hleft{order:1} #hud.compact .hpill{order:3} #hud.compact .hcore{order:4} #hud.compact #hNodes{order:5} #hud.compact .hright{order:7}
 #hud.compact .hleft{position:static;width:auto;margin:0 20px}
 #hud.compact .hpill{position:static;transform:none;margin:14px auto 0}
 #hud.compact .hcore{position:relative;left:auto!important;top:auto!important;transform:none;margin:40px auto 10px;--cs:220px!important}
 #hud.compact #hNodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;padding:0 20px}
 #hud.compact .hnode{position:static;transform:none;animation:rise .5s both}
 #hud.compact #hudLines{display:none}
+
+/* ---------- Conversation with TED (centre) ---------- */
+#hConvo{position:absolute;z-index:3;display:flex;flex-direction:column;gap:8px;animation:rise .7s .4s both}
+.cvlog{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:9px;padding:4px 6px 2px;
+  -webkit-mask-image:linear-gradient(transparent,#000 22%);mask-image:linear-gradient(transparent,#000 22%)}
+.cvlog:empty::before{content:"Ask me anything, Sir — in English or Mongolian. Type below or press 🎙";margin:auto;color:#6f8ba3;font-size:12.5px;letter-spacing:.3px}
+.cv{max-width:86%;font-size:13.5px;line-height:1.55;animation:slideIn .35s both;text-shadow:0 1px 8px rgba(0,0,0,.85)}
+.cv small{display:block;font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;opacity:.75;margin-bottom:1px}
+.cv.me{align-self:flex-end;text-align:right;color:#eef8ff;padding-right:10px;border-right:2px solid rgba(255,255,255,.35)}
+.cv.me small{color:#a9c1d6}
+.cv.ted{align-self:flex-start;color:#c9f3ff;padding-left:10px;border-left:2px solid var(--cyan)}
+.cv.ted small{color:var(--cyan)}
+.cv.ted.think{color:#7fa9c2} .cv.ted.think span::after{content:"";animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+.cv .cvx{margin-top:5px;display:flex;flex-wrap:wrap;gap:6px}
+.cv .cvx button,.cv .cvx a{font-size:11.5px;padding:3px 10px;border-radius:12px;color:var(--cyan);background:rgba(4,16,32,.6);border:1px solid rgba(56,214,245,.35);text-decoration:none}
+.cvin{display:flex;gap:8px;align-items:center;padding:6px 6px 6px 14px;border-radius:24px;background:rgba(4,14,30,.55);
+  border:1px solid rgba(56,214,245,.3);backdrop-filter:blur(6px);transition:border-color .2s,box-shadow .2s}
+.cvin:focus-within{border-color:var(--cyan);box-shadow:0 0 22px rgba(56,214,245,.25)}
+.cvin input{flex:1;background:none;border:0;color:var(--txt);font-size:14px;outline:none;padding:4px 0;min-width:0}
+.cvin button{border-radius:50%;width:34px;height:34px;padding:0;display:grid;place-items:center;background:var(--cyan2);border-color:var(--cyan2)}
+
+/* ---------- Chat notifications strip (bottom) ---------- */
+#hChats{position:absolute;left:28px;right:24px;z-index:3;display:flex;align-items:stretch;gap:14px;animation:rise .7s .5s both}
+#hChats .chh{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;gap:4px;font-size:10.5px;letter-spacing:3px;
+  text-transform:uppercase;color:#c8f6ff;font-weight:600;padding-right:12px;border-right:1px solid rgba(56,214,245,.2)}
+#hChats .chh i{font-style:normal;color:var(--cyan);letter-spacing:1px}
+.chl{flex:1;display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 6px;scrollbar-width:thin}
+.chc{flex:0 0 250px;display:grid;grid-template-columns:30px 1fr;gap:9px;align-items:center;text-align:left;padding:8px 10px;border-radius:12px;
+  background:rgba(4,14,30,.5);border:1px solid rgba(56,214,245,.16);animation:slideInR .4s both;cursor:pointer;color:var(--txt)}
+.chc:hover{border-color:rgba(56,214,245,.45);background:rgba(8,24,46,.7)}
+.chc.hot{border-color:rgba(255,93,108,.5)}
+.chc .ap{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff}
+.ap.viber{background:#7360f2} .ap.messenger{background:linear-gradient(135deg,#00b2ff,#7a3cff 60%,#ff5c87)} .ap.discord{background:#5865f2} .ap.gchat{background:#1e8e3e}
+.chc .cn{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chc .cn em{font-style:normal;font-weight:400;font-size:10.5px;color:#7f9bb3;margin-left:6px}
+.chc .cs{font-size:11.5px;color:#9db6ca;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chempty{align-self:center;font-size:12px;color:#6f8ba3}
+#hud.compact #hConvo,#hud.compact #hChats{position:relative;left:auto!important;top:auto!important;width:auto!important;height:auto!important;margin:20px;z-index:2}
+#hud.compact #hConvo{order:2;height:320px!important} #hud.compact #hChats{order:6;flex-direction:column} #hud.compact .chl{flex-wrap:wrap}
 
 /* ---------- Drawer ---------- */
 #scrim{position:fixed;inset:0;z-index:70;background:rgba(2,6,14,.5);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .3s}
@@ -492,6 +534,14 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
     <div class="hstate" id="hState">ONLINE</div>
   </div>
   <div id="hNodes"></div>
+  <div id="hConvo">
+    <div class="cvlog" id="cvLog" aria-live="polite"></div>
+    <div class="cvin"><input id="cvIn" placeholder="Ask TED… (English or Mongolian)" autocomplete="off"><button id="cvGo" title="Send to TED">➤</button></div>
+  </div>
+  <div id="hChats">
+    <div class="chh">Chats<i id="chN">0</i></div>
+    <div class="chl" id="chList"></div>
+  </div>
 </section>
 
 <main>
@@ -548,6 +598,8 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
       <section class="card pending" style="--d:.12s"><h2>🟡 Needs your approval <span class="n" id="nP">0</span></h2><div class="list" id="pending"></div></section>
       <section class="card auto" style="--d:.2s"><h2>🟢 Handled by TED <span class="n" id="nA">0</span></h2><div class="list" id="auto"></div></section>
     </div>
+    <div data-view="chats"><section class="card" style="--d:.05s"><h2>💬 Viber · Messenger · Discord · Google Chat <span class="n" id="nC">0</span></h2>
+      <div class="list" id="chatsFull"></div></section></div>
     <div data-view="calendar"><section class="card" style="--d:.05s"><h2>Today's calendar</h2><div class="tl" id="cal"></div></section></div>
     <div data-view="metrics"><section class="card" style="--d:.05s"><h2>Key numbers</h2><div class="mgrid" id="met"></div></section></div>
   </div>
@@ -571,6 +623,8 @@ const SRC = {gmail:"Gmail", outlook:"Outlook", telegram:"Telegram", gchat:"Googl
 const srcName = it => it.source === "imap" ? ((it.meta && it.meta.chat) ? "Google Chat" : ((it.meta && it.meta.account) || "Mail")) : (SRC[it.source] || it.source);
 // Шууд илгээж болохгүй эх сурвалж: хариуг хуулж, программыг нээнэ (та Ctrl+V дараад илгээнэ)
 const HANDOFF = it => ["viber", "discord", "messenger"].includes(it.source) || !!(it.meta && it.meta.chat);
+const isChat = it => ["viber", "discord", "messenger", "gchat"].includes(it.source) || !!(it.meta && it.meta.chat);
+const noChat = list => (list || []).filter(it => !isChat(it));
 const handoffApp = it => (it.meta && it.meta.chat) ? "Google Chat" : (SRC[it.source] || "the app");
 let S = null, firstRender = true, lastBrief = null, serverSpeaking = false;
 
@@ -872,10 +926,15 @@ function render(){
   renderMacros(); renderFiles(); renderFolders(); renderTasks(); renderHealthDot();
   if(TAB === "work") renderDayReport();
   const nSm = renderAgenda();
-  reconcile($("urgent"), S.urgent, itemCard, nSm ? "" : "Nothing urgent. 👌");
-  reconcile($("pending"), S.pending, itemCard, "Nothing waiting.");
-  reconcile($("auto"), S.auto, autoCard, "Empty for now.");
-  setCount($("nU"), S.urgent.length + nSm); setCount($("nP"), S.pending.length); setCount($("nA"), S.auto.length);
+  // Мэйл ба чат тусдаа: чат (Viber, Messenger, Discord, Google Chat) нүүрний доод мөр болон «Chats» хэсэгт
+  const mU = noChat(S.urgent), mP = noChat(S.pending), mA = noChat(S.auto);
+  reconcile($("urgent"), mU, itemCard, nSm ? "" : "Nothing urgent. 👌");
+  reconcile($("pending"), mP, itemCard, "Nothing waiting.");
+  reconcile($("auto"), mA, autoCard, "Empty for now.");
+  setCount($("nU"), mU.length + nSm); setCount($("nP"), mP.length); setCount($("nA"), mA.length);
+  const chats = chatItems();
+  reconcile($("chatsFull"), chats, it => it.status === "urgent" || it.status === "pending" ? itemCard(it) : autoCard(it), "No chat messages.");
+  setCount($("nC"), chats.length);
   $("errs").innerHTML = (S.errors||[]).map(e => `⚠ ${esc(e)}`).join("<br>");
   renderHud();
   firstRender = false;
@@ -943,6 +1002,7 @@ async function sendCommand(){
   try{
     const r = await api("/api/command", {text});
     handlePlan(r, false);
+    addTurn("me", text); const [say, extra] = planReply(r); addTurn("ted", say, extra);
     $("cmdIn").value = "";
   } catch(e){ toast("Error: " + e.message, "err"); }
   finally{ $("cmdGo").disabled = false; document.body.classList.remove("busy"); }
@@ -1356,7 +1416,9 @@ async function voiceToggle(){
         const r = await fetch("/api/voice", {method: "POST", headers: {"Content-Type": "audio/wav"}, body: wav});
         const d = await r.json(); if(!r.ok) throw new Error(d.detail || "error");
         if(d.text) $("cmdIn").value = d.text;
-        if(TAB !== "work") showTab("work");
+        if(d.text) addTurn("me", d.text, {voice: true});
+        { const [say, extra] = planReply(d.plan); addTurn("ted", say, extra); }
+        if(TAB !== "home" && TAB !== "work") showTab("home");
         handlePlan(d.plan, true);
       }catch(e){ toast(e.message, "err"); } finally{ document.body.classList.remove("busy"); }
     });
@@ -1441,6 +1503,93 @@ const SPACE = (() => {
   return {resize};
 })();
 
+/* ================= Chats strip (bottom of Home) ================= */
+const APPMARK = {viber: "V", messenger: "M", discord: "D", gchat: "G"};
+const appKey = it => (it.meta && it.meta.chat) ? "gchat" : it.source;
+function chatItems(){
+  return [...(S.urgent || []), ...(S.pending || []), ...(S.auto || [])].filter(isChat)
+    .sort((a, b) => (b.received || "").localeCompare(a.received || ""));
+}
+function renderChats(){
+  const list = chatItems();
+  $("chN").textContent = list.length;
+  const html = list.slice(0, 30).map((it, i) => `<button class="chc ${it.status === "urgent" ? "hot" : ""}" data-chat="${esc(it.id)}" style="animation-delay:${Math.min(i, 10)*.04}s">
+      <span class="ap ${appKey(it)}">${APPMARK[appKey(it)] || "•"}</span>
+      <span style="min-width:0"><div class="cn">${esc(it.sender)}<em>${esc(srcName(it))} · ${when(it.received)}</em></div>
+      <div class="cs">${esc(it.summary || it.snippet || "")}</div></span></button>`).join("")
+    || `<div class="chempty">${S.app_notif || DEMO_CHATS ? "No new chat messages." : "Viber, Messenger, Discord and Google Chat will appear here — turn on <b>app_notifications</b> in settings (README 3.14)."}</div>`;
+  if($("chList").dataset.sig !== html){ $("chList").dataset.sig = html; $("chList").innerHTML = html; }
+}
+let DEMO_CHATS = false;
+$("chList").addEventListener("click", e => {
+  const b = e.target.closest("[data-chat]"); if(!b) return;
+  openDrawer("chats");
+  setTimeout(() => { const el = [...$("chatsFull").children].find(c => c.dataset.id === b.dataset.chat);
+    if(el){ el.scrollIntoView({behavior: "smooth", block: "center"}); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1600); } }, 350);
+});
+
+/* ================= Conversation with TED (centre of Home) ================= */
+let CONVO = [];
+try{ CONVO = JSON.parse(localStorage.getItem("ted.convo") || "[]"); }catch(e){ CONVO = []; }
+const CVX = {};          // turn id -> plan (Run бэлдэхэд)
+function saveConvo(){ try{ localStorage.setItem("ted.convo", JSON.stringify(CONVO.slice(-40))); }catch(e){} }
+function cvTime(ts){ return new Date(ts).toLocaleTimeString("en-GB", {hour: "2-digit", minute: "2-digit"}); }
+function cvTurnHtml(t){
+  let x = "";
+  if(t.plan && t.plan.type === "macro") x = `<div class="cvx"><button data-cvrun="${t.id}">▶ Review & run</button></div>`;
+  if(t.sources && t.sources.length) x = `<div class="cvx">${t.sources.slice(0, 5).map(s => `<a href="#" data-open="${esc(s.path)}">${FICON(s.name)} ${esc(s.name)}</a>`).join("")}</div>`;
+  return `<div class="cv ${t.who}${t.think ? " think" : ""}" data-t="${t.id}"><small>${t.who === "me" ? "You" : "TED"} · ${cvTime(t.ts)}${t.voice ? " · 🎙" : ""}</small><span>${esc(t.text)}</span>${x}</div>`;
+}
+function renderConvo(typeLast){
+  const log = $("cvLog");
+  log.innerHTML = CONVO.slice(-30).map(cvTurnHtml).join("");
+  const last = log.lastElementChild;
+  if(typeLast && last && last.classList.contains("ted") && !last.classList.contains("think")) typeInto(last.querySelector("span"), CONVO[CONVO.length - 1].text);
+  log.scrollTop = log.scrollHeight;
+}
+function addTurn(who, text, extra){
+  const t = {id: Date.now() + Math.random().toString(36).slice(2, 6), who, text: text || "", ts: Date.now(), ...(extra || {})};
+  CONVO.push(t); CONVO = CONVO.slice(-40);
+  if(!t.think) saveConvo();
+  renderConvo(who === "ted");
+  return t;
+}
+function dropThinking(){ CONVO = CONVO.filter(t => !t.think); }
+function planReply(r){
+  // Төлөвлөгөөг (тушаал / хариулт / файл) ярианы мөр болгоно
+  let text = r.say || "", extra = {};
+  if(r.type === "macro"){
+    const m = (S && S.macros || []).find(x => x.name === r.macro);
+    text = (m ? `${m.title || m.name}. ` : "") + (r.say || "Ready. Please review and run it.");
+    extra.plan = r; CVX[r.macro] = r;
+  }
+  if(r.type === "files" && r.sources) extra.sources = r.sources.map(s => ({name: s.name, path: s.path}));
+  return [text, extra];
+}
+async function askTed(text, fromWork){
+  if(!text) return;
+  addTurn("me", text); addTurn("ted", "Thinking", {think: true});
+  $("cvGo").disabled = true; document.body.classList.add("busy");
+  try{
+    const r = await api("/api/command", {text});
+    dropThinking();
+    const [say, extra] = planReply(r); addTurn("ted", say, extra);
+    handlePlan(r, false);                     // Ажил табд ч мөн бэлдэнэ (Run хийх маягт)
+  }catch(e){ dropThinking(); addTurn("ted", "Sorry, something went wrong: " + e.message); }
+  finally{ $("cvGo").disabled = false; document.body.classList.remove("busy"); }
+}
+function cvSend(){ const v = $("cvIn").value.trim(); if(!v) return; $("cvIn").value = ""; askTed(v); }
+$("cvGo").onclick = cvSend;
+$("cvIn").addEventListener("keydown", e => { if(e.key === "Enter") cvSend(); });
+$("cvLog").addEventListener("click", e => {
+  const a = e.target.closest("[data-open]"); if(a){ e.preventDefault(); openFile(a.dataset.open); return; }
+  const b = e.target.closest("[data-cvrun]"); if(!b) return;
+  const t = CONVO.find(x => x.id === b.dataset.cvrun); if(!t || !t.plan) return;
+  const m = (S && S.macros || []).find(x => x.name === t.plan.macro);
+  goCard("work", ".card.sm"); if(m){ MACROS = S.macros; showProposal(m, t.plan.params || {}, t.plan.say); }
+});
+renderConvo(false);
+
 /* ================= HUD (Home): TED in the centre, linked nodes around ================= */
 function goCard(tab, sel){
   showTab(tab);
@@ -1476,7 +1625,7 @@ function nodeInfo(k){
   const ag = (S.sm_state && S.sm_state.agenda) || {today: [], upcoming: [], overdue: []};
   const nowMin = new Date().getHours()*60 + new Date().getMinutes();
   switch(k){
-    case "mail": { const u = S.urgent.length, p = S.pending.length;
+    case "mail": { const u = noChat(S.urgent).length, p = noChat(S.pending).length;
       return {cls: u ? "red" : p ? "amber" : "", nb: u + p || "", sub: u || p ? `${u} urgent · ${p} waiting` : "All clear"}; }
     case "calendar": { const ev = S.calendar || [], nx = ev.find(e => /^\d\d:\d\d$/.test(e.time) && (+e.time.slice(0,2))*60 + (+e.time.slice(3)) > nowMin);
       return {nb: ev.length || "", c: true, sub: nx ? `Next at ${nx.time}` : ev.length ? `${ev.length} today` : "Clear today"}; }
@@ -1507,14 +1656,16 @@ function renderHud(){
     if(ln) ln.setAttribute("class", "hl-link " + (inf.cls || ""));
   });
   const ag = (S.sm_state && S.sm_state.agenda) || {overdue: []}, chips = [];
-  if(S.urgent.length) chips.push(`<button class="achip red" data-open="mail"><b>${S.urgent.length}</b> urgent</button>`);
-  if(S.pending.length) chips.push(`<button class="achip amber" data-open="mail"><b>${S.pending.length}</b> waiting for you</button>`);
+  const mu = noChat(S.urgent).length, mp = noChat(S.pending).length;
+  if(mu) chips.push(`<button class="achip red" data-open="mail"><b>${mu}</b> urgent</button>`);
+  if(mp) chips.push(`<button class="achip amber" data-open="mail"><b>${mp}</b> waiting for you</button>`);
   if(ag.overdue && ag.overdue.length) chips.push(`<button class="achip amber" data-open="mail"><b>${ag.overdue.length}</b> overdue</button>`);
   const ev = S.calendar || [];
   if(ev.length) chips.push(`<button class="achip" data-open="calendar"><b>${ev.length}</b> event${ev.length > 1 ? "s" : ""} today</button>`);
   const sig = chips.join("");
   if($("hAttn").dataset.sig !== sig){ $("hAttn").dataset.sig = sig; $("hAttn").innerHTML = sig; }
   renderBoard();
+  renderChats();
   if(!hudGeo) layoutHud();
 }
 
@@ -1525,25 +1676,25 @@ function bRow(cls, title, meta, act){
 function renderBoard(){
   const ag = (S.sm_state && S.sm_state.agenda) || {today: [], upcoming: [], overdue: []};
   const open = [], done = [];
-  S.urgent.forEach(it => open.push(bRow("red", it.summary || it.subject, `<b>${esc(srcName(it))}</b> · ${esc(it.sender)} · ${when(it.received)}`, "mail")));
+  noChat(S.urgent).forEach(it => open.push(bRow("red", it.summary || it.subject, `<b>${esc(srcName(it))}</b> · ${esc(it.sender)} · ${when(it.received)}`, "mail")));
   if(ag.overdue.length) open.push(bRow("amber", `${ag.overdue.length} overdue School Manager task${ag.overdue.length > 1 ? "s" : ""}`, `<b>SCHOOL MANAGER</b> · overdue`, "mail"));
   ag.today.forEach(p => open.push(bRow("amber", p.activity, `<b>SCHOOL MANAGER</b> · today · ${esc(STATUS_EN[p.status] || p.status || "")}`, "mail")));
-  S.pending.forEach(it => open.push(bRow("amber", it.summary || it.subject, `<b>${esc(srcName(it))}</b> · ${esc(it.sender)} · waiting for you`, "mail")));
+  noChat(S.pending).forEach(it => open.push(bRow("amber", it.summary || it.subject, `<b>${esc(srcName(it))}</b> · ${esc(it.sender)} · waiting for you`, "mail")));
   (S.tasks.open || []).filter(t => t.days_left !== null && t.days_left !== undefined && t.days_left <= 0 && t.kind !== "meeting")
     .forEach(t => open.push(bRow(t.days_left < 0 ? "red" : "amber", t.title, `<b>TASK</b> · ${esc(dueLabel(t))}`, "tasks")));
   ag.upcoming.forEach(p => open.push(bRow("", p.activity, `<b>SCHOOL MANAGER</b> · coming up ${esc(SMDATE(p.startDate))}`, "mail")));
   const act = {archive: "archived", mark_read: "marked as read"};
-  S.auto.forEach(it => done.push(bRow("ok", it.summary || it.subject,
+  noChat(S.auto).forEach(it => done.push(bRow("ok", it.summary || it.subject,
     `<b>${esc(srcName(it))}</b> · ${it.status === "auto_done" ? "TED " + (act[it.action] || "handled") : "sorted by TED"}`, "mail")));
-  (S.done || []).forEach(it => done.push(bRow("ok", it.summary || it.subject,
+  noChat(S.done).forEach(it => done.push(bRow("ok", it.summary || it.subject,
     `<b>${esc(srcName(it))}</b> · ${it.status === "sent" ? "reply sent" : "skipped"}`, "mail")));
   (S.tasks.done || []).slice(0, 5).forEach(t => done.push(bRow("ok", t.title, `<b>TASK</b> · done`, "tasks")));
   const o = open.join("") || `<div class="bdempty">Nothing open. 👌</div>`, d = done.join("") || `<div class="bdempty">Nothing yet today.</div>`;
   if($("bOpen").dataset.sig !== o){ $("bOpen").dataset.sig = o; $("bOpen").innerHTML = o; [...$("bOpen").children].forEach((c, i) => c.style.animationDelay = Math.min(i, 12)*.04 + "s"); }
   if($("bDone").dataset.sig !== d){ $("bDone").dataset.sig = d; $("bDone").innerHTML = d; [...$("bDone").children].forEach((c, i) => c.style.animationDelay = Math.min(i, 12)*.04 + "s"); }
-  const nOpen = S.urgent.length + S.pending.length + ag.today.length + (ag.overdue.length ? 1 : 0);
-  $("bOpenN").textContent = nOpen; $("bOpenN").classList.toggle("hot", S.urgent.length > 0);
-  $("bDoneN").textContent = S.auto.length + (S.done || []).length;
+  const nOpen = noChat(S.urgent).length + noChat(S.pending).length + ag.today.length + (ag.overdue.length ? 1 : 0);
+  $("bOpenN").textContent = nOpen; $("bOpenN").classList.toggle("hot", noChat(S.urgent).length > 0);
+  $("bDoneN").textContent = noChat(S.auto).length + noChat(S.done).length;
 }
 $("hRight").addEventListener("click", e => { const r = e.target.closest("[data-bact]"); if(!r) return;
   r.dataset.bact === "tasks" ? goCard("work", ".card.tk") : openDrawer("mail"); });
@@ -1551,16 +1702,25 @@ $("hAttn").addEventListener("click", e => { const b = e.target.closest("[data-op
 
 function layoutHud(){
   const hud = $("hud"); if(hud.classList.contains("hidden")) return;
-  const W = hud.clientWidth, H = hud.clientHeight, compact = W < 1200 || H < 560;
+  const W = hud.clientWidth, H = hud.clientHeight, compact = W < 1200 || H < 640;
   hud.classList.toggle("compact", compact); document.body.classList.toggle("hud-compact", compact);
   const svg = $("hudLines");
-  if(compact){ svg.innerHTML = ""; hudGeo = {compact: true, W, H, cx: W/2, cy: 330, cs: 220}; SPACE.resize(); return; }
-  // Доор дуут самбар (dock) байгаа тул төвийг бага зэрэг дээш, зангилааны эллипсийг түүнд хүргэхгүй
-  // Зүүн (мэдээ) ба баруун (асуудлын самбар) баганын хооронд зангилаануудыг багтаана
+  if(compact){ svg.innerHTML = ""; ["hConvo", "hChats"].forEach(id => { const e = $(id); e.style.left = e.style.top = e.style.width = e.style.height = ""; });
+    hudGeo = {compact: true, W, H, cx: W/2, cy: 330, cs: 220}; SPACE.resize(); return; }
+  // Босоо хуваарь: дээр TED + зангилаанууд, дунд нь TED-тэй ярилцах хэсэг, доор чатын мөр, хамгийн доор дуут dock
   const pw = Math.round(Math.max(280, Math.min(360, W*.19))); hud.style.setProperty("--pw", pw + "px");
-  const cx = W/2, cy = H/2 - 22;
-  const cs = Math.round(Math.max(200, Math.min(340, Math.min(W, H)*.34)));
-  const rx = Math.max(cs*.5 + 170, Math.min(560, W/2 - pw - 100)), ry = Math.max(cs*.5 + 55, Math.min(310, H/2 - 140));
+  const B = 196, chatH = 74;                                   // доод нөөц: чатын мөр + dock
+  const Hc = Math.round(Math.max(150, Math.min(300, (H - B)*.34)));
+  const Hr = H - B - Hc;                                        // TED + зангилаанд үлдэх өндөр
+  const cx = W/2, cy = Math.round(Hr/2 + 6);
+  const ry = Math.max(95, Math.min(260, Hr/2 - 52));
+  const cs = Math.round(Math.max(130, Math.min(290, Hr*.46, W*.19, (ry - 30)*2)));
+  const rx = Math.max(cs*.5 + 170, Math.min(560, W/2 - pw - 100));
+  hud.classList.toggle("tight", ry < 150);                    // жижиг дэлгэцэд зангилааны жижиг тайлбарыг нууна
+  const side = Math.max(308, pw + 44), cw = Math.min(760, W - 2*side - 20);
+  const cv = $("hConvo"); cv.style.left = (cx - cw/2) + "px"; cv.style.width = cw + "px"; cv.style.top = (Hr + 8) + "px"; cv.style.height = (Hc - 12) + "px";
+  const ch = $("hChats"); ch.style.top = (H - B + 12) + "px"; ch.style.height = chatH + "px";
+  hud.style.setProperty("--rb", (B + Hc*0) + "px");
   const core = $("hCore"); core.style.left = cx + "px"; core.style.top = (cy + 18) + "px"; core.style.setProperty("--cs", cs + "px");
   const n = NODES.length, R = cs*.47;
   let paths = `<ellipse class="hl-ring" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/><circle class="hl-ring" cx="${cx}" cy="${cy}" r="${cs*.72}"/>`;
@@ -1584,7 +1744,7 @@ function layoutHud(){
 let hudT; addEventListener("resize", () => { clearTimeout(hudT); hudT = setTimeout(layoutHud, 120); });
 
 /* Drawer */
-const DTITLE = {mail: "Messages", calendar: "Today's calendar", metrics: "Key numbers"};
+const DTITLE = {mail: "Mail", chats: "Chats", calendar: "Today's calendar", metrics: "Key numbers"};
 function openDrawer(v){
   $("dTitle").textContent = DTITLE[v] || "";
   document.querySelectorAll(".dbody [data-view]").forEach(el => el.classList.toggle("on", el.dataset.view === v));
@@ -1705,7 +1865,12 @@ setInterval(async () => {
       const first = !lastVoicePlan; lastVoicePlan = sp.voice_plan_ts;
       if(!first){
         const vp = await api("/api/voice-plan");
-        if(vp.plan){ if(vp.text) $("cmdIn").value = vp.text; if(TAB !== "work") showTab("work"); handlePlan(vp.plan, false); }
+        if(vp.plan){
+          if(vp.text){ $("cmdIn").value = vp.text; addTurn("me", vp.text, {voice: true}); }
+          { const [say, extra] = planReply(vp.plan); addTurn("ted", say, extra); }
+          if(TAB !== "home" && TAB !== "work") showTab("home");
+          handlePlan(vp.plan, false);
+        }
       }
     }
   }catch(e){}

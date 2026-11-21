@@ -208,6 +208,7 @@ def state():
         "tasks": {"open": tasks.open_tasks(), "done": tasks.done_recent(8)},
         "health": health.report(),
         "has_gemini": bool(gemini_key()),
+        "app_notif": source_enabled("app_notifications"),
         "voice_ok": bool(gemini_key()) or _offline_voice(),
     }
 
