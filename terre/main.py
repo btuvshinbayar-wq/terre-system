@@ -2,6 +2,7 @@
 import asyncio
 import contextlib
 import datetime
+import json
 import logging
 import os
 import secrets
@@ -183,6 +184,69 @@ def quick():
 
 _ASSETS = {"ted-head.js": "application/javascript", "ted-head.glb": "model/gltf-binary"}
 
+# ---- TED-ийн дүр (эзний өөрийн зураг) — зөвхөн энэ компьютерт (DATA) хадгална, repo-д орохгүй ----
+_AV_EXT = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+
+
+def _avatar_file():
+    for ext in ("jpg", "png", "webp"):
+        p = DATA / f"avatar.{ext}"
+        if p.exists():
+            return p
+    return None
+
+
+def _avatar_meta():
+    f = _avatar_file()
+    if not f:
+        return {"has": False}
+    try:
+        m = json.loads((DATA / "avatar.json").read_text("utf-8"))
+    except Exception:
+        m = {}
+    return {"has": True, "v": int(f.stat().st_mtime), "tip": m.get("tip") or [0.751, 0.437]}
+
+
+@app.get("/api/avatar")
+def avatar_get():
+    f = _avatar_file()
+    if not f:
+        raise HTTPException(404)
+    return FileResponse(f, headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/avatar")
+async def avatar_upload(request: Request):
+    ext = _AV_EXT.get((request.headers.get("content-type") or "").split(";")[0].strip())
+    if not ext:
+        raise HTTPException(400, "JPG, PNG эсвэл WEBP зураг сонгоно уу")
+    body = await request.body()
+    if not body or len(body) > 20 * 1024 * 1024:
+        raise HTTPException(400, "Зураг хоосон эсвэл хэт том (20 MB хүртэл)")
+    for e in ("jpg", "png", "webp"):
+        (DATA / f"avatar.{e}").unlink(missing_ok=True)
+    (DATA / f"avatar.{ext}").write_bytes(body)
+    (DATA / "avatar.json").unlink(missing_ok=True)       # шинэ зурагт савааны үзүүрийг дахин заана
+    return _avatar_meta()
+
+
+@app.post("/api/avatar/tip")
+def avatar_tip(b: dict):
+    try:
+        x, y = float(b["tip"][0]), float(b["tip"][1])
+    except Exception:
+        raise HTTPException(400, "tip: [x, y]")
+    (DATA / "avatar.json").write_text(json.dumps({"tip": [min(1, max(0, x)), min(1, max(0, y))]}), "utf-8")
+    return _avatar_meta()
+
+
+@app.post("/api/avatar/remove")
+def avatar_remove():
+    for e in ("jpg", "png", "webp"):
+        (DATA / f"avatar.{e}").unlink(missing_ok=True)
+    (DATA / "avatar.json").unlink(missing_ok=True)
+    return {"has": False}
+
 
 @app.get("/assets/{name}")
 def asset(name: str):
@@ -220,6 +284,7 @@ def state():
         "health": health.report(),
         "has_gemini": bool(gemini_key()),
         "app_notif": source_enabled("app_notifications"),
+        "avatar": _avatar_meta(),
         "voice_ok": bool(gemini_key()) or _offline_voice(),
     }
 
