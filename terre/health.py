@@ -69,6 +69,7 @@ def report():
     for a in CFG.get("sources", {}).get("other_mail", []) or []:
         add(a.get("name") or a.get("email"), bool(a.get("enabled")))
     add("Telegram", source_enabled("telegram"))
+    add("Viber · Discord · Messenger", source_enabled("app_notifications"))
     add("Telegram bot", bool((CFG.get("telegram_bot") or {}).get("enabled")))
     if CFG.get("school_manager", {}).get("enabled"):
         try:

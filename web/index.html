@@ -567,8 +567,11 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
 const $ = id => document.getElementById(id);
 const esc = s => (s ?? "").toString().replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const SRC = {gmail:"Gmail", outlook:"Outlook", telegram:"Telegram", gchat:"Google Chat"};
-const srcName = it => it.source === "imap" ? ((it.meta && it.meta.account) || "Mail") : (SRC[it.source] || it.source);
+const SRC = {gmail:"Gmail", outlook:"Outlook", telegram:"Telegram", gchat:"Google Chat", viber:"Viber", discord:"Discord", messenger:"Messenger"};
+const srcName = it => it.source === "imap" ? ((it.meta && it.meta.chat) ? "Google Chat" : ((it.meta && it.meta.account) || "Mail")) : (SRC[it.source] || it.source);
+// Шууд илгээж болохгүй эх сурвалж: хариуг хуулж, программыг нээнэ (та Ctrl+V дараад илгээнэ)
+const HANDOFF = it => ["viber", "discord", "messenger"].includes(it.source) || !!(it.meta && it.meta.chat);
+const handoffApp = it => (it.meta && it.meta.chat) ? "Google Chat" : (SRC[it.source] || "the app");
 let S = null, firstRender = true, lastBrief = null, serverSpeaking = false;
 
 /* ================= Reactor (SVG) ================= */
@@ -737,11 +740,13 @@ function itemCard(it){
     <details><summary>Original message</summary><pre>${esc(it.subject)}\n\n${esc(it.body || it.snippet)}</pre></details>
     <textarea>${esc(it.draft)}</textarea>
     <div class="acts">
-      ${it.source==="gchat" ? `<button data-a="copy">📋 Copy</button>` : `<button class="pri" data-a="send">✉ Send</button>`}
+      ${it.source==="gchat" ? `<button data-a="copy">📋 Copy</button>`
+        : HANDOFF(it) ? `<button class="pri" data-a="send" data-handoff="1" title="Copies the reply and opens ${esc(handoffApp(it))} — paste with Ctrl+V and send">📋 Copy & open ${esc(handoffApp(it))}</button>`
+        : `<button class="pri" data-a="send">✉ Send</button>`}
       <button data-a="redraft">✎ Rewrite</button>
       <button data-a="read" title="Mark the mail as read and remove it from the list">✓ Read</button>
       <button data-a="dismiss" title="Remove from TED's list only — the mail is not touched">Skip</button>
-      ${MAILSRC.includes(it.source) ? `<button data-a="trash" class="dng" title="Move to trash (can be undone)">🗑 Delete</button>` : ""}
+      ${MAILSRC.includes(it.source) && !(it.meta && it.meta.chat) ? `<button data-a="trash" class="dng" title="Move to trash (can be undone)">🗑 Delete</button>` : ""}
       <button data-a="block" class="dng" title="TED will move future mail from this sender to trash">⛔ Block</button>
     </div></div>`;
 }
@@ -1449,7 +1454,7 @@ function openCmd(name){
                                  : "Connect Google Calendar first (System → Set up connections)", "err");
 }
 const NODES = [
-  {k: "mail",     label: "Mail",           go: () => openDrawer("mail")},
+  {k: "mail",     label: "Messages",           go: () => openDrawer("mail")},
   {k: "calendar", label: "Calendar",       go: () => openDrawer("calendar")},
   {k: "meet",     label: "Meetings",       go: () => openCmd("Уулзалт товлох (Google Meet)")},
   {k: "sm",       label: "School Manager", go: () => goCard("work", ".card.sm")},
@@ -1618,7 +1623,13 @@ document.body.addEventListener("click", async ev => {
   const card = b.closest(".item"), id = card.dataset.id, a = b.dataset.a, ta = card.querySelector("textarea");
   try{
     b.disabled = true;
-    if(a === "send"){
+    if(a === "send" && b.dataset.handoff){
+      // Viber/Discord/Messenger/Google Chat: TED илгээхгүй — хуулж, программыг нээнэ
+      const r = await api(`/api/items/${id}/send`, {body: ta.value});
+      try{ await navigator.clipboard.writeText(ta.value); }catch(e){}
+      leave(card, "sent");
+      toast(r.opened === false ? "📋 Reply copied — open the app, paste with Ctrl+V and send" : "📋 Reply copied — paste with Ctrl+V in the chat and press Enter", "ok");
+    } else if(a === "send"){
       if(!confirm("Send this reply?\n\n" + ta.value.slice(0,300))) return;
       await api(`/api/items/${id}/send`, {body: ta.value});
       leave(card, "sent"); toast("✓ Reply sent", "ok");

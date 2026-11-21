@@ -62,6 +62,9 @@ sources:
   outlook:                     # Outlook мэйл + календарь
     enabled: false
     client_id: ""              # Azure App registration-ийн Application (client) ID
+  app_notifications:           # Viber, Discord (компьютерийн апп), Messenger (браузер) — Windows-ийн мэдэгдлээр (README 3.14)
+    enabled: false
+    apps: [viber, discord, messenger]
   # Бусад мэйл хаягууд (IMAP/SMTP) — хэдийг ч нэмж болно. Нууц үгийг setup_connections.bat асууж,
   # Windows Credential Manager-т хадгална (энд бичихгүй).
   # provider: gmail | yahoo | icloud | mailru | yandex | zoho | aol | gmx | (хоосон = өөрөө сервер бичих)

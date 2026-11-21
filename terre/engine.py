@@ -23,6 +23,8 @@ def _connector(source):
         from .connectors import telegram as m
     elif source == "imap":
         from .connectors import imap_mail as m
+    elif source in ("viber", "discord", "messenger"):
+        from .connectors import notifications as m
     else:
         raise RuntimeError(f"{source}-д энэ үйлдэл дэмжигдэхгүй")
     return m
@@ -65,6 +67,9 @@ async def fetch_messages(errors):
     if source_enabled("google_chat"):
         from .connectors import gchat
         items += await _safe("Google Chat", gchat.fetch_recent, errors, [])
+    if source_enabled("app_notifications"):
+        from .connectors import notifications
+        items += await _safe("Viber · Discord · Messenger", notifications.fetch_recent, errors, [])
     return items
 
 
@@ -228,13 +233,23 @@ async def send(item_id, body, who="Та"):
     if not item:
         raise KeyError(item_id)
     track = None
+    handoff = item["source"] in ("viber", "discord", "messenger") or (item.get("meta") or {}).get("chat")
     if not DEMO:
-        track = await _call(_connector(item["source"]).send_reply, item, body)
+        if (item.get("meta") or {}).get("chat"):
+            # Google Chat-ийн мэдэгдлийн мэйл: мэйлээр хариулбал Chat-д очихгүй — хуулж, Chat-ийг нээнэ
+            from .connectors import notifications
+            track = await asyncio.to_thread(notifications.handoff, body, "https://chat.google.com/")
+        else:
+            track = await _call(_connector(item["source"]).send_reply, item, body)
     learn.record_draft(item, item.get("draft") or "", body)
     store.update(item_id, status="sent", draft=body)
+    if handoff:
+        journal.add("mail", f"Хариуг хуулж, программыг нээв: {item.get('sender')} — {item.get('subject')}"[:200], body[:300], who=who)
+        return {"handoff": True}
     journal.add("mail", f"Хариу илгээв: {item.get('sender')} — {item.get('subject')}"[:200], body[:300], who=who)
     if isinstance(track, dict) and (CFG.get("tasks") or {}).get("follow_up", True) and item["source"] in ("gmail", "outlook", "imap"):
         tasks.add_followup(item, track)
+    return {"handoff": False}
 
 
 async def apply(item_id, who="Та"):

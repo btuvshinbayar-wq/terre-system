@@ -121,6 +121,8 @@ def parse(raw, acc, uid, uidvalidity):
             "rfc_id": str(msg.get("Message-ID", "")), "references": str(msg.get("References", "")),
             "reply_to": str(msg.get("Reply-To") or msg.get("From", "")), "subject": str(msg.get("Subject", "")),
             "attachments": _attachments(msg),
+            # Google Chat-ийн «уншаагүй мессеж» мэдэгдлийн мэйл — самбарт Google Chat гэж харуулна
+            "chat": (addr or "").lower() in ("chat-noreply@google.com", "chat-noreply@chat.google.com"),
         },
     }
 

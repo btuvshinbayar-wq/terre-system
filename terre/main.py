@@ -125,6 +125,9 @@ async def lifespan(app):
     from . import wake
     if wake.start(LOOP, _wake_command):
         log.info("Дуудах үг эхэллээ")
+    if source_enabled("app_notifications") and not DEMO:
+        from .connectors import notifications
+        notifications.start()       # Viber/Discord/Messenger-ийн мэдэгдлийг 15 сек тутам санах ойд авна
     tasks_ = [asyncio.create_task(_startup_sequence()), asyncio.create_task(_background_loop()),
               asyncio.create_task(engine.scheduler_loop()), asyncio.create_task(_watchdog())]
     yield
@@ -278,10 +281,10 @@ class RedraftBody(BaseModel):
 @app.post("/api/items/{item_id:path}/send")
 async def send(item_id: str, b: SendBody):
     try:
-        await engine.send(item_id, b.body)
+        r = await engine.send(item_id, b.body)
     except Exception as e:
         raise HTTPException(500, f"Илгээж чадсангүй: {e}")
-    return {"ok": True}
+    return {"ok": True, **(r or {})}
 
 
 @app.post("/api/items/{item_id:path}/apply")
