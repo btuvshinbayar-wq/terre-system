@@ -181,6 +181,17 @@ def quick():
     return FileResponse(ROOT / "web" / "quick.html", headers={"Cache-Control": "no-store"})
 
 
+_ASSETS = {"ted-head.js": "application/javascript", "ted-head.glb": "model/gltf-binary"}
+
+
+@app.get("/assets/{name}")
+def asset(name: str):
+    """Самбарын тогтмол файл (TED-ийн 3D толгой гэх мэт) — зөвхөн жагсаалтад байгаа нэр."""
+    if name not in _ASSETS:
+        raise HTTPException(404)
+    return FileResponse(ROOT / "web" / "assets" / name, media_type=_ASSETS[name], headers={"Cache-Control": "max-age=86400"})
+
+
 # ======================= Төлөв =======================
 @app.get("/api/state")
 def state():
