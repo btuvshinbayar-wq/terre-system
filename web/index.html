@@ -372,13 +372,17 @@ body.t-home #bg{opacity:.25}
 .hpill.off i{background:#55687e;box-shadow:none;animation:none} .hpill.paused i{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:none}
 .hpill.listen{border-color:var(--cyan);box-shadow:0 0 22px rgba(56,214,245,.45)} .hpill.listen i{background:var(--cyan);animation:breathe .5s infinite}
 .hpill.think i{background:var(--amber);animation:breathe .5s infinite}
+/* Нүүрэнд зангилаа харуулахгүй — TED нь урсдаг кодоор бүтсэн толгой */
+#hNodes,#hudLines{display:none!important}
+#matrix{position:absolute;z-index:2;pointer-events:none}
+#hud.compact #matrix{position:relative;left:auto!important;top:auto!important;order:3;margin:10px auto 0;width:min(92vw,420px)!important;height:360px!important}
 .hcore{position:absolute;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;pointer-events:none;--cs:300px}
 .hcore .reactor{width:var(--cs);height:var(--cs)}
 .hcore .halo{position:absolute;width:calc(var(--cs)*2);height:calc(var(--cs)*2);left:50%;top:calc(var(--cs)/2);border-radius:50%;z-index:-1;
   transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(120,230,255,.30),rgba(56,214,245,.10) 36%,transparent 66%);animation:haloP 5s ease-in-out infinite}
 @keyframes haloP{50%{transform:translate(-50%,-50%) scale(1.07);opacity:.75}}
-.hname{margin-top:-2px;font-size:15px;letter-spacing:12px;padding-left:12px;color:#e2fbff;text-shadow:0 0 14px var(--cyan)}
-.hstate{font-size:10.5px;letter-spacing:4px;color:var(--cyan);opacity:.85;margin-top:3px;text-transform:uppercase}
+.hname{margin-top:-2px;font-size:15px;letter-spacing:12px;padding-left:12px;color:#d9ffe9;text-shadow:0 0 14px #2bff9a}
+.hstate{font-size:10.5px;letter-spacing:4px;color:#3dffa8;opacity:.85;margin-top:3px;text-transform:uppercase}
 body.wake-listen .hcore .reactor,body.speaking .hcore .reactor{filter:drop-shadow(0 0 22px rgba(56,214,245,.95)) drop-shadow(0 0 50px rgba(56,214,245,.55))}
 body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))}
 .hnode{position:absolute;transform:translate(-50%,-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;
@@ -524,9 +528,9 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
     <div class="errs" id="errs"></div>
   </div>
   <button class="hpill" id="hPill" title="“Hey Ted” status — click to pause or resume"><i></i><span id="hPillTxt">Voice ready</span></button>
+  <canvas id="matrix" aria-label="TED"></canvas>
   <div class="hcore" id="hCore">
-    <div class="halo"></div>
-    <div class="reactor" id="coreReactor"></div>
+    <div class="reactor" id="coreReactor" style="display:none"></div>
     <div class="hname">TED</div>
     <div class="hstate" id="hState">ONLINE</div>
   </div>
@@ -1434,6 +1438,104 @@ function handlePlan(r, speak){
 }
 $("answer").addEventListener("click", e => { const a = e.target.closest("[data-open]"); if(a){ e.preventDefault(); openFile(a.dataset.open); } });
 
+/* ================= TED: head made of falling code (Mongolian script, Cyrillic, digits) ================= */
+const MATRIX = (() => {
+  const c = $("matrix"), x = c.getContext("2d");
+  const mask = document.createElement("canvas"), mk = mask.getContext("2d");
+  const GLYPHS = ("ᠠᠡᠢᠣᠤᠥᠦᠧᠨᠩᠪᠫᠬᠭᠮᠯᠰᠱᠲᠳᠴᠵᠶᠷᠸᠹᠺᠻᠼᠽᠾᠿᡀᡁᡂ" + "АБВГДЕЁЖЗИЙКЛМНОӨПРСТУҮФХЦЧШЩЪЫЬЭЮЯ" + "0123456789").split("");
+  let W = 0, H = 0, fs = 14, cols = [], md = null, dpr = 1, geo = {};
+  const pick = () => GLYPHS[(Math.random()*GLYPHS.length) | 0];
+  function headPath(g, cx, top, h){
+    // Урдаас харсан хүний цээж баримал: толгой, хүзүү, мөр
+    const hw = h*.25, hh = h*.30, hy = top + h*.31;
+    g.beginPath(); g.ellipse(cx, hy, hw, hh, 0, 0, Math.PI*2); g.fill();
+    g.beginPath(); g.moveTo(cx - hw*.95, hy + hh*.2);                       // эрүү
+    g.quadraticCurveTo(cx - hw*.7, hy + hh*1.05, cx, hy + hh*1.12);
+    g.quadraticCurveTo(cx + hw*.7, hy + hh*1.05, cx + hw*.95, hy + hh*.2); g.fill();
+    g.fillRect(cx - hw*.42, hy + hh*.85, hw*.84, h*.16);                    // хүзүү
+    const sy = top + h*.80;                                                 // мөр
+    g.beginPath(); g.moveTo(cx - hw*.45, sy - h*.06);
+    g.bezierCurveTo(cx - hw*1.6, sy - h*.04, cx - hw*2.35, sy + h*.02, cx - hw*2.55, top + h);
+    g.lineTo(cx + hw*2.55, top + h);
+    g.bezierCurveTo(cx + hw*2.35, sy + h*.02, cx + hw*1.6, sy - h*.04, cx + hw*.45, sy - h*.06); g.closePath(); g.fill();
+  }
+  let grid = null, gc = 0, gr = 0, drops = [];
+  function resize(){
+    const r = c.getBoundingClientRect(); if(!r.width || !r.height) return;
+    dpr = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height;
+    c.width = W*dpr; c.height = H*dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fs = Math.max(10, Math.min(16, Math.round(H/40)));
+    mask.width = Math.ceil(W); mask.height = Math.ceil(H);
+    const h = H*.97, top = H - h, cx = W/2, hw = h*.25, hy = top + h*.31;
+    mk.clearRect(0, 0, W, H);
+    mk.fillStyle = "rgb(255,0,0)"; headPath(mk, cx, top, h);                // R = толгой
+    mk.fillStyle = "rgb(255,255,0)";                                        // G = нүд
+    [-1, 1].forEach(sd => { mk.beginPath(); mk.ellipse(cx + sd*hw*.42, hy - h*.01, hw*.27, h*.036, 0, 0, Math.PI*2); mk.fill(); });
+    mk.fillStyle = "rgb(255,0,255)";                                        // B = ам
+    mk.beginPath(); mk.ellipse(cx, hy + h*.175, hw*.4, h*.028, 0, 0, Math.PI*2); mk.fill();
+    md = mk.getImageData(0, 0, mask.width, mask.height).data;
+    // Тор: нүд бүрт тэмдэгт + төрөл (0 гадна, 1 толгой, 2 ирмэг, 3 нүд, 4 ам)
+    gc = Math.ceil(W/fs); gr = Math.ceil(H/fs);
+    grid = new Array(gc*gr);
+    const kind = (cx2, cy2) => { const [R, G, B] = at(cx2*fs + fs/2, cy2*fs + fs/2); if(R < 128) return 0; if(G > 128 && B < 128) return 3; if(B > 128 && G < 128) return 4; return 1; };
+    for(let j = 0; j < gr; j++) for(let i = 0; i < gc; i++) grid[j*gc + i] = {k: kind(i, j), g: pick()};
+    for(let j = 0; j < gr; j++) for(let i = 0; i < gc; i++){
+      const cell = grid[j*gc + i]; if(cell.k !== 1) continue;
+      const out = (a, b) => a < 0 || b < 0 || a >= gc || b >= gr || grid[b*gc + a].k === 0;
+      if(out(i-1, j) || out(i+1, j) || out(i, j-1) || out(i, j+1)) cell.k = 2;
+    }
+    drops = Array.from({length: gc*2}, (_, n) => ({c: n % gc, y: -Math.random()*gr*1.5, v: .25 + Math.random()*.45, L: 6 + Math.random()*14}));
+    x.clearRect(0, 0, W, H);
+  }
+  function at(px, py){
+    const ix = px | 0, iy = py | 0;
+    if(!md || ix < 0 || iy < 0 || ix >= mask.width || iy >= mask.height) return [0, 0, 0];
+    const k = (iy*mask.width + ix)*4; return [md[k], md[k+1], md[k+2]];
+  }
+  let last = 0;
+  const trail = new Float32Array(1);
+  function frame(now){
+    if(!RM) requestAnimationFrame(frame);
+    if(TAB !== "home" || document.hidden || !W || !grid || now - last < 55) return;   // ~18 fps
+    last = now;
+    const speaking = document.body.classList.contains("speaking"), listen = document.body.classList.contains("wake-listen") || !!VOICE.rec,
+          think = document.body.classList.contains("wake-think") || document.body.classList.contains("busy");
+    const amp = Math.min(1, ampS*2.4), t = now/1000;
+    // Урсгалын гэрэлтэлт багана бүрээр
+    const lit = new Float32Array(gc*gr);
+    for(const d of drops){
+      d.y += d.v*(speaking ? 1.5 : think ? 1.8 : 1);
+      if(d.y - d.L > gr){ d.y = -Math.random()*gr*.6; d.v = .25 + Math.random()*.45; d.L = 6 + Math.random()*14; }
+      const hy = d.y | 0;
+      for(let k = 0; k < d.L; k++){ const rr = hy - k; if(rr < 0 || rr >= gr) continue; const v = 1 - k/d.L, id = rr*gc + d.c; if(v > lit[id]) lit[id] = v; }
+    }
+    x.clearRect(0, 0, W, H);
+    x.font = `${fs}px "Mongolian Baiti","Noto Sans Mongolian","Segoe UI",sans-serif`; x.textAlign = "center"; x.textBaseline = "top";
+    const breathe = .5 + .5*Math.sin(t*1.6);
+    for(let j = 0; j < gr; j++){
+      for(let i = 0; i < gc; i++){
+        const id = j*gc + i, cell = grid[id], L = lit[id];
+        let a = 0, col = "#39ff9c";
+        switch(cell.k){
+          case 0: a = L*.16; col = "#2bd884"; break;
+          case 1: a = .26 + .08*breathe + L*.7; break;
+          case 2: a = .55 + L*.45; col = "#7dffc0"; break;
+          case 3: a = listen ? 1 : 0; col = "#d4fff6"; break;                       // нүд: сул үед хонхор, сонсоход гэрэлтэнэ
+          case 4: a = speaking ? .45 + amp*.55 : 0; col = "#f0fff6"; break;           // ам: ярихад гэрэлтэнэ
+        }
+        if(a < .03) continue;
+        if(Math.random() < (L > .95 ? .6 : .02)) cell.g = pick();
+        if(think && cell.k === 1 && L > .6) col = "#ffd166";
+        if(L > .95 && cell.k !== 0 && cell.k !== 3 && cell.k !== 4){ col = "#f0fff6"; a = 1; }
+        x.globalAlpha = Math.min(1, a); x.fillStyle = col; x.fillText(cell.g, i*fs + fs/2, j*fs);
+      }
+    }
+    x.globalAlpha = 1;
+  }
+  if(!RM) requestAnimationFrame(frame); else setTimeout(() => { resize(); last = -1e9; frame(performance.now()); }, 600);
+  return {resize};
+})();
+
 /* ================= Space behind TED: stars, nebula, slowly turning galaxy ================= */
 const SPACE = (() => {
   const c = $("space"), x = c.getContext("2d"); let W = 0, H = 0, stars = [], arms = [], neb = null, shoot = null, dpr = 1;
@@ -1705,39 +1807,25 @@ function layoutHud(){
   hud.classList.toggle("compact", compact); document.body.classList.toggle("hud-compact", compact);
   const svg = $("hudLines");
   if(compact){ svg.innerHTML = ""; ["hConvo", "hChats"].forEach(id => { const e = $(id); e.style.left = e.style.top = e.style.width = e.style.height = ""; });
-    hudGeo = {compact: true, W, H, cx: W/2, cy: 330, cs: 220}; SPACE.resize(); return; }
+    hudGeo = {compact: true, W, H, cx: W/2, cy: 330, cs: 220}; SPACE.resize(); MATRIX.resize(); return; }
   // Босоо хуваарь: дээр TED + зангилаанууд, дунд нь TED-тэй ярилцах хэсэг, доор чатын мөр, хамгийн доор дуут dock
   const pw = Math.round(Math.max(280, Math.min(360, W*.19))); hud.style.setProperty("--pw", pw + "px");
   const B = 106, chatH = 74;                                   // доод нөөц: чатын мөр (dock байхгүй)
   const Hc = Math.round(Math.max(150, Math.min(300, (H - B)*.34)));
   const Hr = H - B - Hc;                                        // TED + зангилаанд үлдэх өндөр
-  const cx = W/2, cy = Math.round(Hr/2 + 6);
-  const ry = Math.max(95, Math.min(260, Hr/2 - 52));
-  const cs = Math.round(Math.max(130, Math.min(290, Hr*.46, W*.19, (ry - 30)*2)));
-  const rx = Math.max(cs*.5 + 170, Math.min(560, W/2 - pw - 100));
-  hud.classList.toggle("tight", ry < 150);                    // жижиг дэлгэцэд зангилааны жижиг тайлбарыг нууна
+  // TED-ийн толгой: зүүн мэдээ, баруун самбарын хоорондох төв хэсгийг бүтэн эзэлнэ
   const side = Math.max(308, pw + 44), cw = Math.min(760, W - 2*side - 20);
+  const cx = W/2, mw = W - 2*side + 40, mh = Hr - 6;
+  const mx = $("matrix"); mx.style.left = (cx - mw/2) + "px"; mx.style.top = "0px"; mx.style.width = mw + "px"; mx.style.height = mh + "px";
+  const cs = Math.round(Math.min(mh*.9, mw*.6)), cy = Math.round(mh*.48);
+  const core = $("hCore"); core.style.left = cx + "px"; core.style.top = (mh - 24) + "px"; core.style.setProperty("--cs", "0px");
   const cv = $("hConvo"); cv.style.left = (cx - cw/2) + "px"; cv.style.width = cw + "px"; cv.style.top = (Hr + 8) + "px"; cv.style.height = (Hc - 12) + "px";
   const ch = $("hChats"); ch.style.top = (H - B + 12) + "px"; ch.style.height = chatH + "px";
-  hud.style.setProperty("--rb", (B + Hc*0) + "px");
-  const core = $("hCore"); core.style.left = cx + "px"; core.style.top = (cy + 18) + "px"; core.style.setProperty("--cs", cs + "px");
-  const n = NODES.length, R = cs*.47;
-  let paths = `<ellipse class="hl-ring" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/><circle class="hl-ring" cx="${cx}" cy="${cy}" r="${cs*.72}"/>`;
-  NODES.forEach((nd, i) => {
-    const a = (-90 + 360/n*(i + .5)) * Math.PI/180, ca = Math.cos(a), sa = Math.sin(a);
-    const x = cx + rx*ca, y = cy + ry*sa, sx = cx + R*ca, sy = cy + R*sa;
-    const mx = cx + (R + (Math.hypot(x-cx, y-cy) - R)*.55)*Math.cos(a + .18*(ca >= 0 ? 1 : -1)), my = cy + (R + (Math.hypot(x-cx, y-cy) - R)*.55)*Math.sin(a + .18*(ca >= 0 ? 1 : -1));
-    const dir = ca >= 0 ? 1 : -1, L = 60 + (i*37 % 70), tx = x + dir*L, ty = y + (sa > 0 ? 14 : -14);
-    paths += `<path id="lk-${nd.k}" class="hl-link" d="M${sx.toFixed(1)},${sy.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}"/>`
-      + `<path class="hl-flow" style="animation-delay:-${(i*.37).toFixed(2)}s" d="M${sx.toFixed(1)},${sy.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}"/>`
-      + `<path class="hl-tail" d="M${(x + dir*14).toFixed(1)},${y.toFixed(1)} L${(x + dir*34).toFixed(1)},${ty.toFixed(1)} L${tx.toFixed(1)},${ty.toFixed(1)}"/>`
-      + `<circle class="hl-end" cx="${tx.toFixed(1)}" cy="${ty.toFixed(1)}" r="2.2"/>`
-      + (RM ? "" : `<circle class="hl-spark" r="2"><animateMotion dur="${(3.2 + (i%4)*.6).toFixed(1)}s" begin="-${(i*.8).toFixed(1)}s" repeatCount="indefinite"><mpath href="#lk-${nd.k}"/></animateMotion></circle>`);
-    const b = document.querySelector(`.hnode[data-node="${nd.k}"]`); b.style.left = x + "px"; b.style.top = (y + 18) + "px";
-  });
+  hud.style.setProperty("--rb", B + "px");
+  let paths = "";
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = paths;
   hudGeo = {W, H, cx, cy, cs};
-  SPACE.resize();
+  SPACE.resize(); MATRIX.resize();
   if(S) renderHud();
 }
 let hudT; addEventListener("resize", () => { clearTimeout(hudT); hudT = setTimeout(layoutHud, 120); });
