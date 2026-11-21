@@ -196,15 +196,78 @@ def _avatar_file():
     return None
 
 
+_CLIP_KINDS = ("enter", "idle", "exit")          # алхаж ирээд гар өргөх · гэрэлтэй зогсох (давтана) · гар буулгаж эргэж явах
+_CLIP_EXT = {"video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov"}
+
+
+def _clip_file(kind):
+    for ext in ("mp4", "webm", "mov"):
+        p = DATA / f"avatar-{kind}.{ext}"
+        if p.exists():
+            return p
+    return None
+
+
+def _avatar_json():
+    try:
+        return json.loads((DATA / "avatar.json").read_text("utf-8"))
+    except Exception:
+        return {}
+
+
 def _avatar_meta():
     f = _avatar_file()
-    if not f:
+    clips = {k: int(c.stat().st_mtime) for k in _CLIP_KINDS if (c := _clip_file(k))}
+    if not f and not clips:
         return {"has": False}
+    m = _avatar_json()
+    return {"has": True, "v": int(f.stat().st_mtime) if f else 0, "photo": bool(f), "clips": clips,
+            "tip": m.get("tip") or [0.751, 0.437], "lumos_at": m.get("lumos_at")}
+
+
+@app.get("/api/avatar/clip/{kind}")
+def avatar_clip_get(kind: str):
+    f = _clip_file(kind) if kind in _CLIP_KINDS else None
+    if not f:
+        raise HTTPException(404)
+    return FileResponse(f, headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/avatar/clip/{kind}")
+async def avatar_clip_upload(kind: str, request: Request):
+    ext = _CLIP_EXT.get((request.headers.get("content-type") or "").split(";")[0].strip())
+    if kind not in _CLIP_KINDS or not ext:
+        raise HTTPException(400, "MP4 эсвэл WEBP/WEBM видео сонгоно уу")
+    body = await request.body()
+    if not body or len(body) > 150 * 1024 * 1024:
+        raise HTTPException(400, "Видео хоосон эсвэл хэт том (150 MB хүртэл)")
+    for e in ("mp4", "webm", "mov"):
+        (DATA / f"avatar-{kind}.{e}").unlink(missing_ok=True)
+    (DATA / f"avatar-{kind}.{ext}").write_bytes(body)
+    return _avatar_meta()
+
+
+@app.post("/api/avatar/clip/{kind}/remove")
+def avatar_clip_remove(kind: str):
+    for e in ("mp4", "webm", "mov"):
+        (DATA / f"avatar-{kind}.{e}").unlink(missing_ok=True)
+    return _avatar_meta()
+
+
+@app.post("/api/avatar/lumos")
+def avatar_lumos(b: dict):
+    """«Алхаж ирэх» видеоны хэдэн дэх секундэд саваа гэрэлтэхийг тэмдэглэнэ."""
+    m = _avatar_json()
     try:
-        m = json.loads((DATA / "avatar.json").read_text("utf-8"))
+        at = float(b["at"])
     except Exception:
-        m = {}
-    return {"has": True, "v": int(f.stat().st_mtime), "tip": m.get("tip") or [0.751, 0.437]}
+        raise HTTPException(400, "at: секунд")
+    if at < 0:
+        m.pop("lumos_at", None)          # хоосон = видео дуусахаас өмнөхөн
+    else:
+        m["lumos_at"] = at
+    (DATA / "avatar.json").write_text(json.dumps(m), "utf-8")
+    return _avatar_meta()
 
 
 @app.get("/api/avatar")
@@ -226,7 +289,8 @@ async def avatar_upload(request: Request):
     for e in ("jpg", "png", "webp"):
         (DATA / f"avatar.{e}").unlink(missing_ok=True)
     (DATA / f"avatar.{ext}").write_bytes(body)
-    (DATA / "avatar.json").unlink(missing_ok=True)       # шинэ зурагт савааны үзүүрийг дахин заана
+    m = _avatar_json(); m.pop("tip", None)               # шинэ зурагт савааны үзүүрийг дахин заана
+    (DATA / "avatar.json").write_text(json.dumps(m), "utf-8")
     return _avatar_meta()
 
 
@@ -236,7 +300,8 @@ def avatar_tip(b: dict):
         x, y = float(b["tip"][0]), float(b["tip"][1])
     except Exception:
         raise HTTPException(400, "tip: [x, y]")
-    (DATA / "avatar.json").write_text(json.dumps({"tip": [min(1, max(0, x)), min(1, max(0, y))]}), "utf-8")
+    m = _avatar_json(); m["tip"] = [min(1, max(0, x)), min(1, max(0, y))]
+    (DATA / "avatar.json").write_text(json.dumps(m), "utf-8")
     return _avatar_meta()
 
 
@@ -244,6 +309,9 @@ def avatar_tip(b: dict):
 def avatar_remove():
     for e in ("jpg", "png", "webp"):
         (DATA / f"avatar.{e}").unlink(missing_ok=True)
+    for k in _CLIP_KINDS:
+        for e in ("mp4", "webm", "mov"):
+            (DATA / f"avatar-{k}.{e}").unlink(missing_ok=True)
     (DATA / "avatar.json").unlink(missing_ok=True)
     return {"has": False}
 

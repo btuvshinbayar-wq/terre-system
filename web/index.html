@@ -272,7 +272,7 @@ body.busy .r2{animation-duration:1.4s} body.busy .r4{animation-duration:.9s} bod
 .hdot.warn{background:var(--amber);box-shadow:0 0 6px var(--amber)} .hdot.error{background:var(--red);box-shadow:0 0 8px var(--red);animation:breathe 1s infinite}
 [data-tab].hidden{display:none!important}
 #mic.rec{background:var(--red);border-color:var(--red);color:#fff;animation:breathe .8s infinite}
-.tk,.dr{grid-column:span 6} .se{grid-column:span 12} .hl{grid-column:span 6} .jr{grid-column:span 6} .lr{grid-column:span 12}
+.tk,.dr{grid-column:span 6} .se{grid-column:span 12} .hl{grid-column:span 6} .jr{grid-column:span 6} .lr{grid-column:span 12} .av{grid-column:span 12}
 .task{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px;
   margin-bottom:7px;background:rgba(8,18,13,.75);border-left:3px solid var(--cyan2)}
 .task.over{border-left-color:var(--red)} .task.today{border-left-color:var(--amber)} .task.meet{border-left-color:#a78bfa} .task.fu{border-left-color:#7dab96}
@@ -385,7 +385,14 @@ label.btn:hover{border-color:var(--cyan)}
 .avset{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
 .avprev{position:relative;max-width:420px;border-radius:10px;overflow:hidden;border:1px solid var(--line);cursor:crosshair}
 .avprev img{display:block;width:100%}
+.avclip{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.avclip .st{font-size:16px;text-align:center} .avclip .ds{font-size:12px;color:var(--mut)}
+.avclip .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.avprev video{display:block;width:100%}
 .avprev i{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 12px #3dff9c,0 0 0 3px rgba(61,255,156,.5)}
+#avVid{position:absolute;display:none;filter:contrast(1.45) brightness(.86) saturate(1.1);
+  -webkit-mask-image:radial-gradient(ellipse 52% 70% at 52% 50%,#000 35%,transparent 100%);mask-image:radial-gradient(ellipse 52% 70% at 52% 50%,#000 35%,transparent 100%)}
+body.av-video #avVid{display:block} body.av-video #avImg{display:none}
 #avImg{position:absolute;user-select:none;filter:contrast(1.45) brightness(.86) saturate(1.1);
   -webkit-mask-image:radial-gradient(ellipse 52% 70% at 52% 50%,#000 35%,transparent 100%);mask-image:radial-gradient(ellipse 52% 70% at 52% 50%,#000 35%,transparent 100%)}
 #wandFlare{position:absolute;width:0;height:0;opacity:var(--wg,0)}
@@ -558,7 +565,7 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
   <button class="hpill" id="hPill" title="“Hey Ted” status — click to pause or resume"><i></i><span id="hPillTxt">Voice ready</span></button>
   <canvas id="matrix" aria-hidden="true"></canvas>
   <div id="headBox" aria-label="TED">
-    <div id="avWrap"><img id="avImg" alt="" draggable="false"><div id="wandFlare"><i></i><b>Lumos</b></div></div>
+    <div id="avWrap"><img id="avImg" alt="" draggable="false"><video id="avVid" muted playsinline preload="auto"></video><div id="wandFlare"><i></i><b>Lumos</b></div></div>
   </div>
   <div class="hcore" id="hCore">
     <div class="reactor" id="coreReactor" style="display:none"></div>
@@ -625,6 +632,7 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
       <button data-sys="setup">🔌 Set up connections</button><button data-sys="config">⚙ Edit settings</button>
       <button data-sys="folder">📂 Data folder</button><button data-sys="restart">↻ Restart</button>
       <button id="demoBtn"></button></div></section>
+  <section data-tab="system" class="card jr" style="--d:.12s"><h2>📜 Activity log</h2><div id="jlist"></div></section>
   <section data-tab="system" class="card av" style="--d:.1s"><h2>🧙 TED's look</h2>
     <div class="avset">
       <div id="avPrev"></div>
@@ -634,8 +642,13 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
           <button id="avTest">✨ Preview</button><button id="avDel">Remove</button></div>
         <div class="why" id="avHint" style="margin-top:10px"></div>
       </div>
-    </div></section>
-  <section data-tab="system" class="card jr" style="--d:.12s"><h2>📜 Activity log</h2><div id="jlist"></div></section>
+    </div>
+    <div class="fsub" style="margin-top:14px"><span>🎬 Moving TED (optional) — three short videos made from your picture, e.g. with Gemini (Veo)</span></div>
+    <div id="avClips"></div>
+    <div class="fadd" style="margin-top:8px"><span class="why">Light the wand at second</span>
+      <input id="avLumosAt" type="number" step="0.1" min="0" style="flex:0 0 90px;min-width:0" placeholder="auto">
+      <button id="avLumosSave">Save</button><span class="why">of the walk-in video (empty = just before it ends)</span></div>
+  </section>
   <section data-tab="system" class="card lr" style="--d:.2s"><h2>🧠 What TED has learned</h2><div id="lbox"></div></section>
 </main>
 
@@ -1378,9 +1391,49 @@ function typeInto(el, t){ let i = 0; t = t || ""; (function step(){ el.textConte
 function renderAvatarCard(){
   const m = (S && S.avatar) || {has: false};
   $("avDel").style.display = m.has ? "" : "none"; $("avTest").style.display = m.has ? "" : "none";
-  $("avPrev").innerHTML = m.has ? `<div class="avprev" id="avPv"><img src="/api/avatar?v=${m.v}" alt=""><i style="left:${m.tip[0]*100}%;top:${m.tip[1]*100}%"></i></div>` : "";
+  const media = m.photo ? `<img src="/api/avatar?v=${m.v}" alt="">`
+    : (m.clips && m.clips.idle) ? `<video src="/api/avatar/clip/idle?v=${m.clips.idle}#t=1" muted playsinline preload="auto"></video>` : "";
+  $("avPrev").innerHTML = m.has && media ? `<div class="avprev" id="avPv">${media}<i style="left:${m.tip[0]*100}%;top:${m.tip[1]*100}%"></i></div>` : "";
+  renderClips();
   $("avHint").textContent = m.has ? "Click on the picture where the tip of the wand is — the light appears there." : "No picture yet — TED uses the code head.";
 }
+const CLIPS = [
+  ["enter", "1 · Walk in and raise the wand", "TED walks out of the dark, raises the wand — the light turns on (Lumos).",
+   "Use the attached picture as the person, clothing and style. Pure black background with faint falling green code. The young man in the dark robe and glasses walks slowly toward the camera from the dark distance, stops in the centre, raises his wand to point slightly to the right of the camera, and the wand tip lights up with a bright green-white light. Static camera, 16:9, 6-8 seconds, no text, no music."],
+  ["idle", "2 · Standing with the lit wand (loops)", "Plays while you talk with TED.",
+   "Same person and framing as the end of the previous video: he stands still in the centre holding the raised, glowing wand, breathing gently with small natural movements, looking at the camera. Seamless loop, static camera, pure black background with faint falling green code, 16:9, 6 seconds, no text."],
+  ["exit", "3 · Lower the wand, turn and walk away", "Plays when the conversation ends; TED dissolves into the code.",
+   "Same person and framing: the wand light goes out, he lowers his arm, turns around and walks slowly away into the dark distance until he disappears. Static camera, pure black background with faint falling green code, 16:9, 6-8 seconds, no text."],
+];
+function renderClips(){
+  const m = (S && S.avatar) || {}, c = m.clips || {};
+  $("avClips").innerHTML = CLIPS.map(([k, title, ds]) => `<div class="avclip"><span class="st">${c[k] ? "✅" : "▫️"}</span>
+    <div><b style="font-size:13px">${title}</b><div class="ds">${ds}</div></div>
+    <div class="acts"><button data-clp="${k}" title="Copy a prompt for Gemini (Veo) — attach your picture">📋 Prompt</button>
+      <label class="btn" style="cursor:pointer"><input type="file" accept="video/mp4,video/webm,video/quicktime" data-clu="${k}" style="display:none">🎬 ${c[k] ? "Replace" : "Choose video"}</label>
+      ${c[k] ? `<button data-clr="${k}">Remove</button>` : ""}</div></div>`).join("");
+  $("avLumosAt").value = m.lumos_at != null ? m.lumos_at : "";
+}
+$("avClips").addEventListener("click", async e => {
+  const cp = e.target.closest("[data-clp]");
+  if(cp){ const pr = CLIPS.find(x => x[0] === cp.dataset.clp)[3]; try{ await navigator.clipboard.writeText(pr); toast("📋 Prompt copied — paste it in Gemini with your picture", "ok"); }catch(err){ prompt("Copy this prompt:", pr); } return; }
+  const rm = e.target.closest("[data-clr]");
+  if(rm){ const d = await api(`/api/avatar/clip/${rm.dataset.clr}/remove`, {}); S.avatar = d; renderAvatarCard(); MATRIX.loadAvatar(d); toast("Removed"); }
+});
+$("avClips").addEventListener("change", async e => {
+  const inp = e.target.closest("[data-clu]"); if(!inp || !inp.files[0]) return;
+  const f = inp.files[0]; toast("⏳ Uploading the video…");
+  try{
+    const r = await fetch(`/api/avatar/clip/${inp.dataset.clu}`, {method: "POST", headers: {"Content-Type": f.type || "video/mp4"}, body: f});
+    const d = await r.json(); if(!r.ok) throw new Error(d.detail || "error");
+    S.avatar = d; renderAvatarCard(); MATRIX.loadAvatar(d); toast("🎬 Video saved", "ok");
+  }catch(err){ toast("Error: " + err.message, "err"); }
+});
+$("avLumosSave").onclick = async () => {
+  const v = $("avLumosAt").value.trim();
+  try{ const d = await api("/api/avatar/lumos", {at: v === "" ? -1 : +v}); S.avatar = d; MATRIX.loadAvatar(d); toast("✨ Saved", "ok"); }
+  catch(err){ toast("Error: " + err.message, "err"); }
+};
 $("avFile").onchange = async e => {
   const f = e.target.files[0]; if(!f) return;
   try{
@@ -1518,17 +1571,40 @@ const MATRIX = (() => {
   // TED-ийн дүр: эзний зураг байвал түүнийг, үгүй бол 3D толгойг (three.js + Face Cap) ашиглана
   let av = null;              // {img, tip:[x,y], lum, rect}
   let avP = 0, avLumos = false, avLumKey = "";
+  let vst = "away", clips = {}, lumosAt = null;
   function loadAvatar(meta){
-    if(!meta || !meta.has){ if(av){ av = null; document.body.classList.remove("has-avatar"); } return; }
-    const key = meta.v + ":" + meta.tip;
+    if(!meta || !meta.has){ if(av){ av = null; document.body.classList.remove("has-avatar", "av-video"); } return; }
+    const key = meta.v + ":" + meta.tip + ":" + JSON.stringify(meta.clips || {}) + ":" + meta.lumos_at;
     document.body.classList.add("has-avatar");                 // 3D толгойг шууд нууна
     if(av && av.key === key) return;
-    const img = $("avImg"); img.onload = () => { av = {img, tip: meta.tip, key, lum: null}; document.body.classList.add("has-avatar"); avLumKey = ""; fitAvatar(); };
+    clips = meta.clips || {}; lumosAt = meta.lumos_at;
+    const hasVid = !!(clips.enter || clips.idle || clips.exit);
+    document.body.classList.toggle("av-video", hasVid);
+    if(hasVid){
+      // Видео горим: алхаж ирэх → гэрэлтэй зогсох (давтана) → эргэж явах
+      const vid = $("avVid"); vst = "away";
+      const first = clips.idle ? "idle" : clips.enter ? "enter" : "exit";
+      vid.onloadedmetadata = () => { if(!av || av.mode !== "video"){ av = {img: vid, mode: "video", tip: meta.tip, key, lum: null}; } fitAvatar(); vid.onloadedmetadata = null; };
+      vid.src = `/api/avatar/clip/${first}?v=${clips[first]}`;
+      av = {img: vid, mode: "video", tip: meta.tip, key, lum: null};
+      return;
+    }
+    const img = $("avImg"); img.onload = () => { av = {img, mode: "photo", tip: meta.tip, key, lum: null}; document.body.classList.add("has-avatar"); avLumKey = ""; fitAvatar(); };
     img.src = "/api/avatar?v=" + meta.v;
   }
+  function playClip(kind, loop){
+    const vid = $("avVid"); vst = kind;
+    vid.loop = !!loop; vid.src = `/api/avatar/clip/${kind}?v=${clips[kind]}`;
+    vid.currentTime = 0; vid.play().catch(() => {});
+  }
+  $("avVid").addEventListener("ended", () => {
+    if(vst === "enter"){ if(clips.idle) playClip("idle", true); else vst = "hold"; }
+    else if(vst === "exit") vst = "away";
+  });
   function fitAvatar(){
     if(!av) return;
-    const box = $("headBox"), bw = box.clientWidth, bh = box.clientHeight, ar = av.img.naturalWidth/av.img.naturalHeight;
+    const box = $("headBox"), bw = box.clientWidth, bh = box.clientHeight,
+          ar = av.mode === "video" ? (av.img.videoWidth/av.img.videoHeight || 16/9) : av.img.naturalWidth/av.img.naturalHeight;
     let h = bh*1.0, w = h*ar; if(w > bw*1.15){ w = bw*1.15; h = w/ar; }
     const l = (bw - w)/2, t = bh - h;
     Object.assign(av.img.style, {left: l + "px", top: t + "px", width: w + "px", height: h + "px"});
@@ -1538,7 +1614,7 @@ const MATRIX = (() => {
   function avatarLum(cols, rows, region){
     // Зургийн гэрэлтэлтийг кодын торонд: хүнийг тод, ар талыг (зургийн өөрийн код) бүдэг
     const key = cols + "x" + rows + ":" + region.width + ":" + av.key;
-    if(av.lum && avLumKey === key) return av.lum;
+    if(av.mode !== "video" && av.lum && avLumKey === key) return av.lum;   // видеоны хувьд фрейм бүрээр
     const cv = document.createElement("canvas"); cv.width = cols; cv.height = rows; const g = cv.getContext("2d");
     const sx = cols/region.width, sy = rows/region.height, r = av.rect;
     g.drawImage(av.img, r.l*sx, r.t*sy, r.w*sx, r.h*sy);
@@ -1592,7 +1668,35 @@ const MATRIX = (() => {
     // Толгойн хөдөлгөөн (толгой нь ар талын бороонаас нарийн тортой — илүү нарийвчлалтай)
     let hcN = 0, hrN = 0; const hfs = fs <= 11 ? 9 : 10;
     let codeVis = vis;
-    if(av && region.width){
+    if(av && av.mode === "video" && region.width){
+      const vid = $("avVid"), dur = vid.duration || 0, ct = vid.currentTime || 0, fl = $("wandFlare"), wrap = $("avWrap");
+      if(active && (vst === "away" || vst === "exit" || vst === "fade")){
+        if(clips.enter) playClip("enter"); else if(clips.idle) playClip("idle", true); else vst = "hold";
+        avLumos = false;
+      } else if(!active && (vst === "enter" || vst === "idle" || vst === "hold")){
+        if(avLumos){ avLumos = false; fl.classList.remove("lumos"); }          // Nox: гэрэл түрүүлж унтарна
+        if(clips.exit) playClip("exit"); else { vst = "fade"; avP = 1; }
+      }
+      let op = 0, cvis = 0;
+      if(vst === "enter"){ op = Math.min(1, Math.max(0, (ct - .35)/.9)); cvis = Math.max(.25, 1 - ct/1.8)*Math.min(1, ct/.3 + .2);
+        const la = lumosAt != null ? lumosAt : Math.max(0, dur - .6);
+        if(dur && ct >= la && !avLumos){ avLumos = true; fl.classList.remove("lumos"); void fl.offsetWidth; fl.classList.add("lumos"); } }
+      else if(vst === "idle" || vst === "hold"){ op = 1; cvis = .22; if(!avLumos){ avLumos = true; } }
+      else if(vst === "exit"){ const rem = dur ? dur - ct : 2; op = Math.min(1, rem/2.2); cvis = .22 + (1 - op)*.85; }
+      else if(vst === "fade"){ avP = Math.max(0, avP - .03); op = avP; cvis = .22 + (1 - op)*.8*(avP > 0 ? 1 : 0); if(avP <= 0) vst = "away"; }
+      wrap.style.opacity = "1"; wrap.style.transform = "none"; wrap.style.filter = "none";
+      vid.style.opacity = op.toFixed(3);
+      codeVis = vst === "away" ? 0 : cvis*(vst === "exit" && op < .05 ? Math.max(0, (dur - ct)/.6) : 1);
+      const amp = Math.min(1, ampS*2.6);
+      const wg = avLumos && vst !== "exit" ? (speaking ? .75 + amp*.25 : listen ? 1 : think ? .55 + .45*Math.abs(Math.sin(t*9)) : .82 + .08*Math.sin(t*2.2)) : 0;
+      fl.style.setProperty("--wg", (wg*Math.min(1, op*1.5)).toFixed(3));
+      fl.style.setProperty("--ws", (speaking ? 1 + amp*.45 : listen ? 1.15 : 1).toFixed(3));
+      if(codeVis > .01 && vid.readyState >= 2){ hcN = Math.ceil(region.width/hfs); hrN = Math.ceil(region.height/hfs); lum = avatarLum(hcN, hrN, region);
+        if(hglyph.length !== hcN*hrN){ hglyph = Array.from({length: hcN*hrN}, pick);
+          hdrops = Array.from({length: Math.round(hcN*1.6)}, (_, n) => ({c: n % hcN, y: -Math.random()*hrN, v: .35 + Math.random()*.7, L: 6 + Math.random()*18})); } }
+      else lum = null;
+    }
+    else if(av && region.width){
       // Алхаж ирэх: алсаас (жижиг, бүдэг) ойртож, алхааны хэмнэлээр хөдөлнө → код хүн болж тодорно → Lumos
       avP += ((active ? 1 : 0) - avP)*(active ? .045 : .06);
       const p = avP, walk = 1 - Math.pow(1 - Math.min(1, p/.82), 3);
