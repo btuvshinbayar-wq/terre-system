@@ -80,7 +80,7 @@ button.pri{background:var(--cyan2);border-color:var(--cyan2);color:#fff} button.
 button:disabled{opacity:.5;cursor:wait}
 #refresh .ic{display:inline-block} .loading #refresh .ic{animation:spin .9s linear infinite}
 
-main{padding:22px 32px 120px;display:grid;gap:18px;grid-template-columns:repeat(12,1fr)}
+main{padding:22px 32px 48px;display:grid;gap:18px;grid-template-columns:repeat(12,1fr)}
 .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;overflow:hidden;
       backdrop-filter:blur(8px);opacity:0;animation:rise .7s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:var(--d,0s);
       transition:border-color .3s, box-shadow .3s}
@@ -386,7 +386,6 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
 .hnode:hover{box-shadow:none;background:rgba(56,214,245,.06)}
 .hnode:active{transform:translate(-50%,-50%) scale(.95)} #hud.compact .hnode:active{transform:scale(.95)}
 .hpill:active{transform:translateX(-50%) scale(.96)} #hud.compact .hpill:active{transform:scale(.96)}
-#dock:active{transform:translateX(-50%)}
 .hnode .nd{position:relative;width:18px;height:18px;border-radius:50%;border:2px solid var(--cyan);transition:transform .25s;
   background:radial-gradient(circle,#e8fdff 0 22%,rgba(56,214,245,.4) 28%,rgba(4,18,36,.85) 70%);animation:ndPulse 3.2s infinite}
 .hnode.amber .nd{border-color:var(--amber);animation-name:ndPulseA} .hnode.red .nd{border-color:var(--red);animation:ndPulseR 1.4s infinite}
@@ -428,7 +427,15 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
   border:1px solid rgba(56,214,245,.3);backdrop-filter:blur(6px);transition:border-color .2s,box-shadow .2s}
 .cvin:focus-within{border-color:var(--cyan);box-shadow:0 0 22px rgba(56,214,245,.25)}
 .cvin input{flex:1;background:none;border:0;color:var(--txt);font-size:14px;outline:none;padding:4px 0;min-width:0}
-.cvin button{border-radius:50%;width:34px;height:34px;padding:0;display:grid;place-items:center;background:var(--cyan2);border-color:var(--cyan2)}
+.cvin button{border-radius:50%;width:34px;height:34px;padding:0;display:grid;place-items:center;flex:0 0 auto}
+.cvin #cvGo{background:var(--cyan2);border-color:var(--cyan2)}
+.cvin .cvmic{width:38px;height:38px;font-size:16px;background:rgba(56,214,245,.12);border-color:rgba(56,214,245,.45)}
+.cvin .cvmic.rec{background:var(--red);border-color:var(--red);animation:breathe 1s infinite}
+.cvin .cvic{background:none;border-color:transparent;font-size:15px;opacity:.85} .cvin .cvic:hover{opacity:1;border-color:var(--line)}
+.cvin #wave{width:80px;height:20px;flex:0 0 auto;opacity:.9}
+.cvst{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);white-space:nowrap;flex:0 0 auto}
+.cvsep{width:1px;height:22px;background:rgba(56,214,245,.2);flex:0 0 auto}
+.cvin{padding-left:6px}
 
 /* ---------- Chat notifications strip (bottom) ---------- */
 #hChats{position:absolute;left:28px;right:24px;z-index:3;display:flex;align-items:stretch;gap:14px;animation:rise .7s .5s both}
@@ -461,19 +468,9 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
 .dbody [data-view]{display:none} .dbody [data-view].on{display:block}
 .dbody .card{margin-bottom:14px}
 
-/* ---------- Voice dock ---------- */
-#dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:40px;
-  background:rgba(5,15,29,.8);border:1px solid rgba(56,214,245,.3);backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.45),0 0 26px rgba(56,214,245,.1);
-  animation:dockIn .8s .3s cubic-bezier(.2,.8,.2,1) both}
-@keyframes dockIn{from{opacity:0;transform:translate(-50%,24px)}}
-#dock button{border-radius:50%;width:42px;height:42px;padding:0;font-size:17px;display:grid;place-items:center}
-#dock #mic{background:var(--cyan2);border-color:var(--cyan2);width:48px;height:48px;font-size:19px}
-.dwave{display:flex;flex-direction:column;align-items:center;width:190px}
-#wave{width:190px;height:26px}
-#dockState{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);margin-top:1px;white-space:nowrap}
 
 /* toasts */
-#toasts{position:fixed;right:22px;bottom:90px;display:flex;flex-direction:column;gap:8px;z-index:60}
+#toasts{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:8px;z-index:60}
 .toast{background:rgba(10,20,32,.95);border:1px solid var(--cyan2);border-left:3px solid var(--cyan);padding:10px 16px;border-radius:10px;
        font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);animation:toastIn .4s cubic-bezier(.2,.8,.2,1)}
 .toast.ok{border-left-color:var(--green)} .toast.err{border-left-color:var(--red)}
@@ -536,7 +533,15 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
   <div id="hNodes"></div>
   <div id="hConvo">
     <div class="cvlog" id="cvLog" aria-live="polite"></div>
-    <div class="cvin"><input id="cvIn" placeholder="Ask TED… (English or Mongolian)" autocomplete="off"><button id="cvGo" title="Send to TED">➤</button></div>
+    <div class="cvin">
+      <button id="mic" class="cvmic" title="Talk to TED (English or Mongolian)">🎙</button>
+      <input id="cvIn" placeholder="Ask TED… (English or Mongolian)" autocomplete="off">
+      <canvas id="wave" width="160" height="40"></canvas><span id="dockState" class="cvst">Say “Hey Ted”</span>
+      <button id="cvGo" title="Send to TED">➤</button>
+      <span class="cvsep"></span>
+      <button id="play" class="cvic" title="Play today's briefing">🔊</button>
+      <button id="refresh" class="cvic" title="Refresh — check mail now"><span class="ic">↻</span></button>
+    </div>
   </div>
   <div id="hChats">
     <div class="chh">Chats<i id="chN">0</i></div>
@@ -605,12 +610,6 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
   </div>
 </aside>
 
-<div id="dock">
-  <button id="mic" title="Talk to TED (English or Mongolian)">🎙</button>
-  <div class="dwave"><canvas id="wave" width="360" height="44"></canvas><div id="dockState">Say “Hey Ted”</div></div>
-  <button id="play" title="Play today's briefing">🔊</button>
-  <button id="refresh" title="Refresh — check mail now"><span class="ic">↻</span></button>
-</div>
 
 <div id="toasts"></div>
 <audio id="audio"></audio>
@@ -1709,7 +1708,7 @@ function layoutHud(){
     hudGeo = {compact: true, W, H, cx: W/2, cy: 330, cs: 220}; SPACE.resize(); return; }
   // Босоо хуваарь: дээр TED + зангилаанууд, дунд нь TED-тэй ярилцах хэсэг, доор чатын мөр, хамгийн доор дуут dock
   const pw = Math.round(Math.max(280, Math.min(360, W*.19))); hud.style.setProperty("--pw", pw + "px");
-  const B = 196, chatH = 74;                                   // доод нөөц: чатын мөр + dock
+  const B = 106, chatH = 74;                                   // доод нөөц: чатын мөр (dock байхгүй)
   const Hc = Math.round(Math.max(150, Math.min(300, (H - B)*.34)));
   const Hr = H - B - Hc;                                        // TED + зангилаанд үлдэх өндөр
   const cx = W/2, cy = Math.round(Hr/2 + 6);
@@ -1764,7 +1763,8 @@ function updateVoiceUi(){
   if(w === "listening" || rec){ st = "Listening"; dock = "Listening…"; }
   if(w === "thinking"){ st = "Thinking"; dock = "Thinking…"; }
   if(speaking){ st = "Speaking"; dock = "Speaking…"; }
-  $("hState").textContent = st; $("dockState").textContent = dock;
+  // «Press to talk» гэх мэт сул үеийн бичиг харуулахгүй — зөвхөн сонсож / бодож / ярьж байх үед
+  $("hState").textContent = st; $("dockState").textContent = /…$/.test(dock) ? dock : "";
   const pill = $("hPill");
   pill.className = "hpill " + ({listening: "listen", thinking: "think", paused: "paused", off: "off", error: "off", "": "off", loading: "off"}[w] ?? "");
   $("hPillTxt").textContent = {listening: "Listening…", thinking: "Thinking…", paused: "Paused — click to resume", loading: "Starting voice…",
