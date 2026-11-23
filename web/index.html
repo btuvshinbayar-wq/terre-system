@@ -395,6 +395,14 @@ label.btn:hover{border-color:var(--cyan)}
 body.av-video #avVid{display:block} body.av-video #avImg{display:none}
 #avImg{position:absolute;user-select:none;filter:contrast(1.45) brightness(.86) saturate(1.1);
   -webkit-mask-image:radial-gradient(ellipse 52% 70% at 52% 50%,#000 35%,transparent 100%);mask-image:radial-gradient(ellipse 52% 70% at 52% 50%,#000 35%,transparent 100%)}
+/* TED = хөвж гарч ирдэг шидэт саваа: харилцаа эхлэхэд Lumos, дуусахад бүдгэрч алга болно */
+.card.av{display:none!important}
+#wand{position:absolute;left:50%;top:50%;width:440px;height:44px;margin:-22px 0 0 -220px;opacity:0;
+  transform-origin:50% 50%;will-change:transform,opacity,filter;pointer-events:none}
+#wand svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;
+  filter:drop-shadow(0 0 calc(2px + 14px*var(--wg,0)) rgba(61,255,156,calc(.25 + .5*var(--wg,0))))}
+#wand .rim{opacity:calc(.25 + .75*var(--wg,0))}
+#wand #wandFlare{left:432px;top:22px;transform:rotate(calc(var(--wr,0deg)*-1))}
 #wandFlare{position:absolute;width:0;height:0;opacity:var(--wg,0)}
 #wandFlare i{position:absolute;left:-90px;top:-90px;width:180px;height:180px;border-radius:50%;mix-blend-mode:screen;
   background:radial-gradient(circle,#ffffff 0 5%,rgba(205,255,225,.95) 9%,rgba(80,255,160,.55) 24%,rgba(40,255,140,.18) 45%,transparent 70%);
@@ -565,7 +573,25 @@ body.wake-think .hcore .reactor{filter:drop-shadow(0 0 20px rgba(255,190,85,.8))
   <button class="hpill" id="hPill" title="“Hey Ted” status — click to pause or resume"><i></i><span id="hPillTxt">Voice ready</span></button>
   <canvas id="matrix" aria-hidden="true"></canvas>
   <div id="headBox" aria-label="TED">
-    <div id="avWrap"><img id="avImg" alt="" draggable="false"><video id="avVid" muted playsinline preload="auto"></video><div id="wandFlare"><i></i><b>Lumos</b></div></div>
+    <div id="avWrap"><img id="avImg" alt="" draggable="false"><video id="avVid" muted playsinline preload="auto"></video></div>
+    <div id="wand"><svg viewBox="0 0 440 44" aria-hidden="true">
+      <defs>
+        <linearGradient id="wWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b4a2e"/><stop offset=".35" stop-color="#3f2817"/><stop offset=".8" stop-color="#1c110a"/><stop offset="1" stop-color="#0d0805"/></linearGradient>
+        <linearGradient id="wHandle" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3020"/><stop offset=".4" stop-color="#24160d"/><stop offset="1" stop-color="#070403"/></linearGradient>
+        <linearGradient id="wRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3dff9c" stop-opacity=".1"/><stop offset=".7" stop-color="#7dffc0" stop-opacity=".6"/><stop offset="1" stop-color="#e8fff2" stop-opacity="1"/></linearGradient>
+      </defs>
+      <!-- бариул: товгор цагирагууд -->
+      <path d="M8 16 Q4 22 8 28 L30 29 Q36 33 44 29 L58 29 Q64 34 72 29 L120 27.5 L120 16.5 L72 15 Q64 10 58 15 L44 15 Q36 11 30 15 Z" fill="url(#wHandle)"/>
+      <ellipse cx="8" cy="22" rx="5" ry="7" fill="#2c1b10"/>
+      <path d="M37 13.5 Q41 22 37 30.5 M65 12.5 Q69 22 65 31.5 M96 15.5 Q99 22 96 28.5" stroke="#5c3d26" stroke-width="1.2" fill="none" opacity=".7"/>
+      <path d="M120 16.5 L126 15.5 L130 22 L126 28.5 L120 27.5 Z" fill="#2a1a0f"/>
+      <!-- нарийссан иш -->
+      <path d="M130 14.8 C220 16.8 330 19.4 434 21 L434 23 C330 24.6 220 27.2 130 29.2 Z" fill="url(#wWood)"/>
+      <path d="M180 17.6 Q186 22 180 26.4 M250 18.9 Q254 22 250 25.1" stroke="#6b4a2e" stroke-width=".9" fill="none" opacity=".5"/>
+      <!-- гэрлийн ирмэг -->
+      <path class="rim" d="M130 16.3 C220 18 330 20.2 434 21.5" stroke="url(#wRim)" stroke-width="1.1" fill="none"/>
+      <path class="rim" d="M10 16.5 L30 15.5 M44 15.5 L58 15.5 M72 15.5 L120 17" stroke="#3dff9c" stroke-opacity=".35" stroke-width=".8" fill="none"/>
+    </svg><div id="wandFlare"><i></i><b>Lumos</b></div></div>
   </div>
   <div class="hcore" id="hCore">
     <div class="reactor" id="coreReactor" style="display:none"></div>
@@ -1572,7 +1598,9 @@ const MATRIX = (() => {
   let av = null;              // {img, tip:[x,y], lum, rect}
   let avP = 0, avLumos = false, avLumKey = "";
   let vst = "away", clips = {}, lumosAt = null;
+  let wP = 0, wLumos = false, wNoxT = -1e9, motes = [];
   function loadAvatar(meta){
+    return;                                  // зураг/видео дүр ашиглахаа больсон
     if(!meta || !meta.has){ if(av){ av = null; document.body.classList.remove("has-avatar", "av-video"); } return; }
     const key = meta.v + ":" + meta.tip + ":" + JSON.stringify(meta.clips || {}) + ":" + meta.lumos_at;
     document.body.classList.add("has-avatar");                 // 3D толгойг шууд нууна
@@ -1628,14 +1656,7 @@ const MATRIX = (() => {
     }
     av.lum = out; avLumKey = key; return out;
   }
-  const s = document.createElement("script"); s.src = "/assets/ted-head.js";
-  s.onload = async () => {
-    try{
-      head = await TEDHead.create("/assets/ted-head.glb");
-      $("headBox").appendChild(head.canvas); fitHead();
-    }catch(e){ console.warn("TED head:", e); head = null; }
-  };
-  document.head.appendChild(s);
+  // Хүний толгой/зураг харуулахгүй — TED бол хөвдөг шидэт саваа (доорх WAND)
   function fitHead(){
     const r = $("headBox").getBoundingClientRect(); region = r;
     if(head && r.width && r.height) head.resize(r.width, r.height);
@@ -1670,6 +1691,32 @@ const MATRIX = (() => {
     // Толгойн хөдөлгөөн (толгой нь ар талын бороонаас нарийн тортой — илүү нарийвчлалтай)
     let hcN = 0, hrN = 0; const hfs = fs <= 11 ? 9 : 10;
     let codeVis = vis;
+    // ---- Шидэт саваа: доороос хөвж гарч ирнэ → Lumos → яриа дуусахад Nox → бүдгэрч алга болно ----
+    let tipX = -1, tipY = -1, wgNow = 0;
+    {
+      const wd = $("wand"), fl = $("wandFlare");
+      wP += ((active ? 1 : 0) - wP)*(active ? .085 : (wLumos ? 0 : .04));
+      if(!active && wLumos){ wLumos = false; fl.classList.remove("lumos"); wNoxT = now; }   // гэрэл түрүүлж унтарна
+      if(!active && now - wNoxT < 700) wP = Math.max(wP, .98);                              // унтарсны дараа хэсэг хөвөөд явна
+      const p = wP, e = 1 - Math.pow(1 - Math.min(1, p), 3);
+      const bob = Math.sin(t*1.3)*7 + Math.sin(t*.53)*4, sway = Math.sin(t*.8)*3.5 + Math.sin(t*.31)*2;
+      const rot = -30 + sway + (1 - e)*-18;
+      const sc = Math.min(1.25, Math.max(.75, (region.width || 600)/620));
+      wd.style.opacity = Math.min(1, p*1.6).toFixed(3);
+      wd.style.transform = `translate(${((1 - e)*-40).toFixed(1)}px, ${((1 - e)*120 + bob).toFixed(1)}px) rotate(${rot.toFixed(2)}deg) scale(${(sc*(.8 + .2*e)).toFixed(3)})`;
+      wd.style.filter = `blur(${((1 - e)*6).toFixed(1)}px)`;
+      wd.style.setProperty("--wr", rot.toFixed(2) + "deg");
+      if(active && p > .93 && !wLumos){ wLumos = true; fl.classList.remove("lumos"); void fl.offsetWidth; fl.classList.add("lumos"); }
+      const amp = Math.min(1, ampS*2.6);
+      wgNow = wLumos ? (speaking ? .75 + amp*.25 : listen ? 1 : think ? .55 + .45*Math.abs(Math.sin(t*9)) : .82 + .08*Math.sin(t*2.2)) : 0;
+      wd.style.setProperty("--wg", wgNow.toFixed(3));
+      fl.style.setProperty("--ws", (speaking ? 1 + amp*.45 : listen ? 1.15 : 1).toFixed(3));
+      if(p > .02){ const r = fl.getBoundingClientRect(); tipX = r.left; tipY = r.top; }
+      // гэрлээс хөвөх оч
+      if(wgNow > .3 && tipX >= 0 && Math.random() < .55) motes.push({x: tipX + (Math.random() - .5)*10, y: tipY + (Math.random() - .5)*10,
+        vx: (Math.random() - .5)*1.2, vy: -.4 - Math.random()*1.1, l: 1});
+      codeVis = 0; lum = null;
+    }
     if(av && av.mode === "video" && region.width){
       const vid = $("avVid"), fl = $("wandFlare"), wrap = $("avWrap");
       // Видео солигдох мөчид хуучин видеоны цаг/урт уншигдаж болно — зөвхөн шинэ видео бодитоор тоглож эхэлсэн үед тооцно
@@ -1754,6 +1801,8 @@ const MATRIX = (() => {
       for(let i = 0; i < gc; i++){
         const id = j*gc + i, L = lit[id];
         let a = L*.12, col = "#1fbf6e";                                           // маш бүдэг ар талын бороо
+        if(wgNow > .05){ const dx = i*fs + fs/2 - tipX, dy = j*fs + fs/2 - tipY, d2 = dx*dx + dy*dy;   // савааны гэрэл кодыг гэрэлтүүлнэ
+          if(d2 < 90000){ const g = (1 - Math.sqrt(d2)/300)*wgNow; a += g*(.12 + L*.55); if(g > .45 && L > .3) col = "#8dffc4"; } }
         if(lum && vis > .05){                                                       // толгойн ард бороо харагдахгүй
           const px = i*fs + fs/2 - region.left, py = j*fs + fs/2 - region.top;
           if(px >= 0 && py >= 0 && px < region.width && py < region.height && lum[((py/hfs) | 0)*hcN + ((px/hfs) | 0)] > .04) a *= 1 - vis;
@@ -1789,6 +1838,15 @@ const MATRIX = (() => {
           x.globalAlpha = a > 1 ? 1 : a; x.fillStyle = col; x.fillText(hglyph[id], ox + i*hfs + hfs/2, oy + j*hfs);
         }
       }
+    }
+    // оч
+    if(motes.length){
+      x.globalCompositeOperation = "lighter";
+      for(const m of motes){ m.x += m.vx; m.y += m.vy; m.vy -= .01; m.l -= .025;
+        if(m.l <= 0) continue; x.globalAlpha = m.l*.9; x.fillStyle = m.l > .6 ? "#e8fff2" : "#3dff9c";
+        x.beginPath(); x.arc(m.x, m.y, 1 + m.l*1.6, 0, 6.283); x.fill(); }
+      motes = motes.filter(m => m.l > 0).slice(-140);
+      x.globalCompositeOperation = "source-over";
     }
     x.globalAlpha = 1;
   }
